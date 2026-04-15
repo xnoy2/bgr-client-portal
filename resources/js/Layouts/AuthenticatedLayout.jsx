@@ -30,7 +30,7 @@ const Icon = ({ name, size = 15 }) => (
 function getNav(role) {
     if (role === 'admin') return [
         { label: 'Dashboard',     icon: 'grid',      href: () => route('admin.dashboard'),    active: () => route().current('admin.dashboard') },
-        { label: 'Projects',      icon: 'briefcase', href: '#', soon: true },
+        { label: 'Projects',      icon: 'briefcase', href: () => route('admin.projects.index'), active: () => route().current('admin.projects.*') },
         { label: 'Users',         icon: 'users',     href: () => route('admin.users.index'),  active: () => route().current('admin.users.*') },
         { label: 'Stage Manager', icon: 'layers',    href: '#', soon: true },
         { label: 'Updates',       icon: 'list',      href: '#', soon: true },

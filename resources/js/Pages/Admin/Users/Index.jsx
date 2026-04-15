@@ -99,7 +99,7 @@ function Btn({ variant = 'default', className = '', ...props }) {
     };
     return (
         <button
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity disabled:opacity-50 ${className}`}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity disabled:opacity-50 whitespace-nowrap ${className}`}
             style={styles[variant]}
             {...props}
         />
@@ -213,8 +213,10 @@ export default function UsersIndex({ users, roles }) {
                         <tbody>
                             {users.map((user, i) => (
                                 <tr key={user.id}
-                                    className={!user.is_active ? 'opacity-50' : ''}
-                                    style={{ borderBottom: i < users.length - 1 ? '0.5px solid #f5f0e8' : 'none' }}
+                                    style={{
+                                        borderBottom: i < users.length - 1 ? '0.5px solid #f5f0e8' : 'none',
+                                        opacity: user.is_active ? 1 : 0.45,
+                                    }}
                                     onMouseEnter={e => e.currentTarget.style.background = '#fdfcfa'}
                                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                     <td className="px-5 py-3.5">
@@ -239,7 +241,7 @@ export default function UsersIndex({ users, roles }) {
                                     </td>
                                     <td className="px-5 py-3.5"><RoleBadge role={user.role} /></td>
                                     <td className="px-5 py-3.5"><StatusBadge active={user.is_active} /></td>
-                                    <td className="px-5 py-3.5">
+                                    <td className="px-5 py-3.5 whitespace-nowrap w-px">
                                         <div className="flex items-center gap-2">
                                             <Btn onClick={() => openEdit(user)}>Edit</Btn>
                                             <Btn onClick={() => handleResetPassword(user)}>Reset PW</Btn>
@@ -271,8 +273,8 @@ export default function UsersIndex({ users, roles }) {
                         </div>
                     )}
                     {users.map(user => (
-                        <div key={user.id} className={`p-4 ${!user.is_active ? 'opacity-50' : ''}`}
-                            style={{ borderBottom: '0.5px solid #f5f0e8' }}>
+                        <div key={user.id} className="p-4"
+                            style={{ borderBottom: '0.5px solid #f5f0e8', opacity: user.is_active ? 1 : 0.45 }}>
                             <div className="flex items-start gap-3">
                                 {/* Avatar */}
                                 <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0"
