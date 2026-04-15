@@ -19,11 +19,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Role-based middleware aliases
         $middleware->alias([
-            'role'       => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
-            'admin'      => \App\Http\Middleware\AdminMiddleware::class,
-            'worker'     => \App\Http\Middleware\WorkerMiddleware::class,
-            'client'     => \App\Http\Middleware\ClientMiddleware::class,
+            'role'             => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission'       => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'admin'            => \App\Http\Middleware\AdminMiddleware::class,
+            'worker'           => \App\Http\Middleware\WorkerMiddleware::class,
+            'client'           => \App\Http\Middleware\ClientMiddleware::class,
+            'password.changed' => \App\Http\Middleware\EnsurePasswordChanged::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

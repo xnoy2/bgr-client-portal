@@ -1,176 +1,322 @@
-import ApplicationLogo from '@/Components/ApplicationLogo';
-import Dropdown from '@/Components/Dropdown';
-import NavLink from '@/Components/NavLink';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
-import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { Link, router, usePage } from '@inertiajs/react';
+import { useEffect, useRef, useState } from 'react';
 
-export default function AuthenticatedLayout({ header, children }) {
-    const user = usePage().props.auth.user;
+// ── SVG Icon primitive ─────────────────────────────────────────────────────
+const paths = {
+    grid:      <><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></>,
+    briefcase: <><rect x="2" y="5" width="12" height="9" rx="1.5"/><path d="M5 5V3.5A1.5 1.5 0 016.5 2h3A1.5 1.5 0 0111 3.5V5"/><line x1="2" y1="9" x2="14" y2="9"/></>,
+    users:     <><path d="M10 8a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2 14a5 5 0 0110 0"/><path d="M12 6a2 2 0 110-4 2 2 0 010 4M14 13a4 4 0 00-3-3.87"/></>,
+    layers:    <><polygon points="8,2 14,5.5 8,9 2,5.5"/><path d="M2 9.5l6 3.5 6-3.5"/><path d="M2 12l6 3.5 6-3.5"/></>,
+    list:      <><line x1="3" y1="4" x2="13" y2="4"/><line x1="3" y1="8" x2="13" y2="8"/><line x1="3" y1="12" x2="10" y2="12"/></>,
+    image:     <><rect x="2" y="3" width="12" height="10" rx="1.5"/><circle cx="6" cy="7" r="1.2"/><path d="M2 11l3-3 2.5 2.5 2-2.5L14 11"/></>,
+    file:      <><path d="M4 1h6l3 3v10H4V1z"/><path d="M10 1v3h3M6 7h4M6 10h3"/></>,
+    edit:      <><path d="M11 2l3 3-8 8H3v-3l8-8z"/></>,
+    tool:      <><path d="M10 2a4 4 0 01-1.2 7l-6 6a1 1 0 01-1.4-1.4l6-6A4 4 0 0110 2z"/></>,
+    logout:    <><path d="M10 3h3a1 1 0 011 1v8a1 1 0 01-1 1h-3"/><polyline points="7 10 10 7 7 4"/><line x1="10" y1="7" x2="3" y2="7"/></>,
+    menu:      <><line x1="2" y1="4" x2="14" y2="4"/><line x1="2" y1="8" x2="14" y2="8"/><line x1="2" y1="12" x2="14" y2="12"/></>,
+    close:     <><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></>,
+    bell:      <><path d="M8 2a5 5 0 015 5v2l1 2H2l1-2V7a5 5 0 015-5z"/><path d="M6.5 13a1.5 1.5 0 003 0"/></>,
+    user:      <><path d="M8 8a3 3 0 100-6 3 3 0 000 6z"/><path d="M2 14a6 6 0 0112 0"/></>,
+};
+const Icon = ({ name, size = 15 }) => (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none"
+        stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"
+        className="flex-shrink-0">
+        {paths[name]}
+    </svg>
+);
 
-    const [showingNavigationDropdown, setShowingNavigationDropdown] =
-        useState(false);
+// ── Nav per role ───────────────────────────────────────────────────────────
+function getNav(role) {
+    if (role === 'admin') return [
+        { label: 'Dashboard',     icon: 'grid',      href: () => route('admin.dashboard'),    active: () => route().current('admin.dashboard') },
+        { label: 'Projects',      icon: 'briefcase', href: '#', soon: true },
+        { label: 'Users',         icon: 'users',     href: () => route('admin.users.index'),  active: () => route().current('admin.users.*') },
+        { label: 'Stage Manager', icon: 'layers',    href: '#', soon: true },
+        { label: 'Updates',       icon: 'list',      href: '#', soon: true },
+        { label: 'Media',         icon: 'image',     href: '#', soon: true },
+        { label: 'Documents',     icon: 'file',      href: '#', soon: true },
+        { label: 'Variations',    icon: 'edit',      href: '#', soon: true },
+        { label: 'Maintenance',   icon: 'tool',      href: '#', soon: true },
+    ];
+    if (role === 'worker') return [
+        { label: 'Dashboard',     icon: 'grid',      href: () => route('worker.dashboard'),   active: () => route().current('worker.dashboard') },
+        { label: 'Stage Manager', icon: 'layers',    href: '#', soon: true },
+        { label: 'Upload Media',  icon: 'image',     href: '#', soon: true },
+        { label: 'Post Update',   icon: 'edit',      href: '#', soon: true },
+    ];
+    return [
+        { label: 'My Project',    icon: 'grid',      href: () => route('client.dashboard'),   active: () => route().current('client.dashboard') },
+        { label: 'Updates',       icon: 'list',      href: '#', soon: true },
+        { label: 'Photo Gallery', icon: 'image',     href: '#', soon: true },
+        { label: 'Documents',     icon: 'file',      href: '#', soon: true },
+        { label: 'Variations',    icon: 'edit',      href: '#', soon: true, badge: '1' },
+        { label: 'Maintenance',   icon: 'tool',      href: '#', soon: true },
+    ];
+}
+
+function initials(name = '') {
+    return name.trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase()).join('');
+}
+
+// ── Sidebar content (shared between desktop + mobile drawer) ───────────────
+function SidebarContent({ user, role, nav, onNavigate }) {
+    const logout = (e) => { e.preventDefault(); router.post(route('logout')); };
 
     return (
-        <div className="min-h-screen bg-gray-100">
-            <nav className="border-b border-gray-100 bg-white">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div className="flex h-16 justify-between">
-                        <div className="flex">
-                            <div className="flex shrink-0 items-center">
-                                <Link href="/">
-                                    <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800" />
-                                </Link>
-                            </div>
-
-                            <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink
-                                    href={route('dashboard')}
-                                    active={route().current('dashboard')}
-                                >
-                                    Dashboard
-                                </NavLink>
-                            </div>
+        <>
+            {/* Brand */}
+            <div style={{ padding: '24px 20px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+                <div className="flex items-center gap-2.5 mb-1">
+                    <div className="flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0"
+                        style={{ background: '#c9a84c' }}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 1.5L13 4.5V10.5L8 13.5L3 10.5V4.5L8 1.5Z" stroke="white" strokeWidth="1.2" fill="rgba(255,255,255,0.15)"/>
+                            <circle cx="8" cy="7.5" r="1.8" fill="white"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div className="text-xs font-medium leading-tight" style={{ color: 'rgba(255,255,255,0.92)', letterSpacing: '0.02em' }}>
+                            BGR Client Portal
                         </div>
-
-                        <div className="hidden sm:ms-6 sm:flex sm:items-center">
-                            <div className="relative ms-3">
-                                <Dropdown>
-                                    <Dropdown.Trigger>
-                                        <span className="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
-                                            >
-                                                {user.name}
-
-                                                <svg
-                                                    className="-me-0.5 ms-2 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fillRule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clipRule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
-                                    </Dropdown.Trigger>
-
-                                    <Dropdown.Content>
-                                        <Dropdown.Link
-                                            href={route('profile.edit')}
-                                        >
-                                            Profile
-                                        </Dropdown.Link>
-                                        <Dropdown.Link
-                                            href={route('logout')}
-                                            method="post"
-                                            as="button"
-                                        >
-                                            Log Out
-                                        </Dropdown.Link>
-                                    </Dropdown.Content>
-                                </Dropdown>
-                            </div>
-                        </div>
-
-                        <div className="-me-2 flex items-center sm:hidden">
-                            <button
-                                onClick={() =>
-                                    setShowingNavigationDropdown(
-                                        (previousState) => !previousState,
-                                    )
-                                }
-                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none"
-                            >
-                                <svg
-                                    className="h-6 w-6"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        className={
-                                            !showingNavigationDropdown
-                                                ? 'inline-flex'
-                                                : 'hidden'
-                                        }
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                    <path
-                                        className={
-                                            showingNavigationDropdown
-                                                ? 'inline-flex'
-                                                : 'hidden'
-                                        }
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
+                        <div className="text-xs mt-0.5" style={{ color: 'rgba(201,168,76,0.7)' }}>Ballycastle</div>
                     </div>
                 </div>
+                <div className="text-xs uppercase tracking-widest mt-2 pl-11" style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10 }}>
+                    {role === 'admin' ? 'Admin Panel' : role === 'worker' ? 'Worker Portal' : 'Client Portal'}
+                </div>
+            </div>
 
-                <div
-                    className={
-                        (showingNavigationDropdown ? 'block' : 'hidden') +
-                        ' sm:hidden'
-                    }
-                >
-                    <div className="space-y-1 pb-3 pt-2">
-                        <ResponsiveNavLink
-                            href={route('dashboard')}
-                            active={route().current('dashboard')}
+            {/* Nav */}
+            <nav className="flex-1 overflow-y-auto p-3 flex flex-col" style={{ gap: 1 }}>
+                {nav.map((item) => {
+                    const href     = typeof item.href === 'function' ? item.href() : item.href;
+                    const isActive = item.active ? item.active() : false;
+
+                    return (
+                        <Link key={item.label} href={href}
+                            onClick={(e) => {
+                                if (item.soon) { e.preventDefault(); return; }
+                                onNavigate?.();
+                            }}
+                            title={item.soon ? 'Coming soon' : undefined}
+                            className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-sm transition-all duration-150 relative select-none"
+                            style={isActive
+                                ? { background: 'rgba(201,168,76,0.12)', color: '#c9a84c', fontWeight: 500 }
+                                : { color: item.soon ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.5)' }
+                            }
+                            onMouseEnter={e => !isActive && !item.soon && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+                            onMouseLeave={e => !isActive && (e.currentTarget.style.background = 'transparent')}
                         >
-                            Dashboard
-                        </ResponsiveNavLink>
-                    </div>
-
-                    <div className="border-t border-gray-200 pb-1 pt-4">
-                        <div className="px-4">
-                            <div className="text-base font-medium text-gray-800">
-                                {user.name}
-                            </div>
-                            <div className="text-sm font-medium text-gray-500">
-                                {user.email}
-                            </div>
-                        </div>
-
-                        <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink href={route('profile.edit')}>
-                                Profile
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                method="post"
-                                href={route('logout')}
-                                as="button"
-                            >
-                                Log Out
-                            </ResponsiveNavLink>
-                        </div>
-                    </div>
-                </div>
+                            {isActive && (
+                                <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r"
+                                    style={{ background: '#c9a84c' }} />
+                            )}
+                            <Icon name={item.icon} />
+                            <span className="flex-1 truncate">{item.label}</span>
+                            {item.badge && (
+                                <span className="text-xs font-medium px-1.5 py-0.5 rounded-full flex-shrink-0"
+                                    style={{ background: '#c9a84c', color: '#0e2019', fontSize: 9 }}>
+                                    {item.badge}
+                                </span>
+                            )}
+                            {item.soon && (
+                                <span className="flex-shrink-0" style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)' }}>soon</span>
+                            )}
+                        </Link>
+                    );
+                })}
             </nav>
 
-            {header && (
-                <header className="bg-white shadow">
-                    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                        {header}
+            {/* Footer */}
+            <div style={{ padding: '12px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
+                <Link href={route('profile.edit')} onClick={onNavigate}
+                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all duration-150 mb-0.5"
+                    style={{ color: 'rgba(255,255,255,0.7)' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 text-xs font-semibold"
+                        style={{ background: 'rgba(201,168,76,0.2)', border: '1px solid rgba(201,168,76,0.4)', color: '#c9a84c' }}>
+                        {initials(user?.name)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <div className="text-xs font-medium truncate" style={{ color: 'rgba(255,255,255,0.85)' }}>{user?.name}</div>
+                        <div className="text-xs capitalize" style={{ color: 'rgba(255,255,255,0.35)' }}>{role}</div>
+                    </div>
+                </Link>
+                <button onClick={logout}
+                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg w-full text-left transition-all duration-150"
+                    style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                    <Icon name="logout" />
+                    <span>Log out</span>
+                </button>
+            </div>
+        </>
+    );
+}
+
+// ── Main layout ────────────────────────────────────────────────────────────
+export default function AuthenticatedLayout({ title, breadcrumb, children }) {
+    const { auth, flash } = usePage().props;
+    const user  = auth.user;
+    const role  = user?.roles?.[0] ?? 'client';
+    const nav   = getNav(role);
+
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [notifOpen,  setNotifOpen]  = useState(false);
+    const notifRef = useRef(null);
+
+    // Close drawer on Inertia navigation
+    useEffect(() => {
+        const close = () => setDrawerOpen(false);
+        document.addEventListener('inertia:navigate', close);
+        return () => document.removeEventListener('inertia:navigate', close);
+    }, []);
+
+    // Lock body scroll when drawer open
+    useEffect(() => {
+        document.body.style.overflow = drawerOpen ? 'hidden' : '';
+        return () => { document.body.style.overflow = ''; };
+    }, [drawerOpen]);
+
+    // Close notif on outside click
+    useEffect(() => {
+        const handler = (e) => {
+            if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false);
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    // Escape key closes both
+    useEffect(() => {
+        const handler = (e) => {
+            if (e.key === 'Escape') { setDrawerOpen(false); setNotifOpen(false); }
+        };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, []);
+
+    const sidebarStyle = { width: 240, background: '#0e2019', borderRight: '0.5px solid rgba(201,168,76,0.12)' };
+
+    return (
+        <div className="flex h-screen overflow-hidden" style={{ background: '#f5f0e8' }}>
+
+            {/* ── Desktop sidebar (always visible ≥ lg) ── */}
+            <aside className="hidden lg:flex flex-col flex-shrink-0" style={sidebarStyle}>
+                <SidebarContent user={user} role={role} nav={nav} />
+            </aside>
+
+            {/* ── Mobile drawer backdrop ── */}
+            <div
+                className={`fixed inset-0 z-40 bg-black/50 lg:hidden transition-opacity duration-300 ${
+                    drawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+                }`}
+                onClick={() => setDrawerOpen(false)}
+            />
+
+            {/* ── Mobile sidebar drawer ── */}
+            <aside
+                className={`fixed inset-y-0 left-0 z-50 flex flex-col lg:hidden
+                    transition-transform duration-300 ease-in-out
+                    ${drawerOpen ? 'translate-x-0' : '-translate-x-full'}`}
+                style={sidebarStyle}
+            >
+                {/* Close button */}
+                <button
+                    onClick={() => setDrawerOpen(false)}
+                    className="absolute top-4 right-4 flex items-center justify-center w-7 h-7 rounded-lg transition-colors"
+                    style={{ color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.06)' }}
+                    aria-label="Close menu"
+                >
+                    <Icon name="close" size={13} />
+                </button>
+                <SidebarContent user={user} role={role} nav={nav} onNavigate={() => setDrawerOpen(false)} />
+            </aside>
+
+            {/* ── Main content area ── */}
+            <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+
+                {/* Topbar */}
+                <header
+                    className="flex items-center gap-3 px-4 sm:px-6 flex-shrink-0"
+                    style={{ height: 60, background: 'rgba(245,240,232,0.97)', borderBottom: '0.5px solid #e4ddd2' }}
+                >
+                    {/* Hamburger — mobile only */}
+                    <button
+                        onClick={() => setDrawerOpen(true)}
+                        className="flex lg:hidden items-center justify-center w-9 h-9 rounded-lg flex-shrink-0 transition-colors"
+                        style={{ background: '#ede8df', border: '0.5px solid #e4ddd2', color: '#6b5e4a' }}
+                        aria-label="Open menu"
+                    >
+                        <Icon name="menu" size={15} />
+                    </button>
+
+                    {/* Title */}
+                    <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-forest truncate">{title ?? 'Dashboard'}</div>
+                        {breadcrumb && (
+                            <div className="text-xs truncate hidden sm:block" style={{ color: '#8a7e6e' }}>{breadcrumb}</div>
+                        )}
+                    </div>
+
+                    {/* Bell */}
+                    <div className="relative flex-shrink-0" ref={notifRef}>
+                        <button
+                            onClick={() => setNotifOpen(o => !o)}
+                            className="relative flex items-center justify-center w-9 h-9 rounded-lg transition-colors"
+                            style={{ background: '#ede8df', border: '0.5px solid #e4ddd2', color: '#6b5e4a' }}
+                            aria-label="Notifications"
+                        >
+                            <Icon name="bell" size={16} />
+                            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
+                                style={{ background: '#c9a84c', border: '1.5px solid #ede8df' }} />
+                        </button>
+
+                        {notifOpen && (
+                            <div className="absolute right-0 top-11 w-72 bg-white rounded-xl shadow-xl z-50"
+                                style={{ border: '0.5px solid #e4ddd2' }}>
+                                <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '0.5px solid #ede8df' }}>
+                                    <span className="text-sm font-medium text-forest">Notifications</span>
+                                    <button className="text-xs" style={{ color: '#b8943c' }}>Mark all read</button>
+                                </div>
+                                <div className="flex gap-2.5 px-4 py-3">
+                                    <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: '#c9a84c' }} />
+                                    <div>
+                                        <div className="text-xs text-forest leading-snug">Welcome to the BGR Client Portal</div>
+                                        <div className="text-xs mt-1" style={{ color: '#8a7e6e' }}>Just now</div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </header>
-            )}
 
-            <main>{children}</main>
+                {/* Flash messages */}
+                {(flash?.success || flash?.error) && (
+                    <div className="px-4 sm:px-6 pt-4">
+                        {flash.success && (
+                            <div className="px-4 py-3 rounded-xl text-sm font-medium text-forest bg-green-50 mb-2"
+                                style={{ border: '0.5px solid #90c090' }}>
+                                {flash.success}
+                            </div>
+                        )}
+                        {flash.error && (
+                            <div className="px-4 py-3 rounded-xl text-sm font-medium bg-red-50 text-red-700"
+                                style={{ border: '0.5px solid #f0a0a0' }}>
+                                {flash.error}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Scrollable content */}
+                <main className="flex-1 overflow-y-auto p-4 sm:p-6" style={{ scrollbarWidth: 'thin' }}>
+                    {children}
+                </main>
+            </div>
         </div>
     );
 }

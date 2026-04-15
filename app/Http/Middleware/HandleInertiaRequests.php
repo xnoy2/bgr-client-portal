@@ -29,13 +29,12 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
             ],
             'notifications' => [
-                'unread_count' => $request->user()
-                    ? $request->user()->unreadNotifications()->count()
-                    : 0,
+                'unread_count' => 0, // notifications table added when notification feature is built
             ],
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error'   => $request->session()->get('error'),
+                'created' => $request->session()->get('created'), // temp credentials after user creation
             ],
         ]);
     }

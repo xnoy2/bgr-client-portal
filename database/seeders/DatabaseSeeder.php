@@ -15,11 +15,20 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->call(RolesAndPermissionsSeeder::class);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Default admin account — change credentials after first login
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@bgr.com.au'],
+            [
+                'name'                => 'BGR Admin',
+                'username'            => 'admin',
+                'password'            => 'Admin@1234', // hashed cast on User model handles hashing
+                'must_change_password' => true,
+                'is_active'           => true,
+            ]
+        );
+
+        $admin->assignRole('admin');
     }
 }

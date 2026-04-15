@@ -11,7 +11,8 @@ class User extends Authenticatable
     use HasRoles, Notifiable;
 
     protected $fillable = [
-        'name', 'email', 'password', 'ghl_contact_id',
+        'name', 'username', 'email', 'password',
+        'ghl_contact_id', 'must_change_password', 'is_active',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -19,8 +20,10 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
+            'email_verified_at'    => 'datetime',
+            'password'             => 'hashed',
+            'must_change_password' => 'boolean',
+            'is_active'            => 'boolean',
         ];
     }
 
