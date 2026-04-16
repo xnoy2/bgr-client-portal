@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
 
 // ── Design-system helpers ──────────────────────────────────────────────────
@@ -55,21 +55,6 @@ function formatDate(iso) {
     return new Date(iso).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-// ── Flash banner ────────────────────────────────────────────────────────────
-
-function Flash() {
-    const { flash } = usePage().props;
-    if (!flash?.success && !flash?.error) return null;
-    const ok = !!flash.success;
-    return (
-        <div className="mb-4 px-4 py-3 rounded-xl text-sm font-medium"
-            style={ok
-                ? { background: 'rgba(34,197,94,0.08)', color: '#15803d', border: '0.5px solid rgba(34,197,94,0.2)' }
-                : { background: 'rgba(239,68,68,0.08)', color: '#b91c1c', border: '0.5px solid rgba(239,68,68,0.2)' }}>
-            {flash.success ?? flash.error}
-        </div>
-    );
-}
 
 // ── Opportunity card ────────────────────────────────────────────────────────
 
@@ -180,7 +165,6 @@ export default function ProjectsIndex({ opportunities, ghl_meta }) {
     return (
         <AuthenticatedLayout title="Projects" breadcrumb="GHL pipeline — click any opportunity to open it as a project">
             <Head title="Projects" />
-            <Flash />
 
             {/* Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">

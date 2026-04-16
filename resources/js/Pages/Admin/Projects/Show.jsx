@@ -62,18 +62,6 @@ function Select({ children, ...props }) {
     );
 }
 
-function Flash({ flash }) {
-    if (!flash?.success && !flash?.error) return null;
-    const ok = !!flash.success;
-    return (
-        <div className="mb-4 px-4 py-3 rounded-xl text-sm font-medium"
-            style={ok
-                ? { background: 'rgba(34,197,94,0.08)', color: '#15803d', border: '0.5px solid rgba(34,197,94,0.2)' }
-                : { background: 'rgba(239,68,68,0.08)', color: '#b91c1c', border: '0.5px solid rgba(239,68,68,0.2)' }}>
-            {flash.success ?? flash.error}
-        </div>
-    );
-}
 
 // ── Local project status badge ────────────────────────────────────────────────
 
@@ -244,7 +232,7 @@ function GHLPanel({ ghl, projectId, onRefresh }) {
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
-export default function ProjectShow({ project, ghl, workers, clients, flash }) {
+export default function ProjectShow({ project, ghl, workers, clients }) {
     const [showEdit, setShowEdit] = useState(false);
 
     const editForm = useForm({
@@ -300,7 +288,6 @@ export default function ProjectShow({ project, ghl, workers, clients, flash }) {
             }>
             <Head title={project.name} />
 
-            <Flash flash={flash} />
 
             {/* Page header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">

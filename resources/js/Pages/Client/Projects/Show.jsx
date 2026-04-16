@@ -217,20 +217,6 @@ function Lightbox({ photos, startIndex, onClose }) {
     );
 }
 
-// ── Flash ────────────────────────────────────────────────────────────────────
-
-function Flash({ flash }) {
-    if (!flash?.success && !flash?.error) return null;
-    const ok = !!flash.success;
-    return (
-        <div className="mb-4 px-4 py-3 rounded-xl text-sm font-medium"
-            style={ok
-                ? { background: 'rgba(34,197,94,0.08)', color: '#15803d', border: '0.5px solid rgba(34,197,94,0.2)' }
-                : { background: 'rgba(239,68,68,0.08)', color: '#b91c1c', border: '0.5px solid rgba(239,68,68,0.2)' }}>
-            {flash.success ?? flash.error}
-        </div>
-    );
-}
 
 // ── Tab panels ────────────────────────────────────────────────────────────────
 
@@ -600,7 +586,7 @@ function WhatsNextTab({ project, ghl }) {
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
-export default function ClientProjectShow({ project, ghl, updates, flash }) {
+export default function ClientProjectShow({ project, ghl, updates }) {
     const [activeTab, setActiveTab] = useState('details');
 
     const completedCount = project.stages?.filter(s => s.status === 'completed').length ?? 0;
@@ -620,7 +606,6 @@ export default function ClientProjectShow({ project, ghl, updates, flash }) {
             }>
             <Head title={project.name} />
 
-            <Flash flash={flash} />
 
             {/* Hero banner */}
             <div className="rounded-2xl p-5 mb-5"
