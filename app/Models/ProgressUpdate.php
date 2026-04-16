@@ -8,7 +8,7 @@ class ProgressUpdate extends Model
 {
     protected $fillable = [
         'project_id', 'stage_id', 'user_id',
-        'title', 'body', 'is_published', 'visibility', 'published_at',
+        'title', 'body', 'photos', 'is_published', 'visibility', 'published_at',
     ];
 
     protected function casts(): array
@@ -16,6 +16,7 @@ class ProgressUpdate extends Model
         return [
             'is_published' => 'boolean',
             'published_at' => 'datetime',
+            'photos'       => 'array',
         ];
     }
 

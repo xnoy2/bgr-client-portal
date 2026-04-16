@@ -65,6 +65,17 @@ return [
             '43939eb4-90f7-416c-976a-637f67258da1' => 4, // Interior & Fit-Out
             'd8fe19be-a045-484b-b86d-b7c7502f359d' => 5, // Completed
         ],
+        // Custom field key used to store photo URLs on an opportunity
+        'photos_field_key'  => env('GHL_PHOTOS_FIELD_KEY', 'photos'),
+
+        // Reverse map: position (1-5) → GHL stage ID
+        'stage_id_by_order' => [
+            1 => '68069241-332c-40c2-ac00-506056390255',
+            2 => '0ec0cb0e-3203-4a77-af34-4701b6a20593',
+            3 => 'cc806b0a-f9a2-41b0-88aa-8274a2e2b705',
+            4 => '43939eb4-90f7-416c-976a-637f67258da1',
+            5 => 'd8fe19be-a045-484b-b86d-b7c7502f359d',
+        ],
     ],
 
 ];

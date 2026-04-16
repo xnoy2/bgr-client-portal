@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Project;
+use App\Models\ProgressUpdate;
 use App\Services\GHLService;
 use Inertia\Inertia;
 
@@ -81,6 +82,21 @@ class ProjectController extends Controller
         $totalStages     = $project->stages->count();
         $progressPct     = $totalStages > 0 ? round(($completedStages / $totalStages) * 100) : 0;
 
+        $updates = ProgressUpdate::with(['author', 'stage'])
+            ->where('project_id', $project->id)
+            ->where('is_published', true)
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn ($u) => [
+                'id'         => $u->id,
+                'title'      => $u->title,
+                'body'       => $u->body,
+                'photos'     => $u->photos ?? [],
+                'stage_name' => $u->stage?->name,
+                'author'     => $u->author?->name,
+                'created_at' => $u->created_at->diffForHumans(),
+            ]);
+
         return Inertia::render('Client/Projects/Show', [
             'project' => [
                 'id'                   => $project->id,
@@ -111,6 +127,7 @@ class ProjectController extends Controller
                 'custom_fields'=> $ghl['custom_fields'] ?? [],
                 'created_at'   => $ghl['created_at'],
             ] : null,
+            'updates' => $updates,
             'flash' => ['success' => session('success'), 'error' => session('error')],
         ]);
     }

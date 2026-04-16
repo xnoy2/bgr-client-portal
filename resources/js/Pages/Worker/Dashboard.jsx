@@ -1,32 +1,126 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 
-export default function WorkerDashboard() {
+const STATUS_COLOR = {
+    active:    { bg: 'rgba(201,168,76,0.1)',  border: 'rgba(201,168,76,0.3)',  text: '#b8943c'  },
+    completed: { bg: 'rgba(26,60,46,0.08)',   border: 'rgba(26,60,46,0.2)',    text: '#1a3c2e'  },
+    on_hold:   { bg: 'rgba(180,80,60,0.08)',  border: 'rgba(180,80,60,0.25)',  text: '#b44c3c'  },
+};
+
+function ProgressRing({ pct, size = 40, stroke = 3 }) {
+    const r = (size - stroke * 2) / 2;
+    const circ = 2 * Math.PI * r;
+    const offset = circ - (pct / 100) * circ;
     return (
-        <AuthenticatedLayout title="Dashboard" breadcrumb="Worker portal">
+        <svg width={size} height={size} className="flex-shrink-0 -rotate-90">
+            <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e4ddd2" strokeWidth={stroke} />
+            <circle cx={size / 2} cy={size / 2} r={r} fill="none"
+                stroke="#c9a84c" strokeWidth={stroke}
+                strokeDasharray={circ} strokeDashoffset={offset}
+                strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+            />
+        </svg>
+    );
+}
+
+function ProjectCard({ project }) {
+    const s = STATUS_COLOR[project.status] ?? STATUS_COLOR.active;
+
+    return (
+        <Link href={route('worker.projects.show', project.ghl_opportunity_id)}
+            className="block bg-white rounded-xl p-5 transition-shadow duration-200 hover:shadow-md"
+            style={{ border: '0.5px solid #e4ddd2' }}>
+
+            {/* Header row */}
+            <div className="flex items-start justify-between gap-3 mb-4">
+                <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold text-forest leading-snug truncate">{project.name}</h3>
+                    {project.client_name && (
+                        <p className="text-xs mt-0.5 truncate" style={{ color: '#8a7e6e' }}>{project.client_name}</p>
+                    )}
+                    {project.address && (
+                        <p className="text-xs mt-0.5 truncate" style={{ color: '#a09487' }}>{project.address}</p>
+                    )}
+                </div>
+                <span className="text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 capitalize"
+                    style={{ background: s.bg, border: `0.5px solid ${s.border}`, color: s.text }}>
+                    {project.status?.replace('_', ' ')}
+                </span>
+            </div>
+
+            {/* Progress row */}
+            <div className="flex items-center gap-3">
+                <ProgressRing pct={project.progress_pct} />
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-1 mb-1">
+                        <span className="text-sm font-bold text-forest">{project.progress_pct}%</span>
+                        <span className="text-xs" style={{ color: '#8a7e6e' }}>complete</span>
+                    </div>
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#ede8df' }}>
+                        <div className="h-full rounded-full transition-all duration-500"
+                            style={{ width: `${project.progress_pct}%`, background: '#c9a84c' }} />
+                    </div>
+                </div>
+                <div className="text-right flex-shrink-0">
+                    <div className="text-xs font-medium text-forest">
+                        {project.completed_stages}/{project.total_stages}
+                    </div>
+                    <div className="text-xs" style={{ color: '#8a7e6e' }}>stages</div>
+                </div>
+            </div>
+
+            {/* Current stage */}
+            {project.current_stage && (
+                <div className="mt-3 pt-3 flex items-center gap-2" style={{ borderTop: '0.5px solid #ede8df' }}>
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#c9a84c' }} />
+                    <span className="text-xs" style={{ color: '#6b5e4a' }}>
+                        Currently: <span className="font-medium text-forest">{project.current_stage}</span>
+                    </span>
+                </div>
+            )}
+        </Link>
+    );
+}
+
+export default function WorkerDashboard({ projects }) {
+    return (
+        <AuthenticatedLayout title="My Projects" breadcrumb="Your assigned projects">
             <Head title="Worker Dashboard" />
 
+            {/* Header */}
             <div className="rounded-2xl p-6 mb-5 flex items-start justify-between"
                 style={{ background: '#1a3c2e', border: '0.5px solid rgba(201,168,76,0.15)' }}>
                 <div>
-                    <h1 className="text-2xl text-white font-serif font-normal mb-1">Worker Dashboard</h1>
+                    <h1 className="text-2xl text-white font-serif font-normal mb-1">My Projects</h1>
                     <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                        Your assigned projects and tasks
+                        {projects?.length ?? 0} project{(projects?.length ?? 0) !== 1 ? 's' : ''} assigned to you
                     </p>
                 </div>
                 <span className="text-sm font-medium px-3 py-1.5 rounded-full mt-1"
                     style={{ color: '#c9a84c', background: 'rgba(201,168,76,0.1)', border: '0.5px solid rgba(201,168,76,0.25)' }}>
-                    Active
+                    Worker
                 </span>
             </div>
 
-            <div className="bg-white rounded-xl p-8 text-center" style={{ border: '0.5px solid #e4ddd2' }}>
-                <svg width="40" height="40" viewBox="0 0 16 16" fill="none" stroke="#e4ddd2" strokeWidth="1.2" strokeLinecap="round" className="mx-auto mb-3">
-                    <polygon points="8,2 14,5.5 8,9 2,5.5"/><path d="M2 9.5l6 3.5 6-3.5"/><path d="M2 12l6 3.5 6-3.5"/>
-                </svg>
-                <p className="text-sm font-medium text-forest mb-1">Stage Manager coming soon</p>
-                <p className="text-xs" style={{ color: '#8a7e6e' }}>Project assignments, progress updates, and media uploads will appear here.</p>
-            </div>
+            {/* Project grid */}
+            {projects?.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {projects.map(p => <ProjectCard key={p.id} project={p} />)}
+                </div>
+            ) : (
+                <div className="bg-white rounded-xl p-10 text-center" style={{ border: '0.5px solid #e4ddd2' }}>
+                    <svg width="40" height="40" viewBox="0 0 16 16" fill="none" stroke="#e4ddd2" strokeWidth="1.2"
+                        strokeLinecap="round" className="mx-auto mb-3">
+                        <rect x="2" y="5" width="12" height="9" rx="1.5"/>
+                        <path d="M5 5V3.5A1.5 1.5 0 016.5 2h3A1.5 1.5 0 0111 3.5V5"/>
+                        <line x1="2" y1="9" x2="14" y2="9"/>
+                    </svg>
+                    <p className="text-sm font-medium text-forest mb-1">No projects assigned yet</p>
+                    <p className="text-xs" style={{ color: '#8a7e6e' }}>
+                        Projects assigned to you by an admin will appear here.
+                    </p>
+                </div>
+            )}
         </AuthenticatedLayout>
     );
 }

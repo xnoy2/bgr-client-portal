@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Client\ProjectController as ClientProjectController;
+use App\Http\Controllers\Worker\ProjectController as WorkerProjectController;
 use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Project;
@@ -80,9 +81,10 @@ Route::middleware(['auth', 'password.changed', 'role:worker|admin'])
     ->prefix('worker')
     ->name('worker.')
     ->group(function () {
-        Route::get('/dashboard', fn () => Inertia::render('Worker/Dashboard'))
-            ->name('dashboard');
-        // More worker routes added in Phase 5+
+        Route::get('/dashboard',                       [WorkerProjectController::class, 'index'])->name('dashboard');
+        Route::get('/projects/{ghlId}',                [WorkerProjectController::class, 'show'])->name('projects.show');
+        Route::put('/projects/{ghlId}/stage',          [WorkerProjectController::class, 'updateStage'])->name('projects.stage.update');
+        Route::post('/projects/{ghlId}/update',        [WorkerProjectController::class, 'postUpdate'])->name('projects.update.post');
     });
 
 // ─── Client portal routes ────────────────────────────────────────────────────

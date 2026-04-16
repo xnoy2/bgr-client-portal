@@ -32,7 +32,6 @@ function getNav(role) {
         { label: 'Dashboard',     icon: 'grid',      href: () => route('admin.dashboard'),    active: () => route().current('admin.dashboard') },
         { label: 'Projects',      icon: 'briefcase', href: () => route('admin.projects.index'), active: () => route().current('admin.projects.*') },
         { label: 'Users',         icon: 'users',     href: () => route('admin.users.index'),  active: () => route().current('admin.users.*') },
-        { label: 'Stage Manager', icon: 'layers',    href: '#', soon: true },
         { label: 'Updates',       icon: 'list',      href: '#', soon: true },
         { label: 'Media',         icon: 'image',     href: '#', soon: true },
         { label: 'Documents',     icon: 'file',      href: '#', soon: true },
@@ -40,8 +39,7 @@ function getNav(role) {
         { label: 'Maintenance',   icon: 'tool',      href: '#', soon: true },
     ];
     if (role === 'worker') return [
-        { label: 'Dashboard',     icon: 'grid',      href: () => route('worker.dashboard'),   active: () => route().current('worker.dashboard') },
-        { label: 'Stage Manager', icon: 'layers',    href: '#', soon: true },
+        { label: 'My Projects',   icon: 'briefcase', href: () => route('worker.dashboard'),   active: () => route().current('worker.dashboard') || route().current('worker.projects.*') },
         { label: 'Upload Media',  icon: 'image',     href: '#', soon: true },
         { label: 'Post Update',   icon: 'edit',      href: '#', soon: true },
     ];

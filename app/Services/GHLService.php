@@ -161,6 +161,119 @@ class GHLService
         ];
     }
 
+    // ── GHL writeback ─────────────────────────────────────────────────────────
+
+    /**
+     * Push a stage change back to GHL so the pipeline stage stays in sync.
+     * Called when a worker advances or completes a stage.
+     */
+    public function updateOpportunityStage(string $opportunityId, string $ghlStageId): bool
+    {
+        try {
+            $response = $this->http()->put("/opportunities/{$opportunityId}", [
+                'pipelineStageId' => $ghlStageId,
+            ]);
+
+            if ($response->successful()) {
+                $this->forgetOpportunityCache($opportunityId);
+                $this->forgetPipelineCache();
+                return true;
+            }
+
+            Log::warning('GHL updateOpportunityStage failed', [
+                'opportunity_id' => $opportunityId,
+                'stage_id'       => $ghlStageId,
+                'status'         => $response->status(),
+                'body'           => $response->body(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('GHL updateOpportunityStage exception', ['error' => $e->getMessage()]);
+        }
+
+        return false;
+    }
+
+    /**
+     * Update local stage statuses AND write the resulting stage back to GHL.
+     * Use this instead of syncProjectStages() when a worker advances a stage.
+     */
+    public function advanceProjectStage(Project $project, int $newOrder): void
+    {
+        // 1. Update local stages
+        if (! $project->relationLoaded('stages')) {
+            $project->load('stages');
+        }
+
+        foreach ($project->stages as $stage) {
+            $newStatus = match (true) {
+                $stage->order < $newOrder  => 'completed',
+                $stage->order === $newOrder => 'in_progress',
+                default                    => 'pending',
+            };
+
+            if ($stage->status !== $newStatus) {
+                $stage->update(['status' => $newStatus]);
+                $stage->status = $newStatus;
+            }
+        }
+
+        // 2. Write back to GHL — move opportunity to the matching GHL stage ID
+        if ($project->ghl_opportunity_id) {
+            $ghlStageId = config("services.ghl.stage_id_by_order.{$newOrder}");
+            if ($ghlStageId) {
+                $this->updateOpportunityStage($project->ghl_opportunity_id, $ghlStageId);
+            }
+        }
+    }
+
+    // ── Notes (progress updates → GHL) ───────────────────────────────────────
+
+    /**
+     * Post a note on the GHL opportunity.
+     * The GHL "Photos" custom field is a file-upload widget — it cannot be
+     * populated via the PUT API.  Instead we attach photo URLs as clickable
+     * links inside a note, which appears in the Notes tab of the opportunity.
+     */
+    public function postOpportunityNote(
+        string $opportunityId,
+        string $title,
+        string $body,
+        array  $photoUrls = []
+    ): bool {
+        $lines   = ["📋 {$title}", '', $body];
+
+        if (! empty($photoUrls)) {
+            $lines[] = '';
+            $lines[] = '📷 Photos:';
+            foreach ($photoUrls as $url) {
+                $lines[] = $url;
+            }
+        }
+
+        $noteBody = implode("\n", $lines);
+
+        try {
+            $response = $this->http()->post("/opportunities/{$opportunityId}/notes", [
+                'body'   => $noteBody,
+                'userId' => null,
+            ]);
+
+            if ($response->successful()) {
+                return true;
+            }
+
+            Log::warning('GHL postOpportunityNote failed', [
+                'opportunity_id' => $opportunityId,
+                'status'         => $response->status(),
+                'body'           => $response->body(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('GHL postOpportunityNote exception', ['error' => $e->getMessage()]);
+        }
+
+        return false;
+    }
+
     // ── Stage sync ────────────────────────────────────────────────────────────
 
     /**
