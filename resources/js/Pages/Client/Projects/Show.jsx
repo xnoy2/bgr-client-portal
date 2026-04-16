@@ -346,13 +346,49 @@ function ProgressTab({ project }) {
 
 // ── Facebook-style photo grid ─────────────────────────────────────────────────
 
+// ── Expandable body text ──────────────────────────────────────────────────────
+
+const BODY_LIMIT = 150;
+
+function ExpandableText({ text }) {
+    const [expanded, setExpanded] = useState(false);
+    if (!text) return null;
+    if (text.length <= BODY_LIMIT) {
+        return <p className="text-sm leading-relaxed" style={{ color: '#4a3f32' }}>{text}</p>;
+    }
+    return (
+        <p className="text-sm leading-relaxed" style={{ color: '#4a3f32' }}>
+            {expanded ? text : text.slice(0, BODY_LIMIT).trimEnd()}
+            {!expanded && (
+                <>
+                    {'… '}
+                    <button onClick={() => setExpanded(true)}
+                        className="font-semibold hover:underline"
+                        style={{ color: '#b8943c', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+                        See more
+                    </button>
+                </>
+            )}
+            {expanded && (
+                <>
+                    {' '}
+                    <button onClick={() => setExpanded(false)}
+                        className="font-semibold hover:underline"
+                        style={{ color: '#b8943c', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+                        See less
+                    </button>
+                </>
+            )}
+        </p>
+    );
+}
+
 function PhotoGrid({ photos, onOpen }) {
     const count = photos.length;
     if (count === 0) return null;
 
     // Always show max 4 slots; 4th slot gets "+N more" overlay if count > 4
-    const slots    = Math.min(count, 4);
-    const overflow = count - 4; // positive only when count > 4
+
 
     const wrap = {
         borderRadius: 12,
@@ -386,42 +422,24 @@ function PhotoGrid({ photos, onOpen }) {
         );
     }
 
-    // ── 1 photo: centered with contain so it never crops ────────────────────
+    // ── 1 photo: same 2/1 ratio as multi-photo grid ──────────────────────────
     if (count === 1) return (
-        <div style={{ ...wrap, display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f5f0e8', minHeight: 160, maxHeight: 260, overflow: 'hidden', padding: 8 }}
+        <div style={{ ...wrap, aspectRatio: '2/1', overflow: 'hidden', cursor: 'pointer' }}
             onClick={() => onOpen(0)}>
             <img src={photos[0]} alt=""
-                style={{ maxWidth: '100%', maxHeight: 244, objectFit: 'contain', borderRadius: 8, cursor: 'pointer', display: 'block' }}
-                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
+                className="w-full h-full object-cover block"
+                style={{ transition: 'transform 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.04)'}
                 onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
             />
         </div>
     );
 
-    // ── 2 photos: side by side, square-ish ───────────────────────────────────
-    if (count === 2) return (
+    // ── 2+ photos: always 2 side by side; second cell shows +N if more ─────────
+    return (
         <div style={{ ...wrap, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, aspectRatio: '2/1' }}>
             <Cell src={photos[0]} idx={0} />
-            <Cell src={photos[1]} idx={1} />
-        </div>
-    );
-
-    // ── 3 photos: big left, two stacked right ─────────────────────────────────
-    if (count === 3) return (
-        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: 2, aspectRatio: '4/3' }}>
-            <div style={{ gridRow: 'span 2' }}><Cell src={photos[0]} idx={0} /></div>
-            <Cell src={photos[1]} idx={1} />
-            <Cell src={photos[2]} idx={2} />
-        </div>
-    );
-
-    // ── 4+ photos: 2×2 grid, last cell shows +N if more ──────────────────────
-    return (
-        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: 2, aspectRatio: '4/3' }}>
-            <Cell src={photos[0]} idx={0} />
-            <Cell src={photos[1]} idx={1} />
-            <Cell src={photos[2]} idx={2} />
-            <Cell src={photos[3]} idx={3} moreCount={overflow > 0 ? overflow : 0} />
+            <Cell src={photos[1]} idx={1} moreCount={count > 2 ? count - 2 : 0} />
         </div>
     );
 }
@@ -499,7 +517,7 @@ function UpdatesTab({ updates }) {
 
                             {/* Post body */}
                             <div className="px-4 pb-3">
-                                <p className="text-sm leading-relaxed" style={{ color: '#4a3f32' }}>{update.body}</p>
+                                <ExpandableText text={update.body} />
                             </div>
 
                             {/* Photo grid — full bleed */}

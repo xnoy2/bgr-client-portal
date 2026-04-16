@@ -1,6 +1,37 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 
+// ── Toast notification system ──────────────────────────────────────────────
+function ToastContainer({ toasts, remove }) {
+    return (
+        <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 360, width: 'calc(100vw - 40px)' }}>
+            {toasts.map(t => (
+                <div key={t.id}
+                    style={{
+                        display: 'flex', alignItems: 'flex-start', gap: 10,
+                        padding: '12px 14px',
+                        borderRadius: 12,
+                        background: t.type === 'success' ? '#0e2019' : '#3b0a0a',
+                        border: `0.5px solid ${t.type === 'success' ? 'rgba(201,168,76,0.35)' : 'rgba(240,100,100,0.4)'}`,
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+                        animation: 'toastIn 0.22s ease',
+                    }}>
+                    <span style={{ fontSize: 15, flexShrink: 0, marginTop: 1 }}>
+                        {t.type === 'success' ? '✓' : '✕'}
+                    </span>
+                    <span style={{ flex: 1, fontSize: 13, color: t.type === 'success' ? '#c9a84c' : '#f87171', lineHeight: 1.45 }}>
+                        {t.message}
+                    </span>
+                    <button onClick={() => remove(t.id)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px', color: 'rgba(255,255,255,0.3)', fontSize: 14, lineHeight: 1, flexShrink: 0 }}>
+                        ✕
+                    </button>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 // ── SVG Icon primitive ─────────────────────────────────────────────────────
 const paths = {
     grid:      <><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></>,
@@ -40,8 +71,6 @@ function getNav(role) {
     ];
     if (role === 'worker') return [
         { label: 'My Projects',   icon: 'briefcase', href: () => route('worker.dashboard'),   active: () => route().current('worker.dashboard') || route().current('worker.projects.*') },
-        { label: 'Upload Media',  icon: 'image',     href: '#', soon: true },
-        { label: 'Post Update',   icon: 'edit',      href: '#', soon: true },
     ];
     return [
         { label: 'My Projects',   icon: 'briefcase', href: () => route('client.dashboard'),   active: () => route().current('client.dashboard') || route().current('client.projects.*') },
@@ -166,6 +195,30 @@ export default function AuthenticatedLayout({ title, breadcrumb, children }) {
     const [notifOpen,  setNotifOpen]  = useState(false);
     const notifRef = useRef(null);
 
+    // ── Toast state ──────────────────────────────────────────────────────────
+    const [toasts, setToasts] = useState([]);
+    const removeToast = (id) => setToasts(t => t.filter(x => x.id !== id));
+    const addToast = (message, type) => {
+        const id = Date.now() + Math.random();
+        setToasts(t => [...t, { id, message, type }]);
+        setTimeout(() => removeToast(id), 4000);
+    };
+
+    // Fire on every Inertia navigation success (handles repeated same-message toasts)
+    useEffect(() => {
+        // Handle hard page load / initial flash
+        if (flash?.success) addToast(flash.success, 'success');
+        if (flash?.error)   addToast(flash.error,   'error');
+
+        // Handle every subsequent Inertia response
+        return router.on('success', (event) => {
+            const f = event.detail.page.props.flash;
+            if (f?.success) addToast(f.success, 'success');
+            if (f?.error)   addToast(f.error,   'error');
+        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     // Close drawer on Inertia navigation
     useEffect(() => {
         const close = () => setDrawerOpen(false);
@@ -199,8 +252,18 @@ export default function AuthenticatedLayout({ title, breadcrumb, children }) {
 
     const sidebarStyle = { width: 240, background: '#0e2019', borderRight: '0.5px solid rgba(201,168,76,0.12)' };
 
+    // Inject toast keyframe once
+    useEffect(() => {
+        if (document.getElementById('toast-style')) return;
+        const s = document.createElement('style');
+        s.id = 'toast-style';
+        s.textContent = '@keyframes toastIn { from { opacity:0; transform:translateX(24px); } to { opacity:1; transform:translateX(0); } }';
+        document.head.appendChild(s);
+    }, []);
+
     return (
         <div className="flex h-screen overflow-hidden" style={{ background: '#f5f0e8' }}>
+            <ToastContainer toasts={toasts} remove={removeToast} />
 
             {/* ── Desktop sidebar (always visible ≥ lg) ── */}
             <aside className="hidden lg:flex flex-col flex-shrink-0" style={sidebarStyle}>
@@ -291,24 +354,6 @@ export default function AuthenticatedLayout({ title, breadcrumb, children }) {
                         )}
                     </div>
                 </header>
-
-                {/* Flash messages */}
-                {(flash?.success || flash?.error) && (
-                    <div className="px-4 sm:px-6 pt-4">
-                        {flash.success && (
-                            <div className="px-4 py-3 rounded-xl text-sm font-medium text-forest bg-green-50 mb-2"
-                                style={{ border: '0.5px solid #90c090' }}>
-                                {flash.success}
-                            </div>
-                        )}
-                        {flash.error && (
-                            <div className="px-4 py-3 rounded-xl text-sm font-medium bg-red-50 text-red-700"
-                                style={{ border: '0.5px solid #f0a0a0' }}>
-                                {flash.error}
-                            </div>
-                        )}
-                    </div>
-                )}
 
                 {/* Scrollable content */}
                 <main className="flex-1 overflow-y-auto p-4 sm:p-6" style={{ scrollbarWidth: 'thin' }}>
