@@ -88,9 +88,11 @@ class ProjectController extends Controller
                 'title'      => $u->title,
                 'body'       => $u->body,
                 'photos'     => $u->photos ?? [],
+                'stage_id'   => $u->stage_id,
                 'stage_name' => $u->stage?->name,
                 'author'     => $u->author?->name,
                 'created_at' => $u->created_at->diffForHumans(),
+                'is_mine'    => $u->user_id === auth()->id(),
             ]);
 
         return Inertia::render('Worker/Projects/Show', [
@@ -219,6 +221,70 @@ class ProjectController extends Controller
         }
 
         return back()->with('success', 'Update posted successfully.');
+    }
+
+    /**
+     * PUT /worker/projects/{ghlId}/updates/{updateId}
+     * Worker edits their own progress update.
+     */
+    public function editUpdate(Request $request, string $ghlId, int $updateId)
+    {
+        $project = Project::with('stages')
+            ->whereHas('workers', fn ($q) => $q->where('users.id', auth()->id()))
+            ->where('ghl_opportunity_id', $ghlId)
+            ->firstOrFail();
+
+        $update = ProgressUpdate::where('id', $updateId)
+            ->where('project_id', $project->id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+
+        $validated = $request->validate([
+            'title'         => 'required|string|max:255',
+            'body'          => 'required|string|max:5000',
+            'stage_id'      => 'nullable|integer|exists:project_stages,id',
+            'kept_photos'   => 'nullable|array',
+            'kept_photos.*' => 'string',
+            'new_photos'    => 'nullable|array|max:10',
+            'new_photos.*'  => 'file|mimes:jpg,jpeg,png,webp,heic|max:10240',
+        ]);
+
+        // Start with the photos the worker chose to keep
+        $photoUrls = $validated['kept_photos'] ?? [];
+
+        // Upload any newly added photos to Cloudinary
+        foreach ($request->file('new_photos', []) as $file) {
+            $result = Cloudinary::uploadApi()->upload($file->getRealPath(), [
+                'folder'        => "bgr/project-updates/{$project->id}",
+                'resource_type' => 'image',
+                'quality'       => 'auto',
+                'fetch_format'  => 'auto',
+            ]);
+
+            $url      = $result['secure_url'];
+            $publicId = $result['public_id'];
+            $photoUrls[] = $url;
+
+            MediaFile::create([
+                'project_id'        => $project->id,
+                'user_id'           => auth()->id(),
+                'original_filename' => $file->getClientOriginalName(),
+                'url'               => $url,
+                'ghl_file_id'       => $publicId,
+                'resource_type'     => 'photo',
+                'mime_type'         => $file->getMimeType(),
+                'file_size'         => $file->getSize(),
+            ]);
+        }
+
+        $update->update([
+            'title'    => $validated['title'],
+            'body'     => $validated['body'],
+            'stage_id' => $validated['stage_id'] ?? null,
+            'photos'   => $photoUrls ?: null,
+        ]);
+
+        return back()->with('success', 'Update edited successfully.');
     }
 
     private function calcProgress(Project $project): int

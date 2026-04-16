@@ -88,7 +88,8 @@ Route::middleware(['auth', 'password.changed', 'role:worker|admin'])
         Route::get('/dashboard',                       [WorkerProjectController::class, 'index'])->name('dashboard');
         Route::get('/projects/{ghlId}',                [WorkerProjectController::class, 'show'])->name('projects.show');
         Route::put('/projects/{ghlId}/stage',          [WorkerProjectController::class, 'updateStage'])->name('projects.stage.update');
-        Route::post('/projects/{ghlId}/update',        [WorkerProjectController::class, 'postUpdate'])->name('projects.update.post');
+        Route::post('/projects/{ghlId}/update',            [WorkerProjectController::class, 'postUpdate'])->name('projects.update.post');
+        Route::put('/projects/{ghlId}/updates/{updateId}', [WorkerProjectController::class, 'editUpdate'])->name('projects.update.edit');
     });
 
 // ─── Client portal routes ────────────────────────────────────────────────────
