@@ -9,14 +9,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('ghl_contact_id')->nullable()->after('email');
+            $table->string('username')->unique()->nullable()->after('name');
+            $table->boolean('must_change_password')->default(false)->after('password');
+            $table->boolean('is_active')->default(true)->after('must_change_password');
         });
     }
 
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('ghl_contact_id');
+            $table->dropColumn(['username', 'must_change_password', 'is_active']);
         });
     }
 };

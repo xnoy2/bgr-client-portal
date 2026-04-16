@@ -35,21 +35,37 @@ return [
         ],
     ],
 
-    // Add this inside the return [ ... ] array, after the existing 'ses' block:
-'ghl' => [
-    'enabled'        => env('GHL_ENABLED', false),
-    'api_key'        => env('pit-dc4576e0-1d8d-4645-ac9f-a188b4d73244'),
-    'location_id'    => env('xUZ6e10rdKZbaHFi8Sr6'),
-    'webhook_secret' => env('jSu(WitU#vhX{s:Rgxb@lPoKM1C|(3hB'),
-    'pipeline_id'    => env('py2K3XQJdPu2ZUH3uHvy'),
-    'base_url'       => 'https://services.leadconnectorhq.com',
-    'stages' => [
-        'design_approved' => env('68069241-332c-40c2-ac00-506056390255', ''),
-        'groundworks'     => env('0ec0cb0e-3203-4a77-af34-4701b6a20593', ''),
-        'structure_build' => env('cc806b0a-f9a2-41b0-88aa-8274a2e2b705', ''),
-        'fit_out'         => env('43939eb4-90f7-416c-976a-637f67258da1', ''),
-        'completed'       => env('d8fe19be-a045-484b-b86d-b7c7502f359d', ''),
+    'ghl' => [
+        'enabled'        => env('GHL_ENABLED', true),
+        'api_key'        => env('GHL_API_KEY',        'pit-dc4576e0-1d8d-4645-ac9f-a188b4d73244'),
+        'location_id'    => env('GHL_LOCATION_ID',    'xUZ6e10rdKZbaHFi8Sr6'),
+        'webhook_secret' => env('GHL_WEBHOOK_SECRET', 'jSu(WitU#vhX{s:Rgxb@lPoKM1C|(3hB'),
+        'pipeline_id'    => env('GHL_PIPELINE_ID',    'py2K3XQJdPu2ZUH3uHvy'),
+        'base_url'       => 'https://services.leadconnectorhq.com',
+        'ssl_verify'     => env('GHL_SSL_VERIFY', true),
+        'stages' => [
+            'design_approved' => '68069241-332c-40c2-ac00-506056390255',
+            'groundworks'     => '0ec0cb0e-3203-4a77-af34-4701b6a20593',
+            'structure_build' => 'cc806b0a-f9a2-41b0-88aa-8274a2e2b705',
+            'fit_out'         => '43939eb4-90f7-416c-976a-637f67258da1',
+            'completed'       => 'd8fe19be-a045-484b-b86d-b7c7502f359d',
+        ],
+        'stage_names' => [
+            '68069241-332c-40c2-ac00-506056390255' => 'Design Approved',
+            '0ec0cb0e-3203-4a77-af34-4701b6a20593' => 'Groundworks',
+            'cc806b0a-f9a2-41b0-88aa-8274a2e2b705' => 'Structure Build',
+            '43939eb4-90f7-416c-976a-637f67258da1' => 'Interior & Fit-Out',
+            'd8fe19be-a045-484b-b86d-b7c7502f359d' => 'Completed',
+        ],
+        // Maps each GHL stage ID to its position (1-5) in the pipeline
+        'stage_order' => [
+            '68069241-332c-40c2-ac00-506056390255' => 1, // Design Approved
+            '0ec0cb0e-3203-4a77-af34-4701b6a20593' => 2, // Groundworks
+            'cc806b0a-f9a2-41b0-88aa-8274a2e2b705' => 3, // Structure Build
+            '43939eb4-90f7-416c-976a-637f67258da1' => 4, // Interior & Fit-Out
+            'd8fe19be-a045-484b-b86d-b7c7502f359d' => 5, // Completed
+        ],
     ],
-],
 
 ];
+    
