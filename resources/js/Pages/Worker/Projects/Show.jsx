@@ -416,6 +416,235 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose }) {
     );
 }
 
+// ── Edit Update Modal ─────────────────────────────────────────────────────────
+
+function EditUpdateModal({ ghlId, update, stages, onClose }) {
+    const [title,      setTitle]     = useState(update.title);
+    const [body,       setBody]      = useState(update.body);
+    const [stageId,    setStageId]   = useState(update.stage_id ? String(update.stage_id) : '');
+    const [keptPhotos, setKept]      = useState(update.photos ?? []);
+    const [newPhotos,  setNewPhotos] = useState([]);
+    const [previews,   setPreviews]  = useState([]);
+    const [busy,       setBusy]      = useState(false);
+    const [showCamera, setShowCamera]= useState(false);
+    const fileRef = useRef(null);
+
+    function addFiles(files) {
+        const arr = Array.from(files);
+        setNewPhotos(p => [...p, ...arr]);
+        arr.forEach(f => {
+            const r = new FileReader();
+            r.onload = e => setPreviews(p => [...p, e.target.result]);
+            r.readAsDataURL(f);
+        });
+    }
+
+    function removeKept(url) { setKept(p => p.filter(u => u !== url)); }
+    function removeNew(i) {
+        setNewPhotos(p => p.filter((_, j) => j !== i));
+        setPreviews(p => p.filter((_, j) => j !== i));
+    }
+
+    const totalPhotos = keptPhotos.length + newPhotos.length;
+
+    function submit(e) {
+        e.preventDefault();
+        if (!title.trim() || !body.trim()) return;
+        setBusy(true);
+        const fd = new FormData();
+        fd.append('title', title);
+        fd.append('body',  body);
+        fd.append('_method', 'PUT');
+        if (stageId) fd.append('stage_id', stageId);
+        keptPhotos.forEach((url, i) => fd.append(`kept_photos[${i}]`, url));
+        newPhotos.forEach((f, i)   => fd.append(`new_photos[${i}]`, f));
+        router.post(route('worker.projects.update.edit', { ghlId, updateId: update.id }), fd, {
+            forceFormData: true,
+            onSuccess: () => onClose(),
+            onFinish:  () => setBusy(false),
+        });
+    }
+
+    if (showCamera) return (
+        <CameraCapture onCapture={file => addFiles([file])} onClose={() => setShowCamera(false)} />
+    );
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
+            style={{ background: 'rgba(14,32,25,0.7)', backdropFilter: 'blur(4px)' }}
+            onClick={e => e.target === e.currentTarget && onClose()}>
+
+            <div className="w-full sm:max-w-lg bg-white flex flex-col rounded-t-3xl sm:rounded-2xl overflow-hidden"
+                style={{ maxHeight: '92vh' }}>
+
+                <div className="flex justify-center pt-3 pb-1 sm:hidden">
+                    <div className="w-10 h-1 rounded-full" style={{ background: '#ddd5c8' }} />
+                </div>
+
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 py-4 flex-shrink-0"
+                    style={{ borderBottom: '1px solid #f0ebe3' }}>
+                    <div>
+                        <h2 className="text-base font-bold text-forest">Edit Update</h2>
+                        <p className="text-xs mt-0.5" style={{ color: '#8a7e6e' }}>Changes visible to client immediately</p>
+                    </div>
+                    <button onClick={onClose}
+                        className="w-8 h-8 flex items-center justify-center rounded-full"
+                        style={{ background: '#f5f0e8', color: '#6b5e4a' }}>
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                            <line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <form onSubmit={submit} className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+                    {/* Title */}
+                    <div>
+                        <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: '#6b5e4a' }}>
+                            Title <span style={{ color: '#c9a84c' }}>*</span>
+                        </label>
+                        <input type="text" value={title} onChange={e => setTitle(e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl text-sm text-forest outline-none"
+                            style={{ background: '#f8f5f0', border: '1.5px solid #ede8df' }}
+                            onFocus={e => e.target.style.borderColor = '#c9a84c'}
+                            onBlur={e => e.target.style.borderColor = '#ede8df'} />
+                    </div>
+
+                    {/* Stage picker */}
+                    {stages?.length > 0 && (
+                        <div>
+                            <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: '#6b5e4a' }}>Stage</label>
+                            <div className="flex flex-wrap gap-2">
+                                {stages.map(s => {
+                                    const active = stageId === String(s.id);
+                                    const dot = s.status === 'completed' ? '#1a3c2e' : s.status === 'in_progress' ? '#c9a84c' : '#d4c9b7';
+                                    return (
+                                        <button key={s.id} type="button"
+                                            onClick={() => setStageId(active ? '' : String(s.id))}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                                            style={active
+                                                ? { background: '#1a3c2e', color: '#c9a84c', border: '1.5px solid #1a3c2e' }
+                                                : { background: '#f8f5f0', color: '#6b5e4a', border: '1.5px solid #ede8df' }}>
+                                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: active ? '#c9a84c' : dot }} />
+                                            {s.name}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Body */}
+                    <div>
+                        <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: '#6b5e4a' }}>
+                            Remarks <span style={{ color: '#c9a84c' }}>*</span>
+                        </label>
+                        <textarea rows={4} value={body} onChange={e => setBody(e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl text-sm text-forest outline-none resize-none"
+                            style={{ background: '#f8f5f0', border: '1.5px solid #ede8df' }}
+                            onFocus={e => e.target.style.borderColor = '#c9a84c'}
+                            onBlur={e => e.target.style.borderColor = '#ede8df'} />
+                    </div>
+
+                    {/* Photos */}
+                    <div>
+                        <div className="flex items-center justify-between mb-2">
+                            <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#6b5e4a' }}>Photos</label>
+                            <span className="text-xs" style={{ color: totalPhotos >= 10 ? '#c9a84c' : '#a09487' }}>{totalPhotos}/10</span>
+                        </div>
+
+                        {/* Existing photos */}
+                        {keptPhotos.length > 0 && (
+                            <>
+                                <p className="text-xs mb-1.5" style={{ color: '#a09487' }}>Existing — tap × to remove</p>
+                                <div className="grid grid-cols-4 gap-2 mb-3">
+                                    {keptPhotos.map((url, i) => (
+                                        <div key={i} className="relative rounded-xl overflow-hidden"
+                                            style={{ aspectRatio: '1', border: '1px solid #ede8df' }}>
+                                            <img src={url} alt="" className="w-full h-full object-cover" />
+                                            <button type="button" onClick={() => removeKept(url)}
+                                                className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center"
+                                                style={{ background: 'rgba(0,0,0,0.55)' }}>
+                                                <svg width="8" height="8" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+                                                    <line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+
+                        {/* New photo previews */}
+                        {previews.length > 0 && (
+                            <>
+                                <p className="text-xs mb-1.5" style={{ color: '#a09487' }}>New photos</p>
+                                <div className="grid grid-cols-4 gap-2 mb-3">
+                                    {previews.map((src, i) => (
+                                        <div key={i} className="relative rounded-xl overflow-hidden"
+                                            style={{ aspectRatio: '1', border: '1px solid #ede8df' }}>
+                                            <img src={src} alt="" className="w-full h-full object-cover" />
+                                            <button type="button" onClick={() => removeNew(i)}
+                                                className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center"
+                                                style={{ background: 'rgba(0,0,0,0.55)' }}>
+                                                <svg width="8" height="8" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+                                                    <line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+
+                        {totalPhotos < 10 && (
+                            <div className="grid grid-cols-2 gap-2">
+                                <button type="button" onClick={() => fileRef.current?.click()}
+                                    className="flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-semibold"
+                                    style={{ border: '1.5px dashed #d4c9b7', background: '#fafaf8', color: '#6b5e4a' }}>
+                                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                                        <rect x="2" y="3" width="12" height="10" rx="1.5"/><circle cx="6" cy="7" r="1.2"/><path d="M2 11l3-3 2.5 2.5 2-2.5L14 11"/>
+                                    </svg>
+                                    Add Photos
+                                </button>
+                                <button type="button" onClick={() => setShowCamera(true)}
+                                    className="flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-semibold"
+                                    style={{ border: '1.5px dashed #d4c9b7', background: '#fafaf8', color: '#6b5e4a' }}>
+                                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                                        <path d="M1 5.5A1.5 1.5 0 012.5 4H4l1-2h6l1 2h1.5A1.5 1.5 0 0115 5.5v7A1.5 1.5 0 0113.5 14h-11A1.5 1.5 0 011 12.5v-7z"/><circle cx="8" cy="9" r="2.5"/>
+                                    </svg>
+                                    Camera
+                                </button>
+                            </div>
+                        )}
+                        <input ref={fileRef} type="file" accept="image/*" multiple className="hidden"
+                            onChange={e => { addFiles(e.target.files); e.target.value = ''; }} />
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-2.5 pt-1 pb-2">
+                        <button type="button" onClick={onClose}
+                            className="flex-1 py-3.5 rounded-xl text-sm font-semibold"
+                            style={{ background: '#f5f0e8', color: '#6b5e4a' }}>
+                            Cancel
+                        </button>
+                        <button type="submit" disabled={busy || !title.trim() || !body.trim()}
+                            className="py-3.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-opacity"
+                            style={{
+                                flex: 2,
+                                background: busy || !title.trim() || !body.trim() ? '#a0b8a8' : '#1a3c2e',
+                                color: '#c9a84c',
+                                cursor: busy || !title.trim() || !body.trim() ? 'not-allowed' : 'pointer',
+                            }}>
+                            {busy ? 'Saving…' : 'Save Changes'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
 // ── Overview tab ──────────────────────────────────────────────────────────────
 
 function OverviewTab({ project, ghl }) {
@@ -719,8 +948,9 @@ function PhotoGrid({ photos, onOpen }) {
 
 // ── Updates tab ───────────────────────────────────────────────────────────────
 
-function UpdatesTab({ updates, onPostUpdate }) {
-    const [lightbox, setLightbox] = useState(null);
+function UpdatesTab({ updates, onPostUpdate, ghlId, stages }) {
+    const [lightbox,   setLightbox]  = useState(null);
+    const [editUpdate, setEditUpdate]= useState(null); // update object being edited
 
     return (
         <div className="space-y-3">
@@ -729,6 +959,15 @@ function UpdatesTab({ updates, onPostUpdate }) {
                     photos={lightbox.photos}
                     startIndex={lightbox.index}
                     onClose={() => setLightbox(null)}
+                />
+            )}
+
+            {editUpdate && (
+                <EditUpdateModal
+                    ghlId={ghlId}
+                    update={editUpdate}
+                    stages={stages}
+                    onClose={() => setEditUpdate(null)}
                 />
             )}
 
@@ -777,12 +1016,19 @@ function UpdatesTab({ updates, onPostUpdate }) {
                                     </div>
                                 </div>
                             </div>
-                            <div className="w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center"
-                                style={{ background: '#f5f0e8' }}>
-                                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a7e6e" strokeWidth="2" strokeLinecap="round">
-                                    <path d="M3 8h.01M8 8h.01M13 8h.01"/>
-                                </svg>
-                            </div>
+                            {u.is_mine && (
+                                <button
+                                    onClick={() => setEditUpdate(u)}
+                                    className="w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center transition-colors"
+                                    style={{ background: '#f5f0e8' }}
+                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(201,168,76,0.15)'}
+                                    onMouseLeave={e => e.currentTarget.style.background = '#f5f0e8'}
+                                    title="Edit update">
+                                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#8a7e6e" strokeWidth="2" strokeLinecap="round">
+                                        <path d="M11 2l3 3-8 8H3v-3l8-8z"/>
+                                    </svg>
+                                </button>
+                            )}
                         </div>
 
                         {/* Title + body */}
@@ -909,7 +1155,7 @@ export default function WorkerProjectShow({ project, ghl, updates, flash }) {
 
             {tab === 'Overview' && <OverviewTab project={project} ghl={ghl} />}
             {tab === 'Stages'   && <StagesTab   project={project} onPostUpdate={openModal} />}
-            {tab === 'Updates'  && <UpdatesTab  updates={updates} onPostUpdate={openModal} />}
+            {tab === 'Updates'  && <UpdatesTab  updates={updates} onPostUpdate={openModal} ghlId={project.ghl_opportunity_id} stages={project.stages} />}
 
             {modalOpen && (
                 <PostUpdateModal
