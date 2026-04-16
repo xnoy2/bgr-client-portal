@@ -29,12 +29,10 @@ const Icon = ({ name, size = 15 }) => (
 // ── Nav per role ───────────────────────────────────────────────────────────
 function getNav(role) {
     if (role === 'admin') return [
-        { label: 'Dashboard',     icon: 'grid',      href: () => route('admin.dashboard'),    active: () => route().current('admin.dashboard') },
+        { label: 'Dashboard',     icon: 'grid',      href: () => route('admin.dashboard'),      active: () => route().current('admin.dashboard') },
         { label: 'Projects',      icon: 'briefcase', href: () => route('admin.projects.index'), active: () => route().current('admin.projects.*') },
-        { label: 'Users',         icon: 'users',     href: () => route('admin.users.index'),  active: () => route().current('admin.users.*') },
-        { label: 'Updates',       icon: 'list',      href: '#', soon: true },
-        { label: 'Media',         icon: 'image',     href: '#', soon: true },
-        { label: 'Documents',     icon: 'file',      href: '#', soon: true },
+        { label: 'Users',         icon: 'users',     href: () => route('admin.users.index'),    active: () => route().current('admin.users.*') },
+        { label: 'Updates',       icon: 'list',      href: () => route('admin.updates.index'),  active: () => route().current('admin.updates.*') },
         { label: 'Variations',    icon: 'edit',      href: '#', soon: true },
         { label: 'Maintenance',   icon: 'tool',      href: '#', soon: true },
     ];

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ProjectController;
+use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Client\ProjectController as ClientProjectController;
 use App\Http\Controllers\Worker\ProjectController as WorkerProjectController;
@@ -66,6 +67,9 @@ Route::middleware(['auth', 'password.changed', 'role:admin'])
         Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
         Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])
             ->name('users.reset-password');
+
+        // Updates feed
+        Route::get('/updates', [UpdateController::class, 'index'])->name('updates.index');
 
         // Project management — {ghlId} is the GHL opportunity ID (string)
         Route::get('/projects',                            [ProjectController::class, 'index'])->name('projects.index');
