@@ -191,17 +191,136 @@ function Lightbox({ photos, startIndex, onClose }) {
     );
 }
 
+// ── Camera Capture ────────────────────────────────────────────────────────────
+
+function CameraCapture({ onCapture, onClose }) {
+    const videoRef  = useRef(null);
+    const canvasRef = useRef(null);
+    const [facing, setFacing] = useState('environment');
+    const [error,  setError]  = useState(null);
+    const [ready,  setReady]  = useState(false);
+
+    useEffect(() => {
+        let stream = null;
+        setReady(false);
+        setError(null);
+
+        async function start() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: facing, width: { ideal: 1920 }, height: { ideal: 1080 } },
+                    audio: false,
+                });
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                    videoRef.current.onloadedmetadata = () => setReady(true);
+                }
+            } catch {
+                setError('Camera access was denied. Please allow camera permissions in your browser and try again.');
+            }
+        }
+
+        start();
+        return () => { stream?.getTracks().forEach(t => t.stop()); };
+    }, [facing]);
+
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = ''; };
+    }, []);
+
+    function shoot() {
+        const video  = videoRef.current;
+        const canvas = canvasRef.current;
+        if (!video || !canvas || !ready) return;
+        canvas.width  = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        canvas.toBlob(blob => {
+            const file = new File([blob], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+            onCapture(file);
+            onClose();
+        }, 'image/jpeg', 0.92);
+    }
+
+    return (
+        <div className="fixed inset-0 z-[70] flex flex-col" style={{ background: '#000' }}>
+            {/* Top bar */}
+            <div className="flex items-center justify-between px-4 py-3 flex-shrink-0 z-10"
+                style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.6), transparent)' }}>
+                <button onClick={onClose}
+                    className="w-9 h-9 rounded-full flex items-center justify-center"
+                    style={{ background: 'rgba(255,255,255,0.15)' }}>
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+                        <line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/>
+                    </svg>
+                </button>
+                <span className="text-white text-sm font-semibold opacity-80">Camera</span>
+                <button onClick={() => setFacing(f => f === 'environment' ? 'user' : 'environment')}
+                    className="w-9 h-9 rounded-full flex items-center justify-center"
+                    style={{ background: 'rgba(255,255,255,0.15)' }}
+                    title="Flip camera">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round">
+                        <path d="M1 4l3-3 3 3M4 1v8"/><path d="M15 12l-3 3-3-3M12 15V7"/>
+                        <rect x="1" y="6" width="6" height="5" rx="1" opacity="0.4"/><rect x="9" y="5" width="6" height="5" rx="1" opacity="0.4"/>
+                    </svg>
+                </button>
+            </div>
+
+            {/* Viewfinder */}
+            <div className="flex-1 relative flex items-center justify-center overflow-hidden">
+                {error ? (
+                    <div className="text-center px-8">
+                        <svg width="40" height="40" viewBox="0 0 16 16" fill="none" stroke="#fca5a5" strokeWidth="1.5" strokeLinecap="round" className="mx-auto mb-4">
+                            <path d="M1 5.5A1.5 1.5 0 012.5 4H4l1-2h6l1 2h1.5A1.5 1.5 0 0115 5.5v7A1.5 1.5 0 0113.5 14h-11A1.5 1.5 0 011 12.5v-7z"/>
+                            <circle cx="8" cy="9" r="2.5"/><line x1="8" y1="7.5" x2="8" y2="9" stroke="#fca5a5"/><circle cx="8" cy="10.5" r="0.3" fill="#fca5a5" stroke="none"/>
+                        </svg>
+                        <p className="text-white text-sm leading-relaxed opacity-80">{error}</p>
+                    </div>
+                ) : (
+                    <video ref={videoRef} autoPlay playsInline muted
+                        className="w-full h-full object-cover" />
+                )}
+            </div>
+
+            {/* Controls */}
+            {!error && (
+                <div className="flex-shrink-0 flex items-center justify-center py-8"
+                    style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)' }}>
+                    <button onClick={shoot} disabled={!ready}
+                        className="w-18 h-18 rounded-full flex items-center justify-center transition-transform active:scale-95"
+                        style={{
+                            width: 72, height: 72,
+                            background: ready ? '#fff' : 'rgba(255,255,255,0.3)',
+                            border: '4px solid rgba(255,255,255,0.5)',
+                            boxShadow: ready ? '0 0 0 3px rgba(201,168,76,0.5)' : 'none',
+                        }}>
+                        <svg width="22" height="22" viewBox="0 0 16 16" fill="none"
+                            stroke={ready ? '#1a3c2e' : 'rgba(255,255,255,0.5)'}
+                            strokeWidth="1.8" strokeLinecap="round">
+                            <path d="M1 5.5A1.5 1.5 0 012.5 4H4l1-2h6l1 2h1.5A1.5 1.5 0 0115 5.5v7A1.5 1.5 0 0113.5 14h-11A1.5 1.5 0 011 12.5v-7z"/>
+                            <circle cx="8" cy="9" r="2.5"/>
+                        </svg>
+                    </button>
+                </div>
+            )}
+
+            <canvas ref={canvasRef} className="hidden" />
+        </div>
+    );
+}
+
 // ── Post Update Modal ─────────────────────────────────────────────────────────
 
 function PostUpdateModal({ ghlId, stages, initialStageId, onClose }) {
-    const [title,    setTitle]    = useState('');
-    const [body,     setBody]     = useState('');
-    const [stageId,  setStageId]  = useState(initialStageId ?? '');
-    const [photos,   setPhotos]   = useState([]);
-    const [previews, setPreviews] = useState([]);
-    const [busy,     setBusy]     = useState(false);
-    const fileRef   = useRef(null);
-    const cameraRef = useRef(null);
+    const [title,       setTitle]      = useState('');
+    const [body,        setBody]       = useState('');
+    const [stageId,     setStageId]    = useState(initialStageId ?? '');
+    const [photos,      setPhotos]     = useState([]);
+    const [previews,    setPreviews]   = useState([]);
+    const [busy,        setBusy]       = useState(false);
+    const [showCamera,  setShowCamera] = useState(false);
+    const fileRef = useRef(null);
 
     function addFiles(files) {
         const arr = Array.from(files);
@@ -233,6 +352,13 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose }) {
             onFinish:  () => setBusy(false),
         });
     }
+
+    if (showCamera) return (
+        <CameraCapture
+            onCapture={file => addFiles([file])}
+            onClose={() => setShowCamera(false)}
+        />
+    );
 
     return (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
@@ -367,7 +493,7 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose }) {
                                     </svg>
                                     {previews.length > 0 ? 'Add More' : 'Gallery'}
                                 </button>
-                                <button type="button" onClick={() => cameraRef.current?.click()}
+                                <button type="button" onClick={() => setShowCamera(true)}
                                     className="flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-semibold transition-colors"
                                     style={{ border: '1.5px dashed #d4c9b7', background: '#fafaf8', color: '#6b5e4a' }}>
                                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
@@ -380,8 +506,6 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose }) {
                         )}
 
                         <input ref={fileRef} type="file" accept="image/*" multiple className="hidden"
-                            onChange={e => { addFiles(e.target.files); e.target.value = ''; }} />
-                        <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden"
                             onChange={e => { addFiles(e.target.files); e.target.value = ''; }} />
                     </div>
 
@@ -828,7 +952,7 @@ function UpdatesTab({ updates, onPostUpdate }) {
 
 const TABS = ['Overview', 'Stages', 'Updates'];
 
-export default function WorkerProjectShow({ project, ghl, updates, flash }) {
+export default function WorkerProjectShow({ project, ghl, updates }) {
     const [tab,            setTab]         = useState('Stages');
     const [modalOpen,      setModal]       = useState(false);
     const [initialStageId, setInitialStage] = useState(null);
@@ -847,22 +971,6 @@ export default function WorkerProjectShow({ project, ghl, updates, flash }) {
             }>
             <Head title={project.name} />
 
-            {/* Flash */}
-            {flash?.success && (
-                <div className="mb-4 px-4 py-3 rounded-2xl text-sm font-medium flex items-center gap-2"
-                    style={{ background: 'rgba(26,60,46,0.07)', color: '#1a3c2e', border: '1px solid rgba(26,60,46,0.15)' }}>
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                        <polyline points="2,8 6,12 14,4"/>
-                    </svg>
-                    {flash.success}
-                </div>
-            )}
-            {flash?.error && (
-                <div className="mb-4 px-4 py-3 rounded-2xl text-sm font-medium"
-                    style={{ background: 'rgba(239,68,68,0.06)', color: '#b91c1c', border: '1px solid rgba(239,68,68,0.15)' }}>
-                    {flash.error}
-                </div>
-            )}
 
             {/* Hero */}
             <div className="rounded-2xl p-5 mb-5 relative overflow-hidden"

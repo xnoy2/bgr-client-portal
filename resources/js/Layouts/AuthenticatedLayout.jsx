@@ -1,6 +1,61 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 
+// ── Toast system ───────────────────────────────────────────────────────────────
+
+function Toast({ toasts, remove }) {
+    return (
+        <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none"
+            style={{ maxWidth: 360 }}>
+            {toasts.map(t => (
+                <div key={t.id}
+                    className="flex items-start gap-3 px-4 py-3 rounded-2xl shadow-lg pointer-events-auto"
+                    style={{
+                        background: t.type === 'success' ? '#1a3c2e' : '#7f1d1d',
+                        border: `0.5px solid ${t.type === 'success' ? 'rgba(201,168,76,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                        animation: 'toast-in 0.25s ease',
+                        minWidth: 260,
+                    }}>
+                    {/* Icon */}
+                    <div className="flex-shrink-0 mt-0.5">
+                        {t.type === 'success' ? (
+                            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#c9a84c" strokeWidth="2.5" strokeLinecap="round">
+                                <polyline points="2,8 6,12 14,4"/>
+                            </svg>
+                        ) : (
+                            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#fca5a5" strokeWidth="2.5" strokeLinecap="round">
+                                <line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/>
+                            </svg>
+                        )}
+                    </div>
+                    {/* Message */}
+                    <p className="flex-1 text-sm font-medium leading-snug"
+                        style={{ color: t.type === 'success' ? '#f5f0e8' : '#fecaca' }}>
+                        {t.message}
+                    </p>
+                    {/* Dismiss */}
+                    <button onClick={() => remove(t.id)}
+                        className="flex-shrink-0 mt-0.5 opacity-50 hover:opacity-100 transition-opacity">
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"
+                            stroke={t.type === 'success' ? '#c9a84c' : '#fca5a5'}
+                            strokeWidth="2.5" strokeLinecap="round">
+                            <line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/>
+                        </svg>
+                    </button>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+// Toast keyframe injected once
+if (typeof document !== 'undefined' && !document.getElementById('toast-style')) {
+    const s = document.createElement('style');
+    s.id = 'toast-style';
+    s.textContent = `@keyframes toast-in { from { opacity:0; transform:translateX(24px); } to { opacity:1; transform:translateX(0); } }`;
+    document.head.appendChild(s);
+}
+
 // ── SVG Icon primitive ─────────────────────────────────────────────────────
 const paths = {
     grid:      <><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></>,
@@ -166,6 +221,20 @@ export default function AuthenticatedLayout({ title, breadcrumb, children }) {
     const [notifOpen,  setNotifOpen]  = useState(false);
     const notifRef = useRef(null);
 
+    const [toasts, setToasts] = useState([]);
+    const removeToast = (id) => setToasts(t => t.filter(x => x.id !== id));
+    const addToast = (message, type) => {
+        const id = Date.now() + Math.random();
+        setToasts(t => [...t, { id, message, type }]);
+        setTimeout(() => removeToast(id), 4000);
+    };
+
+    // Fire toast whenever flash changes
+    useEffect(() => {
+        if (flash?.success) addToast(flash.success, 'success');
+        if (flash?.error)   addToast(flash.error,   'error');
+    }, [flash?.success, flash?.error]);
+
     // Close drawer on Inertia navigation
     useEffect(() => {
         const close = () => setDrawerOpen(false);
@@ -292,23 +361,7 @@ export default function AuthenticatedLayout({ title, breadcrumb, children }) {
                     </div>
                 </header>
 
-                {/* Flash messages */}
-                {(flash?.success || flash?.error) && (
-                    <div className="px-4 sm:px-6 pt-4">
-                        {flash.success && (
-                            <div className="px-4 py-3 rounded-xl text-sm font-medium text-forest bg-green-50 mb-2"
-                                style={{ border: '0.5px solid #90c090' }}>
-                                {flash.success}
-                            </div>
-                        )}
-                        {flash.error && (
-                            <div className="px-4 py-3 rounded-xl text-sm font-medium bg-red-50 text-red-700"
-                                style={{ border: '0.5px solid #f0a0a0' }}>
-                                {flash.error}
-                            </div>
-                        )}
-                    </div>
-                )}
+                <Toast toasts={toasts} remove={removeToast} />
 
                 {/* Scrollable content */}
                 <main className="flex-1 overflow-y-auto p-4 sm:p-6" style={{ scrollbarWidth: 'thin' }}>
