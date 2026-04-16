@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Project;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -158,5 +159,44 @@ class GHLService
             'created_at'   => $opp['createdAt']  ?? null,
             'updated_at'   => $opp['updatedAt']  ?? null,
         ];
+    }
+
+    // ── Stage sync ────────────────────────────────────────────────────────────
+
+    /**
+     * Syncs a project's local stage statuses to match the current GHL pipeline stage.
+     *
+     * Given the GHL stage ID, all local stages with order < current become 'completed',
+     * the matching stage becomes 'in_progress', and later stages stay 'pending'.
+     *
+     * This is called on every project show so GHL is always the source of truth.
+     */
+    public function syncProjectStages(Project $project, string $ghlStageId): void
+    {
+        $stageOrder = config("services.ghl.stage_order.{$ghlStageId}");
+
+        if (! $stageOrder) {
+            return; // Unknown stage ID — don't touch local stages
+        }
+
+        // Load stages if not already loaded
+        if (! $project->relationLoaded('stages')) {
+            $project->load('stages');
+        }
+
+        foreach ($project->stages as $stage) {
+            if ($stage->order < $stageOrder) {
+                $newStatus = 'completed';
+            } elseif ($stage->order === $stageOrder) {
+                $newStatus = 'in_progress';
+            } else {
+                $newStatus = 'pending';
+            }
+
+            if ($stage->status !== $newStatus) {
+                $stage->update(['status' => $newStatus]);
+                $stage->status = $newStatus; // keep in-memory collection in sync
+            }
+        }
     }
 }

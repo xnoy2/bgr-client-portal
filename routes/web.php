@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Client\ProjectController as ClientProjectController;
 use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Project;
@@ -65,14 +66,13 @@ Route::middleware(['auth', 'password.changed', 'role:admin'])
         Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])
             ->name('users.reset-password');
 
-        // Project management
+        // Project management — {ghlId} is the GHL opportunity ID (string)
         Route::get('/projects',                            [ProjectController::class, 'index'])->name('projects.index');
-        Route::post('/projects',                           [ProjectController::class, 'store'])->name('projects.store');
         Route::post('/projects/refresh-pipeline',          [ProjectController::class, 'refreshPipeline'])->name('projects.refresh-pipeline');
-        Route::get('/projects/{project}',                  [ProjectController::class, 'show'])->name('projects.show');
-        Route::put('/projects/{project}',                  [ProjectController::class, 'update'])->name('projects.update');
-        Route::put('/projects/{project}/stage',            [ProjectController::class, 'updateStage'])->name('projects.stage.update');
-        Route::post('/projects/{project}/refresh-ghl',     [ProjectController::class, 'refreshGHL'])->name('projects.refresh-ghl');
+        Route::get('/projects/{ghlId}',                    [ProjectController::class, 'show'])->name('projects.show');
+        Route::put('/projects/{ghlId}',                    [ProjectController::class, 'update'])->name('projects.update');
+        Route::put('/projects/{ghlId}/stage',              [ProjectController::class, 'updateStage'])->name('projects.stage.update');
+        Route::post('/projects/{ghlId}/refresh-ghl',       [ProjectController::class, 'refreshGHL'])->name('projects.refresh-ghl');
     });
 
 // ─── Worker routes ───────────────────────────────────────────────────────────
@@ -90,7 +90,6 @@ Route::middleware(['auth', 'password.changed', 'role:client'])
     ->prefix('portal')
     ->name('client.')
     ->group(function () {
-        Route::get('/dashboard', fn () => Inertia::render('Client/Dashboard'))
-            ->name('dashboard');
-        // More client routes added in Phase 11
+        Route::get('/dashboard',            [ClientProjectController::class, 'index'])->name('dashboard');
+        Route::get('/projects/{ghlId}',     [ClientProjectController::class, 'show'])->name('projects.show');
     });

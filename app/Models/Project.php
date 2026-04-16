@@ -13,6 +13,7 @@ class Project extends Model
         'name', 'description', 'address',
         'start_date', 'estimated_completion',
         'status', 'client_id', 'ghl_opportunity_id',
+        'actual_completion',
     ];
 
     protected function casts(): array

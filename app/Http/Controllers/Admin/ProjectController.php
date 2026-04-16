@@ -14,27 +14,28 @@ class ProjectController extends Controller
 {
     public function __construct(private GHLService $ghl) {}
 
+    // ── Index ─────────────────────────────────────────────────────────────────
+
     /**
      * GET /admin/projects
-     * Shows GHL pipeline opportunities merged with local project records.
+     * All GHL pipeline opportunities. Each IS a project.
      */
     public function index()
     {
-        // Pull from GHL (cached 5 min)
         $ghlData = $this->ghl->getCachedPipelineOpportunities();
         $ghlOpps = collect($ghlData['opportunities'] ?? []);
 
-        // Local projects keyed by ghl_opportunity_id for quick lookup
+        // Existing local records keyed by ghl_opportunity_id
         $localByGhlId = Project::with(['client', 'workers'])
             ->whereNotNull('ghl_opportunity_id')
             ->get()
             ->keyBy('ghl_opportunity_id');
 
-        // Merge GHL opps with local project data
+        // Enrich each GHL opp with any local data we already have
         $opportunities = $ghlOpps->map(function ($opp) use ($localByGhlId) {
             $local = $localByGhlId->get($opp['id']);
             return array_merge($opp, [
-                'local_project' => $local ? [
+                'local' => $local ? [
                     'id'            => $local->id,
                     'status'        => $local->status,
                     'address'       => $local->address,
@@ -51,24 +52,47 @@ class ProjectController extends Controller
             'ghl_meta'      => $ghlData['meta'] ?? [],
             'clients'       => User::role('client')->orderBy('name')->get(['id', 'name', 'email']),
             'workers'       => User::role('worker')->orderBy('name')->get(['id', 'name']),
-            'flash'         => [
-                'success' => session('success'),
-                'error'   => session('error'),
-            ],
         ]);
     }
 
+    // ── Show ──────────────────────────────────────────────────────────────────
+
     /**
-     * GET /admin/projects/{project}
-     * Local project detail enriched with live GHL opportunity data.
+     * GET /admin/projects/{ghlId}
+     * GHL opportunity IS the project. Find-or-create local record on first open.
      */
-    public function show(Project $project)
+    public function show(string $ghlId)
     {
+        // 1. Fetch live GHL data first — it's the source of truth
+        $ghl = $this->ghl->getCachedOpportunity($ghlId);
+
+        if (! $ghl) {
+            abort(404, 'GHL opportunity not found.');
+        }
+
+        // 2. Find or create local project record
+        $project = Project::firstOrCreate(
+            ['ghl_opportunity_id' => $ghlId],
+            [
+                'name'   => $ghl['name'],
+                'status' => 'pending',
+            ]
+        );
+
+        // 3. Auto-create the 5 stages if this is the first open
+        if ($project->wasRecentlyCreated) {
+            foreach (Project::defaultStageNames() as $i => $name) {
+                $project->stages()->create(['name' => $name, 'order' => $i + 1, 'status' => 'pending']);
+            }
+            $this->ghl->forgetPipelineCache();
+        }
+
         $project->load(['client', 'workers', 'stages']);
 
-        $ghl = null;
-        if ($project->ghl_opportunity_id) {
-            $ghl = $this->ghl->getCachedOpportunity($project->ghl_opportunity_id);
+        // Sync local stage statuses from GHL pipeline stage (GHL is source of truth)
+        if ($ghl && ! empty($ghl['stage_id'])) {
+            $this->ghl->syncProjectStages($project, $ghl['stage_id']);
+            $project->load('stages'); // reload after sync
         }
 
         return Inertia::render('Admin/Projects/Show', [
@@ -80,17 +104,12 @@ class ProjectController extends Controller
                 'status'               => $project->status,
                 'start_date'           => $project->start_date?->toDateString(),
                 'estimated_completion' => $project->estimated_completion?->toDateString(),
-                'ghl_opportunity_id'   => $project->ghl_opportunity_id,
-                'client'               => $project->client ? [
-                    'id'    => $project->client->id,
-                    'name'  => $project->client->name,
-                    'email' => $project->client->email,
-                ] : null,
-                'workers' => $project->workers->map(fn ($w) => [
-                    'id'   => $w->id,
-                    'name' => $w->name,
-                ]),
-                'stages' => $project->stages->map(fn ($s) => [
+                'ghl_opportunity_id'   => $ghlId,
+                'client'               => $project->client
+                    ? ['id' => $project->client->id, 'name' => $project->client->name, 'email' => $project->client->email]
+                    : null,
+                'workers' => $project->workers->map(fn ($w) => ['id' => $w->id, 'name' => $w->name]),
+                'stages'  => $project->stages->map(fn ($s) => [
                     'id'         => $s->id,
                     'name'       => $s->name,
                     'order'      => $s->order,
@@ -101,44 +120,20 @@ class ProjectController extends Controller
             ],
             'ghl'     => $ghl,
             'workers' => User::role('worker')->orderBy('name')->get(['id', 'name']),
+            'clients' => User::role('client')->orderBy('name')->get(['id', 'name', 'email']),
             'flash'   => ['success' => session('success'), 'error' => session('error')],
         ]);
     }
 
-    /**
-     * POST /admin/projects
-     * Creates a local project record (can be linked to a GHL opportunity).
-     */
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name'                 => 'required|string|max:255',
-            'client_id'            => 'required|exists:users,id',
-            'description'          => 'nullable|string',
-            'address'              => 'nullable|string|max:255',
-            'start_date'           => 'nullable|date',
-            'estimated_completion' => 'nullable|date|after_or_equal:start_date',
-            'status'               => 'nullable|in:pending,active,on_hold,completed,cancelled',
-            'ghl_opportunity_id'   => 'nullable|string|max:255',
-        ]);
-
-        $project = Project::create($validated + ['status' => $validated['status'] ?? 'pending']);
-
-        foreach (Project::defaultStageNames() as $i => $name) {
-            $project->stages()->create(['name' => $name, 'order' => $i + 1, 'status' => 'pending']);
-        }
-
-        $this->ghl->forgetPipelineCache();
-
-        return redirect()->route('admin.projects.show', $project)
-            ->with('success', "Project \"{$project->name}\" created.");
-    }
+    // ── Update ────────────────────────────────────────────────────────────────
 
     /**
-     * PUT /admin/projects/{project}
+     * PUT /admin/projects/{ghlId}
      */
-    public function update(Request $request, Project $project)
+    public function update(Request $request, string $ghlId)
     {
+        $project = Project::where('ghl_opportunity_id', $ghlId)->firstOrFail();
+
         $validated = $request->validate([
             'name'                 => 'sometimes|string|max:255',
             'description'          => 'nullable|string',
@@ -146,8 +141,7 @@ class ProjectController extends Controller
             'status'               => 'sometimes|in:pending,active,on_hold,completed,cancelled',
             'start_date'           => 'nullable|date',
             'estimated_completion' => 'nullable|date',
-            'client_id'            => 'sometimes|exists:users,id',
-            'ghl_opportunity_id'   => 'nullable|string|max:255',
+            'client_id'            => 'nullable|exists:users,id',
             'worker_ids'           => 'sometimes|array',
             'worker_ids.*'         => 'exists:users,id',
         ]);
@@ -158,19 +152,20 @@ class ProjectController extends Controller
             $project->workers()->sync($validated['worker_ids']);
         }
 
-        if ($project->ghl_opportunity_id) {
-            $this->ghl->forgetOpportunityCache($project->ghl_opportunity_id);
-        }
+        $this->ghl->forgetOpportunityCache($ghlId);
 
         return back()->with('success', 'Project updated.');
     }
 
+    // ── Stage update ──────────────────────────────────────────────────────────
+
     /**
-     * PUT /admin/projects/{project}/stage
-     * Update a single stage status.
+     * PUT /admin/projects/{ghlId}/stage
      */
-    public function updateStage(Request $request, Project $project)
+    public function updateStage(Request $request, string $ghlId)
     {
+        $project = Project::where('ghl_opportunity_id', $ghlId)->firstOrFail();
+
         $validated = $request->validate([
             'stage_id' => 'required|exists:project_stages,id',
             'status'   => 'required|in:pending,in_progress,completed',
@@ -178,15 +173,9 @@ class ProjectController extends Controller
 
         $stage = $project->stages()->findOrFail($validated['stage_id']);
 
-        // If marking in_progress, complete previous stages and reset any later ones
         if ($validated['status'] === 'in_progress') {
-            $project->stages()
-                ->where('order', '<', $stage->order)
-                ->update(['status' => 'completed']);
-
-            $project->stages()
-                ->where('order', '>', $stage->order)
-                ->update(['status' => 'pending']);
+            $project->stages()->where('order', '<', $stage->order)->update(['status' => 'completed']);
+            $project->stages()->where('order', '>', $stage->order)->update(['status' => 'pending']);
         }
 
         $stage->update(['status' => $validated['status']]);
@@ -194,9 +183,10 @@ class ProjectController extends Controller
         return back()->with('success', 'Stage updated.');
     }
 
+    // ── Cache helpers ─────────────────────────────────────────────────────────
+
     /**
      * POST /admin/projects/refresh-pipeline
-     * Bust the cached pipeline opportunity list.
      */
     public function refreshPipeline()
     {
@@ -205,16 +195,12 @@ class ProjectController extends Controller
     }
 
     /**
-     * POST /admin/projects/{project}/refresh-ghl
-     * Bust GHL cache and reload opportunity data for a single project.
+     * POST /admin/projects/{ghlId}/refresh-ghl
      */
-    public function refreshGHL(Project $project)
+    public function refreshGHL(string $ghlId)
     {
-        if ($project->ghl_opportunity_id) {
-            $this->ghl->forgetOpportunityCache($project->ghl_opportunity_id);
-        }
+        $this->ghl->forgetOpportunityCache($ghlId);
         $this->ghl->forgetPipelineCache();
-
         return back()->with('success', 'GHL data refreshed.');
     }
 }

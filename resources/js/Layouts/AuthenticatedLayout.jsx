@@ -46,7 +46,7 @@ function getNav(role) {
         { label: 'Post Update',   icon: 'edit',      href: '#', soon: true },
     ];
     return [
-        { label: 'My Project',    icon: 'grid',      href: () => route('client.dashboard'),   active: () => route().current('client.dashboard') },
+        { label: 'My Projects',   icon: 'briefcase', href: () => route('client.dashboard'),   active: () => route().current('client.dashboard') || route().current('client.projects.*') },
         { label: 'Updates',       icon: 'list',      href: '#', soon: true },
         { label: 'Photo Gallery', icon: 'image',     href: '#', soon: true },
         { label: 'Documents',     icon: 'file',      href: '#', soon: true },

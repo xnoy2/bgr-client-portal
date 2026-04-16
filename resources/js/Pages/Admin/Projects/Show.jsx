@@ -244,7 +244,7 @@ function GHLPanel({ ghl, projectId, onRefresh }) {
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
-export default function ProjectShow({ project, ghl, workers, flash }) {
+export default function ProjectShow({ project, ghl, workers, clients, flash }) {
     const [showEdit, setShowEdit] = useState(false);
 
     const editForm = useForm({
@@ -255,26 +255,29 @@ export default function ProjectShow({ project, ghl, workers, flash }) {
         start_date:           project.start_date     ?? '',
         estimated_completion: project.estimated_completion ?? '',
         ghl_opportunity_id:   project.ghl_opportunity_id  ?? '',
+        client_id:            project.client?.id    ?? '',
         worker_ids:           project.workers?.map(w => w.id) ?? [],
     });
 
+    const ghlId = project.ghl_opportunity_id;
+
     const submitEdit = (e) => {
         e.preventDefault();
-        editForm.put(route('admin.projects.update', project.id), {
+        editForm.put(route('admin.projects.update', ghlId), {
             preserveScroll: true,
             onSuccess: () => setShowEdit(false),
         });
     };
 
     const updateStageStatus = (stageId, status) => {
-        router.put(route('admin.projects.stage.update', project.id), {
+        router.put(route('admin.projects.stage.update', ghlId), {
             stage_id: stageId,
             status,
         }, { preserveScroll: true });
     };
 
     const refreshGHL = () => {
-        router.post(route('admin.projects.refresh-ghl', project.id), {}, { preserveScroll: true });
+        router.post(route('admin.projects.refresh-ghl', ghlId), {}, { preserveScroll: true });
     };
 
     // Determine overall progress
@@ -317,7 +320,7 @@ export default function ProjectShow({ project, ghl, workers, flash }) {
                 </div>
                 <div className="flex gap-2">
                     <Btn variant="ghost" size="sm" onClick={() => router.visit(route('admin.projects.index'))}>
-                        ← Back
+                        ← Projects
                     </Btn>
                     <Btn variant="primary" size="sm" onClick={() => setShowEdit(true)}>
                         Edit Project
@@ -440,6 +443,15 @@ export default function ProjectShow({ project, ghl, workers, flash }) {
                                 </Select>
                             </Field>
                         </div>
+                        <Field label="Client" error={editForm.errors.client_id}>
+                            <Select value={editForm.data.client_id}
+                                onChange={e => editForm.setData('client_id', e.target.value)}>
+                                <option value="">— No client assigned —</option>
+                                {clients.map(c => (
+                                    <option key={c.id} value={c.id}>{c.name} ({c.email})</option>
+                                ))}
+                            </Select>
+                        </Field>
                         <Field label="Address" error={editForm.errors.address}>
                             <Input value={editForm.data.address}
                                 onChange={e => editForm.setData('address', e.target.value)}
