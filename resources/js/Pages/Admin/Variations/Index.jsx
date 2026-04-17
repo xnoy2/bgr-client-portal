@@ -29,8 +29,6 @@ function ReviewModal({ variation, onClose }) {
         });
     }
 
-    const s = STATUS[variation.status] ?? STATUS.pending;
-
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
             style={{ background: 'rgba(14,32,25,0.75)', backdropFilter: 'blur(4px)' }}
@@ -88,19 +86,26 @@ function ReviewModal({ variation, onClose }) {
                                 Decision
                             </label>
                             <div className="grid grid-cols-2 gap-2">
-                                {['approved', 'rejected'].map(val => (
-                                    <button key={val} type="button"
-                                        onClick={() => setStatus(val)}
-                                        className="py-3 rounded-xl text-sm font-semibold transition-all"
-                                        style={status === val
-                                            ? val === 'approved'
-                                                ? { background: '#1a3c2e', color: '#c9a84c', border: '1.5px solid #1a3c2e' }
-                                                : { background: '#7f1d1d', color: '#fca5a5', border: '1.5px solid #7f1d1d' }
-                                            : { background: '#f8f5f0', color: '#6b5e4a', border: '1.5px solid #ede8df' }
-                                        }>
-                                        {val === 'approved' ? 'Approve' : 'Decline'}
-                                    </button>
-                                ))}
+                                {['approved', 'rejected'].map(val => {
+                                    const isSelected = status === val;
+                                    const isDisabled = !isPending && !isSelected;
+                                    return (
+                                        <button key={val} type="button"
+                                            onClick={() => !isDisabled && setStatus(val)}
+                                            disabled={isDisabled}
+                                            className="py-3 rounded-xl text-sm font-semibold transition-all"
+                                            style={isDisabled
+                                                ? { background: '#f0ece6', color: '#c4b8a8', border: '1.5px solid #e4ddd2', cursor: 'not-allowed', opacity: 0.55 }
+                                                : isSelected
+                                                    ? val === 'approved'
+                                                        ? { background: '#1a3c2e', color: '#c9a84c', border: '1.5px solid #1a3c2e' }
+                                                        : { background: '#7f1d1d', color: '#fca5a5', border: '1.5px solid #7f1d1d' }
+                                                    : { background: '#f8f5f0', color: '#6b5e4a', border: '1.5px solid #ede8df' }
+                                            }>
+                                            {val === 'approved' ? 'Approve' : 'Decline'}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
 
