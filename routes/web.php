@@ -3,7 +3,9 @@
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\VariationController as AdminVariationController;
 use App\Http\Controllers\Client\ProjectController as ClientProjectController;
+use App\Http\Controllers\Client\VariationController as ClientVariationController;
 use App\Http\Controllers\Worker\ProjectController as WorkerProjectController;
 use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\ProfileController;
@@ -71,6 +73,10 @@ Route::middleware(['auth', 'password.changed', 'role:admin'])
         // Updates feed
         Route::get('/updates', [UpdateController::class, 'index'])->name('updates.index');
 
+        // Variation requests
+        Route::get('/variations',                              [AdminVariationController::class, 'index'])->name('variations.index');
+        Route::put('/variations/{variation}/review',           [AdminVariationController::class, 'review'])->name('variations.review');
+
         // Project management — {ghlId} is the GHL opportunity ID (string)
         Route::get('/projects',                            [ProjectController::class, 'index'])->name('projects.index');
         Route::post('/projects/refresh-pipeline',          [ProjectController::class, 'refreshPipeline'])->name('projects.refresh-pipeline');
@@ -78,6 +84,8 @@ Route::middleware(['auth', 'password.changed', 'role:admin'])
         Route::put('/projects/{ghlId}',                    [ProjectController::class, 'update'])->name('projects.update');
         Route::put('/projects/{ghlId}/stage',              [ProjectController::class, 'updateStage'])->name('projects.stage.update');
         Route::post('/projects/{ghlId}/refresh-ghl',       [ProjectController::class, 'refreshGHL'])->name('projects.refresh-ghl');
+        Route::post('/projects/{ghlId}/documents',         [ProjectController::class, 'uploadDocument'])->name('projects.documents.upload');
+        Route::delete('/projects/{ghlId}/documents/{document}', [ProjectController::class, 'deleteDocument'])->name('projects.documents.delete');
     });
 
 // ─── Worker routes ───────────────────────────────────────────────────────────
@@ -99,4 +107,6 @@ Route::middleware(['auth', 'password.changed', 'role:client'])
     ->group(function () {
         Route::get('/dashboard',            [ClientProjectController::class, 'index'])->name('dashboard');
         Route::get('/projects/{ghlId}',     [ClientProjectController::class, 'show'])->name('projects.show');
+        Route::get('/variations',           [ClientVariationController::class, 'index'])->name('variations.index');
+        Route::post('/variations',          [ClientVariationController::class, 'store'])->name('variations.store');
     });

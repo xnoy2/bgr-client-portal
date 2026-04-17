@@ -31,7 +31,10 @@ class ProjectController extends Controller
                 ? $this->ghl->getCachedOpportunity($project->ghl_opportunity_id)
                 : null;
 
-            if ($ghl && ! empty($ghl['stage_id'])) {
+            $allCompleted = $project->stages->isNotEmpty()
+                && $project->stages->every(fn ($s) => $s->status === 'completed');
+
+            if ($ghl && ! empty($ghl['stage_id']) && ! $allCompleted) {
                 $this->ghl->syncProjectStages($project, $ghl['stage_id']);
             }
 
@@ -72,8 +75,12 @@ class ProjectController extends Controller
 
         $ghl = $this->ghl->getCachedOpportunity($ghlId);
 
-        // Sync stages from GHL (read-only load)
-        if ($ghl && ! empty($ghl['stage_id'])) {
+        // Sync stages from GHL unless the worker has already completed all stages
+        // locally — prevents GHL from overriding a completed project back to in_progress.
+        $allCompleted = $project->stages->isNotEmpty()
+            && $project->stages->every(fn ($s) => $s->status === 'completed');
+
+        if ($ghl && ! empty($ghl['stage_id']) && ! $allCompleted) {
             $this->ghl->syncProjectStages($project, $ghl['stage_id']);
             $project->load('stages');
         }
@@ -139,7 +146,7 @@ class ProjectController extends Controller
             ->firstOrFail();
 
         $validated = $request->validate([
-            'stage_order' => 'required|integer|min:1|max:5',
+            'stage_order' => 'required|integer|min:1|max:6', // 6 = "complete final stage"
         ]);
 
         $this->ghl->advanceProjectStage($project, $validated['stage_order']);

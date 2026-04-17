@@ -88,21 +88,17 @@ function getNav(role) {
         { label: 'Projects',      icon: 'briefcase', href: () => route('admin.projects.index'), active: () => route().current('admin.projects.*') },
         { label: 'Users',         icon: 'users',     href: () => route('admin.users.index'),    active: () => route().current('admin.users.*') },
         { label: 'Updates',       icon: 'list',      href: () => route('admin.updates.index'),  active: () => route().current('admin.updates.*') },
-        { label: 'Variations',    icon: 'edit',      href: '#', soon: true },
-        { label: 'Maintenance',   icon: 'tool',      href: '#', soon: true },
+        { label: 'Variations',    icon: 'edit',      href: () => route('admin.variations.index'), active: () => route().current('admin.variations.*') },
     ];
     if (role === 'worker') return [
         { label: 'My Projects',   icon: 'briefcase', href: () => route('worker.dashboard'),   active: () => route().current('worker.dashboard') || route().current('worker.projects.*') },
-        { label: 'Upload Media',  icon: 'image',     href: '#', soon: true },
-        { label: 'Post Update',   icon: 'edit',      href: '#', soon: true },
     ];
     return [
         { label: 'My Projects',   icon: 'briefcase', href: () => route('client.dashboard'),   active: () => route().current('client.dashboard') || route().current('client.projects.*') },
         { label: 'Updates',       icon: 'list',      href: '#', soon: true },
         { label: 'Photo Gallery', icon: 'image',     href: '#', soon: true },
         { label: 'Documents',     icon: 'file',      href: '#', soon: true },
-        { label: 'Variations',    icon: 'edit',      href: '#', soon: true, badge: '1' },
-        { label: 'Maintenance',   icon: 'tool',      href: '#', soon: true },
+        { label: 'Variations',    icon: 'edit',      href: () => route('client.variations.index'), active: () => route().current('client.variations.*') },
     ];
 }
 

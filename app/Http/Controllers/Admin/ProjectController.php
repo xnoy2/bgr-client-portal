@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Document;
 use App\Models\Project;
 use App\Models\User;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use App\Services\GHLService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -87,12 +89,16 @@ class ProjectController extends Controller
             $this->ghl->forgetPipelineCache();
         }
 
-        $project->load(['client', 'workers', 'stages']);
+        $project->load(['client', 'workers', 'stages', 'documents.uploader']);
 
-        // Sync local stage statuses from GHL pipeline stage (GHL is source of truth)
-        if ($ghl && ! empty($ghl['stage_id'])) {
+        // Sync local stage statuses from GHL — skip if all stages are already completed
+        // so GHL cannot revert a completed project back to in_progress.
+        $allCompleted = $project->stages->isNotEmpty()
+            && $project->stages->every(fn ($s) => $s->status === 'completed');
+
+        if (! $allCompleted && ! empty($ghl['stage_id'])) {
             $this->ghl->syncProjectStages($project, $ghl['stage_id']);
-            $project->load('stages'); // reload after sync
+            $project->load('stages');
         }
 
         return Inertia::render('Admin/Projects/Show', [
@@ -118,9 +124,20 @@ class ProjectController extends Controller
                     'end_date'   => $s->end_date?->toDateString(),
                 ]),
             ],
-            'ghl'     => $ghl,
-            'workers' => User::role('worker')->orderBy('name')->get(['id', 'name']),
-            'clients' => User::role('client')->orderBy('name')->get(['id', 'name', 'email']),
+            'ghl'       => $ghl,
+            'workers'   => User::role('worker')->orderBy('name')->get(['id', 'name']),
+            'clients'   => User::role('client')->orderBy('name')->get(['id', 'name', 'email']),
+            'documents' => $project->documents->map(fn ($d) => [
+                'id'          => $d->id,
+                'title'       => $d->title,
+                'filename'    => $d->filename,
+                'url'         => $d->url,
+                'mime_type'   => $d->mime_type,
+                'file_size'   => $d->file_size,
+                'category'    => $d->category,
+                'uploaded_by' => $d->uploader?->name,
+                'uploaded_at' => $d->created_at->format('j M Y'),
+            ]),
             'flash'   => ['success' => session('success'), 'error' => session('error')],
         ]);
     }
@@ -202,5 +219,65 @@ class ProjectController extends Controller
         $this->ghl->forgetOpportunityCache($ghlId);
         $this->ghl->forgetPipelineCache();
         return back()->with('success', 'GHL data refreshed.');
+    }
+
+    // ── Documents ─────────────────────────────────────────────────────────────
+
+    /**
+     * POST /admin/projects/{ghlId}/documents
+     */
+    public function uploadDocument(Request $request, string $ghlId)
+    {
+        $project = Project::where('ghl_opportunity_id', $ghlId)->firstOrFail();
+
+        $request->validate([
+            'file'     => 'required|file|max:20480',
+            'category' => 'nullable|in:contract,quote,invoice,plan,report,other',
+        ]);
+
+        $file     = $request->file('file');
+        $filename = $file->getClientOriginalName();
+        $title    = pathinfo($filename, PATHINFO_FILENAME);
+
+        $result = Cloudinary::uploadApi()->upload($file->getRealPath(), [
+            'folder'        => "bgr/documents/{$project->id}",
+            'resource_type' => 'auto',
+            'public_id'     => pathinfo($filename, PATHINFO_FILENAME) . '_' . time(),
+        ]);
+
+        Document::create([
+            'project_id'  => $project->id,
+            'uploaded_by' => auth()->id(),
+            'title'       => $title,
+            'filename'    => $filename,
+            'url'         => $result['secure_url'],
+            'mime_type'   => $file->getMimeType(),
+            'file_size'   => $file->getSize(),
+            'category'    => $request->input('category', 'other'),
+            'visibility'  => 'client',
+            'ghl_file_id' => $result['public_id'],
+        ]);
+
+        return back()->with('success', 'Document uploaded.');
+    }
+
+    /**
+     * DELETE /admin/projects/{ghlId}/documents/{document}
+     */
+    public function deleteDocument(string $ghlId, Document $document)
+    {
+        $project = Project::where('ghl_opportunity_id', $ghlId)->firstOrFail();
+
+        abort_unless($document->project_id === $project->id, 403);
+
+        try {
+            Cloudinary::uploadApi()->destroy($document->ghl_file_id, ['resource_type' => 'raw']);
+        } catch (\Throwable) {
+            // Non-fatal — remove local record even if CDN delete fails
+        }
+
+        $document->delete();
+
+        return back()->with('success', 'Document deleted.');
     }
 }

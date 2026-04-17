@@ -217,6 +217,20 @@ function Lightbox({ photos, startIndex, onClose }) {
     );
 }
 
+// ── Flash ────────────────────────────────────────────────────────────────────
+
+function Flash({ flash }) {
+    if (!flash?.success && !flash?.error) return null;
+    const ok = !!flash.success;
+    return (
+        <div className="mb-4 px-4 py-3 rounded-xl text-sm font-medium"
+            style={ok
+                ? { background: 'rgba(34,197,94,0.08)', color: '#15803d', border: '0.5px solid rgba(34,197,94,0.2)' }
+                : { background: 'rgba(239,68,68,0.08)', color: '#b91c1c', border: '0.5px solid rgba(239,68,68,0.2)' }}>
+            {flash.success ?? flash.error}
+        </div>
+    );
+}
 
 // ── Tab panels ────────────────────────────────────────────────────────────────
 
@@ -332,13 +346,49 @@ function ProgressTab({ project }) {
 
 // ── Facebook-style photo grid ─────────────────────────────────────────────────
 
+// ── Expandable body text ──────────────────────────────────────────────────────
+
+const BODY_LIMIT = 150;
+
+function ExpandableText({ text }) {
+    const [expanded, setExpanded] = useState(false);
+    if (!text) return null;
+    if (text.length <= BODY_LIMIT) {
+        return <p className="text-sm leading-relaxed" style={{ color: '#4a3f32' }}>{text}</p>;
+    }
+    return (
+        <p className="text-sm leading-relaxed" style={{ color: '#4a3f32' }}>
+            {expanded ? text : text.slice(0, BODY_LIMIT).trimEnd()}
+            {!expanded && (
+                <>
+                    {'… '}
+                    <button onClick={() => setExpanded(true)}
+                        className="font-semibold hover:underline"
+                        style={{ color: '#b8943c', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+                        See more
+                    </button>
+                </>
+            )}
+            {expanded && (
+                <>
+                    {' '}
+                    <button onClick={() => setExpanded(false)}
+                        className="font-semibold hover:underline"
+                        style={{ color: '#b8943c', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+                        See less
+                    </button>
+                </>
+            )}
+        </p>
+    );
+}
+
 function PhotoGrid({ photos, onOpen }) {
     const count = photos.length;
     if (count === 0) return null;
 
     // Always show max 4 slots; 4th slot gets "+N more" overlay if count > 4
-    const slots    = Math.min(count, 4);
-    const overflow = count - 4; // positive only when count > 4
+
 
     const wrap = {
         borderRadius: 12,
@@ -372,42 +422,24 @@ function PhotoGrid({ photos, onOpen }) {
         );
     }
 
-    // ── 1 photo: centered with contain so it never crops ────────────────────
+    // ── 1 photo: same 2/1 ratio as multi-photo grid ──────────────────────────
     if (count === 1) return (
-        <div style={{ ...wrap, display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f5f0e8', minHeight: 160, maxHeight: 260, overflow: 'hidden', padding: 8 }}
+        <div style={{ ...wrap, aspectRatio: '2/1', overflow: 'hidden', cursor: 'pointer' }}
             onClick={() => onOpen(0)}>
             <img src={photos[0]} alt=""
-                style={{ maxWidth: '100%', maxHeight: 244, objectFit: 'contain', borderRadius: 8, cursor: 'pointer', display: 'block' }}
-                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
+                className="w-full h-full object-cover block"
+                style={{ transition: 'transform 0.2s' }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.04)'}
                 onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
             />
         </div>
     );
 
-    // ── 2 photos: side by side, square-ish ───────────────────────────────────
-    if (count === 2) return (
+    // ── 2+ photos: always 2 side by side; second cell shows +N if more ─────────
+    return (
         <div style={{ ...wrap, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, aspectRatio: '2/1' }}>
             <Cell src={photos[0]} idx={0} />
-            <Cell src={photos[1]} idx={1} />
-        </div>
-    );
-
-    // ── 3 photos: big left, two stacked right ─────────────────────────────────
-    if (count === 3) return (
-        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: 2, aspectRatio: '4/3' }}>
-            <div style={{ gridRow: 'span 2' }}><Cell src={photos[0]} idx={0} /></div>
-            <Cell src={photos[1]} idx={1} />
-            <Cell src={photos[2]} idx={2} />
-        </div>
-    );
-
-    // ── 4+ photos: 2×2 grid, last cell shows +N if more ──────────────────────
-    return (
-        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: 2, aspectRatio: '4/3' }}>
-            <Cell src={photos[0]} idx={0} />
-            <Cell src={photos[1]} idx={1} />
-            <Cell src={photos[2]} idx={2} />
-            <Cell src={photos[3]} idx={3} moreCount={overflow > 0 ? overflow : 0} />
+            <Cell src={photos[1]} idx={1} moreCount={count > 2 ? count - 2 : 0} />
         </div>
     );
 }
@@ -485,19 +517,29 @@ function UpdatesTab({ updates }) {
 
                             {/* Post body */}
                             <div className="px-4 pb-3">
-                                <p className="text-sm leading-relaxed" style={{ color: '#4a3f32' }}>{update.body}</p>
+                                <ExpandableText text={update.body} />
                             </div>
 
-                            {/* Photo grid — full bleed */}
-                            {photos.length > 0 && (
+                            {/* Photo grid — full bleed, or no-image placeholder */}
+                            {photos.length > 0 ? (
                                 <div className="px-0">
                                     <PhotoGrid photos={photos} onOpen={idx => setLightbox({ photos, idx })} />
+                                </div>
+                            ) : (
+                                <div className="mx-4 mb-3 flex flex-col items-center justify-center gap-1.5 rounded-xl"
+                                    style={{ aspectRatio: '2/1', background: '#f5f0e8', border: '1.5px dashed #e4ddd2' }}>
+                                    <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="#c9c0b3" strokeWidth="1.4" strokeLinecap="round">
+                                        <rect x="1" y="3" width="14" height="10" rx="1.5"/>
+                                        <circle cx="8" cy="8" r="2.2"/>
+                                        <path d="M5 3l1-2h4l1 2"/>
+                                    </svg>
+                                    <span className="text-xs font-medium" style={{ color: '#c9c0b3' }}>No images uploaded</span>
                                 </div>
                             )}
 
                             {/* Footer divider */}
                             <div className="px-4 py-3 flex items-center gap-1.5"
-                                style={{ borderTop: photos.length > 0 ? '0.5px solid #f5f0e8' : 'none' }}>
+                                style={{ borderTop: '0.5px solid #f5f0e8' }}>
                                 <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#b0a090" strokeWidth="1.5" strokeLinecap="round">
                                     <path d="M14 10c0 .6-.4 1-1 1H4l-2 3V3c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v7z"/>
                                 </svg>
@@ -586,7 +628,7 @@ function WhatsNextTab({ project, ghl }) {
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
-export default function ClientProjectShow({ project, ghl, updates }) {
+export default function ClientProjectShow({ project, ghl, updates, flash }) {
     const [activeTab, setActiveTab] = useState('details');
 
     const completedCount = project.stages?.filter(s => s.status === 'completed').length ?? 0;
@@ -606,6 +648,7 @@ export default function ClientProjectShow({ project, ghl, updates }) {
             }>
             <Head title={project.name} />
 
+            <Flash flash={flash} />
 
             {/* Hero banner */}
             <div className="rounded-2xl p-5 mb-5"
