@@ -182,11 +182,11 @@ function UpdateDetailModal({ update, onClose }) {
                             </p>
                         </div>
 
-                        {photos.length > 0 && (
-                            <div className="px-5 pb-5">
-                                <p className="text-xs font-semibold uppercase tracking-wider mb-2.5" style={{ color: '#a09487' }}>
-                                    Photos · {photos.length}
-                                </p>
+                        <div className="px-5 pb-5">
+                            <p className="text-xs font-semibold uppercase tracking-wider mb-2.5" style={{ color: '#a09487' }}>
+                                Photos{photos.length > 0 ? ` · ${photos.length}` : ''}
+                            </p>
+                            {photos.length > 0 ? (
                                 <div className="grid grid-cols-3 gap-1.5">
                                     {photos.map((url, i) => (
                                         <div key={i} className="relative rounded-xl overflow-hidden cursor-pointer"
@@ -200,8 +200,18 @@ function UpdateDetailModal({ update, onClose }) {
                                         </div>
                                     ))}
                                 </div>
-                            </div>
-                        )}
+                            ) : (
+                                <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl"
+                                    style={{ aspectRatio: '2/1', background: '#f5f0e8', border: '1.5px dashed #e4ddd2' }}>
+                                    <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="#c9c0b3" strokeWidth="1.4" strokeLinecap="round">
+                                        <rect x="1" y="3" width="14" height="10" rx="1.5"/>
+                                        <circle cx="8" cy="8" r="2.2"/>
+                                        <path d="M5 3l1-2h4l1 2"/>
+                                    </svg>
+                                    <span className="text-xs font-medium" style={{ color: '#c9c0b3' }}>No images uploaded</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -305,17 +315,27 @@ export default function UpdatesIndex({ updates }) {
                                         </p>
                                     </div>
 
-                                    {/* Single thumbnail with count overlay */}
-                                    {photos.length > 0 && (
+                                    {/* Single thumbnail with count overlay, or no-image placeholder */}
+                                    {photos.length > 0 ? (
                                         <SingleThumbnail
                                             photos={photos}
                                             onClick={e => { e.stopPropagation(); setDetailUpdate(u); }}
                                         />
+                                    ) : (
+                                        <div className="mx-4 mb-3 flex flex-col items-center justify-center gap-1.5 rounded-xl"
+                                            style={{ aspectRatio: '2/1', background: '#f5f0e8', border: '1.5px dashed #e4ddd2' }}>
+                                            <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="#c9c0b3" strokeWidth="1.4" strokeLinecap="round">
+                                                <rect x="1" y="3" width="14" height="10" rx="1.5"/>
+                                                <circle cx="8" cy="8" r="2.2"/>
+                                                <path d="M5 3l1-2h4l1 2"/>
+                                            </svg>
+                                            <span className="text-xs font-medium" style={{ color: '#c9c0b3' }}>No images uploaded</span>
+                                        </div>
                                     )}
 
                                     {/* Footer */}
                                     <div className="px-4 py-3 flex items-center gap-1.5"
-                                        style={{ borderTop: photos.length > 0 ? '0.5px solid #f5f0e8' : 'none' }}>
+                                        style={{ borderTop: '0.5px solid #f5f0e8' }}>
                                         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#b0a090" strokeWidth="1.5" strokeLinecap="round">
                                             <path d="M14 10c0 .6-.4 1-1 1H4l-2 3V3c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v7z"/>
                                         </svg>
