@@ -174,7 +174,7 @@ export default function VariationsIndex({ variations }) {
                 <ReviewModal variation={reviewing} onClose={() => setReviewing(null)} />
             )}
 
-            <div className="max-w-4xl">
+            <div className="w-full">
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-xl font-semibold text-forest">Variation Requests</h1>
@@ -198,7 +198,7 @@ export default function VariationsIndex({ variations }) {
                         </div>
                     ) : (
                         <>
-                            <div className="px-6 pt-5 pb-3">
+                            <div className="px-4 sm:px-6 pt-5 pb-3">
                                 <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#8a7e6e', fontSize: 10 }}>
                                     Previous Requests
                                 </span>
@@ -206,31 +206,35 @@ export default function VariationsIndex({ variations }) {
                             <ul>
                                 {variations.map((v, i) => (
                                     <li key={v.id}
-                                        className="flex items-center gap-4 px-6 py-4"
+                                        className="px-4 sm:px-6 py-4"
                                         style={{ borderTop: i === 0 ? 'none' : '0.5px solid #f0ebe3' }}>
 
-                                        {/* Text */}
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-semibold text-forest truncate">{v.title}</p>
-                                            <p className="text-xs mt-0.5" style={{ color: '#a09487' }}>
-                                                {v.project_name} · {v.submitted_by} · Submitted {v.submitted_at}
-                                            </p>
-                                        </div>
+                                        {/* Mobile: stack, Desktop: row */}
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
 
-                                        {/* Status + action */}
-                                        <div className="flex items-center gap-2.5 flex-shrink-0">
-                                            <StatusBadge status={v.status} />
-                                            <button
-                                                onClick={() => setReviewing(v)}
-                                                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors"
-                                                style={{
-                                                    background: v.status === 'pending' ? '#1a3c2e' : '#f5f0e8',
-                                                    color:      v.status === 'pending' ? '#c9a84c'  : '#6b5e4a',
-                                                }}
-                                                onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
-                                                onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
-                                                {v.status === 'pending' ? 'Review' : 'View'}
-                                            </button>
+                                            {/* Text */}
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-forest">{v.title}</p>
+                                                <p className="text-xs mt-0.5" style={{ color: '#a09487' }}>
+                                                    {v.project_name} · {v.submitted_by} · Submitted {v.submitted_at}
+                                                </p>
+                                            </div>
+
+                                            {/* Status + action */}
+                                            <div className="flex items-center gap-2.5 flex-shrink-0">
+                                                <StatusBadge status={v.status} />
+                                                <button
+                                                    onClick={() => setReviewing(v)}
+                                                    className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-opacity"
+                                                    style={{
+                                                        background: v.status === 'pending' ? '#1a3c2e' : '#f5f0e8',
+                                                        color:      v.status === 'pending' ? '#c9a84c'  : '#6b5e4a',
+                                                    }}
+                                                    onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                                                    onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
+                                                    {v.status === 'pending' ? 'Review' : 'View'}
+                                                </button>
+                                            </div>
                                         </div>
                                     </li>
                                 ))}

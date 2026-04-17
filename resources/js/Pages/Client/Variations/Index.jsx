@@ -1,20 +1,21 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { router } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, router } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
 
 // ── Status config ─────────────────────────────────────────────────────────────
 
 const STATUS = {
-    pending:  { label: 'Under review', bg: 'rgba(201,168,76,0.10)', border: '#c9a84c',  text: '#a07a20' },
-    approved: { label: 'Approved',     bg: 'rgba(26,96,46,0.08)',   border: '#4a9a6a',  text: '#1a6030' },
-    rejected: { label: 'Declined',     bg: 'rgba(200,40,40,0.07)',  border: '#e07070',  text: '#b03030' },
+    pending:  { label: 'Under review', dot: '#c9a84c', bg: 'rgba(201,168,76,0.10)', color: '#9a7520' },
+    approved: { label: 'Approved',     dot: '#22c55e', bg: 'rgba(34,197,94,0.09)',  color: '#15803d' },
+    rejected: { label: 'Declined',     dot: '#ef4444', bg: 'rgba(239,68,68,0.09)',  color: '#b91c1c' },
 };
 
 function StatusBadge({ status }) {
     const s = STATUS[status] ?? STATUS.pending;
     return (
-        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0"
-            style={{ background: s.bg, border: `1px solid ${s.border}`, color: s.text }}>
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0"
+            style={{ background: s.bg, color: s.color }}>
+            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: s.dot }} />
             {s.label}
         </span>
     );
@@ -23,57 +24,107 @@ function StatusBadge({ status }) {
 // ── Detail modal ──────────────────────────────────────────────────────────────
 
 function DetailModal({ variation, onClose }) {
+    useEffect(() => {
+        window.document.body.style.overflow = 'hidden';
+        return () => { window.document.body.style.overflow = ''; };
+    }, []);
+    useEffect(() => {
+        const h = (e) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', h);
+        return () => window.removeEventListener('keydown', h);
+    }, [onClose]);
+
     const s = STATUS[variation.status] ?? STATUS.pending;
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(14,32,25,0.75)', backdropFilter: 'blur(4px)' }}
-            onClick={e => e.target === e.currentTarget && onClose()}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+            style={{ background: 'rgba(14,32,25,0.55)', backdropFilter: 'blur(3px)' }}
+            onClick={onClose}>
 
-            <div className="w-full max-w-lg bg-white rounded-2xl overflow-hidden flex flex-col"
-                style={{ maxHeight: '88vh' }}>
+            <div className="w-full sm:max-w-lg bg-white sm:rounded-2xl rounded-t-2xl overflow-hidden flex flex-col"
+                style={{ maxHeight: '88vh', border: '0.5px solid #e4ddd2' }}
+                onClick={e => e.stopPropagation()}>
 
-                <div className="flex items-center justify-between px-5 py-4 flex-shrink-0"
+                {/* Drag handle */}
+                <div className="flex justify-center pt-3 pb-1 sm:hidden">
+                    <div className="w-10 h-1 rounded-full" style={{ background: '#d0c8bc' }} />
+                </div>
+
+                {/* Header */}
+                <div className="flex items-start justify-between px-5 pt-4 pb-3 flex-shrink-0"
                     style={{ borderBottom: '0.5px solid #f0ebe3' }}>
-                    <div>
-                        <h2 className="text-base font-bold text-forest">{variation.title}</h2>
-                        <p className="text-xs mt-0.5" style={{ color: '#a09487' }}>Submitted {variation.submitted_at}</p>
+                    <div className="min-w-0 flex-1 pr-4">
+                        <p className="text-base font-semibold text-forest leading-snug">{variation.title}</p>
+                        <p className="text-xs mt-1" style={{ color: '#a09487' }}>
+                            Submitted {variation.submitted_at}
+                            {variation.project_name && (
+                                <span className="ml-2 px-1.5 py-0.5 rounded-full font-medium"
+                                    style={{ background: 'rgba(26,60,46,0.07)', color: '#1a3c2e' }}>
+                                    {variation.project_name}
+                                </span>
+                            )}
+                        </p>
                     </div>
                     <button onClick={onClose}
-                        className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
-                        style={{ background: '#f5f0e8', color: '#6b5e4a' }}>
-                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        className="w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0"
+                        style={{ background: '#f5f0e8', color: '#8a7e6e' }}>
+                        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                             <line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/>
                         </svg>
                     </button>
                 </div>
 
+                {/* Body */}
                 <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
-                    <div className="flex items-center gap-2">
-                        <StatusBadge status={variation.status} />
-                        {variation.project_name && (
-                            <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                                style={{ background: 'rgba(26,60,46,0.07)', color: '#1a3c2e' }}>
-                                {variation.project_name}
-                            </span>
-                        )}
+
+                    {/* Status row */}
+                    <div className="flex items-center gap-2.5 p-3 rounded-xl"
+                        style={{ background: s.bg }}>
+                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: s.dot }} />
+                        <p className="text-sm font-semibold" style={{ color: s.color }}>{s.label}</p>
                     </div>
 
-                    <p className="text-sm leading-relaxed" style={{ color: '#4a3f30' }}>{variation.description}</p>
+                    {/* Description */}
+                    {variation.description && (
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: '#a09487' }}>
+                                Request Details
+                            </p>
+                            <p className="text-sm leading-relaxed" style={{ color: '#4a3f30' }}>
+                                {variation.description}
+                            </p>
+                        </div>
+                    )}
 
+                    {/* Estimated cost */}
                     {variation.estimated_cost && (
-                        <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl"
-                            style={{ background: '#f8f5f0', border: '1px solid #ede8df' }}>
+                        <div className="flex items-center justify-between px-4 py-3 rounded-xl"
+                            style={{ background: '#f8f5f0', border: '0.5px solid #ede8df' }}>
                             <span className="text-xs font-semibold" style={{ color: '#8a7e6e' }}>Estimated cost</span>
-                            <span className="text-sm font-bold text-forest ml-auto">${Number(variation.estimated_cost).toLocaleString()}</span>
+                            <span className="text-sm font-bold text-forest">
+                                ${Number(variation.estimated_cost).toLocaleString()}
+                            </span>
                         </div>
                     )}
 
+                    {/* Admin notes */}
                     {variation.admin_notes && (
-                        <div className="px-3 py-2.5 rounded-xl" style={{ background: '#f8f5f0', border: '1px solid #ede8df' }}>
-                            <p className="text-xs font-semibold mb-1" style={{ color: '#8a7e6e' }}>Notes from BGR</p>
-                            <p className="text-sm" style={{ color: '#4a3f30' }}>{variation.admin_notes}</p>
+                        <div className="px-4 py-3 rounded-xl" style={{ background: '#f8f5f0', border: '0.5px solid #ede8df' }}>
+                            <p className="text-xs font-semibold mb-1.5" style={{ color: '#8a7e6e' }}>Notes from BGR</p>
+                            <p className="text-sm leading-relaxed" style={{ color: '#4a3f30' }}>
+                                {variation.admin_notes}
+                            </p>
                         </div>
                     )}
+                </div>
+
+                {/* Footer */}
+                <div className="px-5 py-4 flex-shrink-0" style={{ borderTop: '0.5px solid #f0ebe3' }}>
+                    <button onClick={onClose}
+                        className="w-full py-2.5 rounded-xl text-sm font-semibold"
+                        style={{ background: '#f5f0e8', color: '#6b5e4a' }}>
+                        Close
+                    </button>
                 </div>
             </div>
         </div>
@@ -88,6 +139,16 @@ function SubmitModal({ projects, onClose }) {
     const [desc,      setDesc]      = useState('');
     const [cost,      setCost]      = useState('');
     const [busy,      setBusy]      = useState(false);
+
+    useEffect(() => {
+        window.document.body.style.overflow = 'hidden';
+        return () => { window.document.body.style.overflow = ''; };
+    }, []);
+    useEffect(() => {
+        const h = (e) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', h);
+        return () => window.removeEventListener('keydown', h);
+    }, [onClose]);
 
     function submit(e) {
         e.preventDefault();
@@ -104,110 +165,122 @@ function SubmitModal({ projects, onClose }) {
         });
     }
 
+    const canSubmit = title.trim() && desc.trim() && !busy;
+
     return (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
-            style={{ background: 'rgba(14,32,25,0.75)', backdropFilter: 'blur(4px)' }}
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+            style={{ background: 'rgba(14,32,25,0.55)', backdropFilter: 'blur(3px)' }}
             onClick={e => e.target === e.currentTarget && onClose()}>
 
-            <div className="w-full sm:max-w-lg bg-white flex flex-col rounded-t-3xl sm:rounded-2xl overflow-hidden"
-                style={{ maxHeight: '92vh' }}>
+            <div className="w-full sm:max-w-lg bg-white flex flex-col sm:rounded-2xl rounded-t-2xl overflow-hidden"
+                style={{ maxHeight: '92vh', border: '0.5px solid #e4ddd2' }}>
 
+                {/* Drag handle */}
                 <div className="flex justify-center pt-3 pb-1 sm:hidden">
-                    <div className="w-10 h-1 rounded-full" style={{ background: '#ddd5c8' }} />
+                    <div className="w-10 h-1 rounded-full" style={{ background: '#d0c8bc' }} />
                 </div>
 
-                <div className="flex items-center justify-between px-5 py-4 flex-shrink-0"
-                    style={{ borderBottom: '1px solid #f0ebe3' }}>
+                {/* Header */}
+                <div className="flex items-start justify-between px-5 pt-4 pb-3 flex-shrink-0"
+                    style={{ borderBottom: '0.5px solid #f0ebe3' }}>
                     <div>
-                        <h2 className="text-base font-bold text-forest">Submit Variation</h2>
-                        <p className="text-xs mt-0.5" style={{ color: '#8a7e6e' }}>Request a change to your project scope</p>
+                        <p className="text-base font-semibold text-forest">New Variation Request</p>
+                        <p className="text-xs mt-0.5" style={{ color: '#a09487' }}>Request a change to your project scope</p>
                     </div>
                     <button onClick={onClose}
-                        className="w-8 h-8 flex items-center justify-center rounded-full"
-                        style={{ background: '#f5f0e8', color: '#6b5e4a' }}>
-                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        className="w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0"
+                        style={{ background: '#f5f0e8', color: '#8a7e6e' }}>
+                        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                             <line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/>
                         </svg>
                     </button>
                 </div>
 
+                {/* Form */}
                 <form onSubmit={submit} className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
 
-                    {/* Project picker */}
                     {projects.length > 1 && (
                         <div>
-                            <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: '#6b5e4a' }}>
-                                Project
-                            </label>
+                            <label className="block text-xs font-semibold mb-1.5" style={{ color: '#5a4f42' }}>Project</label>
                             <select value={projectId} onChange={e => setProjectId(e.target.value)}
-                                className="w-full px-4 py-3 rounded-xl text-sm text-forest outline-none"
-                                style={{ background: '#f8f5f0', border: '1.5px solid #ede8df' }}
+                                className="w-full px-3.5 py-2.5 rounded-xl text-sm text-forest outline-none"
+                                style={{ background: '#f8f5f0', border: '1.5px solid #e8e0d5' }}
                                 onFocus={e => e.target.style.borderColor = '#c9a84c'}
-                                onBlur={e => e.target.style.borderColor = '#ede8df'}>
-                                {projects.map(p => (
-                                    <option key={p.id} value={p.id}>{p.name}</option>
-                                ))}
+                                onBlur={e  => e.target.style.borderColor = '#e8e0d5'}>
+                                {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                             </select>
                         </div>
                     )}
 
                     <div>
-                        <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: '#6b5e4a' }}>
+                        <label className="block text-xs font-semibold mb-1.5" style={{ color: '#5a4f42' }}>
                             Title <span style={{ color: '#c9a84c' }}>*</span>
                         </label>
                         <input type="text" value={title} onChange={e => setTitle(e.target.value)}
                             placeholder="e.g. Upgrade to triple-glazed windows"
-                            className="w-full px-4 py-3 rounded-xl text-sm text-forest outline-none"
-                            style={{ background: '#f8f5f0', border: '1.5px solid #ede8df' }}
+                            className="w-full px-3.5 py-2.5 rounded-xl text-sm text-forest outline-none"
+                            style={{ background: '#f8f5f0', border: '1.5px solid #e8e0d5' }}
                             onFocus={e => e.target.style.borderColor = '#c9a84c'}
-                            onBlur={e => e.target.style.borderColor = '#ede8df'}
+                            onBlur={e  => e.target.style.borderColor = '#e8e0d5'}
                         />
                     </div>
 
                     <div>
-                        <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: '#6b5e4a' }}>
+                        <label className="block text-xs font-semibold mb-1.5" style={{ color: '#5a4f42' }}>
                             Description <span style={{ color: '#c9a84c' }}>*</span>
                         </label>
                         <textarea rows={4} value={desc} onChange={e => setDesc(e.target.value)}
                             placeholder="Describe the change you'd like to make and why…"
-                            className="w-full px-4 py-3 rounded-xl text-sm text-forest outline-none resize-none"
-                            style={{ background: '#f8f5f0', border: '1.5px solid #ede8df' }}
+                            className="w-full px-3.5 py-2.5 rounded-xl text-sm text-forest outline-none resize-none"
+                            style={{ background: '#f8f5f0', border: '1.5px solid #e8e0d5' }}
                             onFocus={e => e.target.style.borderColor = '#c9a84c'}
-                            onBlur={e => e.target.style.borderColor = '#ede8df'}
+                            onBlur={e  => e.target.style.borderColor = '#e8e0d5'}
                         />
                     </div>
 
                     <div>
-                        <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: '#6b5e4a' }}>
-                            Estimated cost <span style={{ color: '#a09487', fontWeight: 400, textTransform: 'none' }}>(optional)</span>
+                        <label className="block text-xs font-semibold mb-1.5" style={{ color: '#5a4f42' }}>
+                            Estimated cost{' '}
+                            <span style={{ color: '#b0a090', fontWeight: 400 }}>(optional)</span>
                         </label>
                         <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold" style={{ color: '#a09487' }}>$</span>
+                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold select-none"
+                                style={{ color: '#a09487' }}>$</span>
                             <input type="number" min="0" step="0.01" value={cost} onChange={e => setCost(e.target.value)}
                                 placeholder="0.00"
-                                className="w-full pl-8 pr-4 py-3 rounded-xl text-sm text-forest outline-none"
-                                style={{ background: '#f8f5f0', border: '1.5px solid #ede8df' }}
+                                className="w-full pl-8 pr-3.5 py-2.5 rounded-xl text-sm text-forest outline-none"
+                                style={{ background: '#f8f5f0', border: '1.5px solid #e8e0d5' }}
                                 onFocus={e => e.target.style.borderColor = '#c9a84c'}
-                                onBlur={e => e.target.style.borderColor = '#ede8df'}
+                                onBlur={e  => e.target.style.borderColor = '#e8e0d5'}
                             />
                         </div>
                     </div>
 
+                    {/* Buttons */}
                     <div className="flex gap-2.5 pt-1 pb-2">
                         <button type="button" onClick={onClose}
-                            className="flex-1 py-3.5 rounded-xl text-sm font-semibold"
+                            className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
                             style={{ background: '#f5f0e8', color: '#6b5e4a' }}>
                             Cancel
                         </button>
-                        <button type="submit" disabled={busy || !title.trim() || !desc.trim()}
-                            className="py-3.5 rounded-xl text-sm font-semibold transition-opacity"
+                        <button type="submit" disabled={!canSubmit}
+                            className="rounded-xl text-sm font-semibold transition-all"
                             style={{
                                 flex: 2,
-                                background: busy || !title.trim() || !desc.trim() ? '#a0b8a8' : '#1a3c2e',
-                                color: '#c9a84c',
-                                cursor: busy || !title.trim() || !desc.trim() ? 'not-allowed' : 'pointer',
+                                padding: '10px',
+                                background: canSubmit ? '#1a3c2e' : '#e4ddd2',
+                                color:      canSubmit ? '#c9a84c' : '#b0a090',
+                                cursor:     canSubmit ? 'pointer' : 'not-allowed',
                             }}>
-                            {busy ? 'Submitting…' : 'Submit Request'}
+                            {busy
+                                ? <span className="flex items-center justify-center gap-2">
+                                    <svg className="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/>
+                                    </svg>
+                                    Submitting…
+                                  </span>
+                                : 'Submit Request'
+                            }
                         </button>
                     </div>
                 </form>
@@ -216,34 +289,108 @@ function SubmitModal({ projects, onClose }) {
     );
 }
 
+// ── Variation row ─────────────────────────────────────────────────────────────
+
+function VariationRow({ variation, onView, isLast }) {
+    return (
+        <div className="flex items-center gap-4 px-5 py-4 cursor-pointer transition-colors"
+            style={{ borderBottom: isLast ? 'none' : '0.5px solid #f5f0e8' }}
+            onClick={() => onView(variation)}
+            onMouseEnter={e => e.currentTarget.style.background = '#fdfcfa'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+
+            {/* Status dot indicator */}
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: STATUS[variation.status]?.bg ?? 'rgba(201,168,76,0.10)' }}>
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"
+                    stroke={STATUS[variation.status]?.dot ?? '#c9a84c'}
+                    strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 2l3 3-8 8H3v-3l8-8z"/>
+                </svg>
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-forest truncate leading-snug">{variation.title}</p>
+                <p className="text-xs mt-0.5 truncate" style={{ color: '#a09487' }}>
+                    Submitted {variation.submitted_at}
+                    {variation.project_name && <span className="ml-1">· {variation.project_name}</span>}
+                </p>
+            </div>
+
+            {/* Status + chevron */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+                <StatusBadge status={variation.status} />
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#c4b8a8" strokeWidth="2" strokeLinecap="round">
+                    <polyline points="6,3 11,8 6,13"/>
+                </svg>
+            </div>
+        </div>
+    );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function VariationsIndex({ variations, projects }) {
-    const [viewing,   setViewing]   = useState(null);
-    const [showForm,  setShowForm]  = useState(false);
+    const [viewing,  setViewing]  = useState(null);
+    const [showForm, setShowForm] = useState(false);
+
+    const pending  = variations.filter(v => v.status === 'pending').length;
 
     return (
         <AuthenticatedLayout title="Variations" breadcrumb="Change requests for your project">
+            <Head title="Variations" />
 
-            {viewing  && <DetailModal variation={viewing} onClose={() => setViewing(null)} />}
-            {showForm && <SubmitModal projects={projects} onClose={() => setShowForm(false)} />}
+            {viewing  && <DetailModal variation={viewing}  onClose={() => setViewing(null)}  />}
+            {showForm && <SubmitModal projects={projects}  onClose={() => setShowForm(false)} />}
 
-            <div className="max-w-3xl">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-6">
+            {/* Pending notice */}
+            {pending > 0 && (
+                <div className="mb-5 flex items-center gap-3 px-4 py-3.5 rounded-2xl"
+                    style={{
+                        background: 'linear-gradient(135deg, rgba(201,168,76,0.08), rgba(201,168,76,0.04))',
+                        border: '0.5px solid rgba(201,168,76,0.35)',
+                    }}>
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                        style={{ background: 'rgba(201,168,76,0.15)' }}>
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#b8943c" strokeWidth="2" strokeLinecap="round">
+                            <circle cx="8" cy="8" r="6.5"/>
+                            <line x1="8" y1="5" x2="8" y2="8"/>
+                            <circle cx="8" cy="11" r="0.5" fill="#b8943c"/>
+                        </svg>
+                    </div>
+                    <p className="text-sm" style={{ color: '#6b5e4a' }}>
+                        <span className="font-semibold" style={{ color: '#b8943c' }}>
+                            {pending} request{pending !== 1 ? 's' : ''} under review.
+                        </span>
+                        {' '}BGR will respond shortly.
+                    </p>
+                </div>
+            )}
+
+            {/* Card */}
+            <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '0.5px solid #e4ddd2' }}>
+
+                {/* Card header */}
+                <div className="flex items-center justify-between px-5 py-4"
+                    style={{ borderBottom: '0.5px solid #e4ddd2', background: '#fdfcfa' }}>
                     <div>
-                        <h1 className="text-xl font-semibold text-forest">Variations</h1>
-                        <p className="text-sm mt-0.5" style={{ color: '#8a7e6e' }}>
-                            {variations.length} request{variations.length !== 1 ? 's' : ''} submitted
+                        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#8a7e6e' }}>
+                            Variation Requests
+                        </p>
+                        <p className="text-xs mt-0.5" style={{ color: '#b0a090' }}>
+                            {variations.length === 0
+                                ? 'No requests submitted yet'
+                                : `${variations.length} request${variations.length !== 1 ? 's' : ''} submitted`}
                         </p>
                     </div>
                     {projects.length > 0 && (
                         <button onClick={() => setShowForm(true)}
-                            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-opacity"
+                            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all"
                             style={{ background: '#1a3c2e', color: '#c9a84c' }}
                             onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
                             onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
-                            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                                 <line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/>
                             </svg>
                             New Request
@@ -251,57 +398,40 @@ export default function VariationsIndex({ variations, projects }) {
                     )}
                 </div>
 
-                {/* List */}
-                <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '0.5px solid #e4ddd2' }}>
-                    {variations.length === 0 ? (
-                        <div className="px-6 py-12 text-center">
-                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
-                                style={{ background: '#f5f0e8' }}>
-                                <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#c9a84c" strokeWidth="1.5" strokeLinecap="round">
-                                    <path d="M11 2l3 3-8 8H3v-3l8-8z"/>
-                                </svg>
-                            </div>
-                            <p className="text-sm font-bold text-forest mb-1">No requests yet</p>
-                            <p className="text-xs" style={{ color: '#a09487' }}>Submit a variation to request a change to your project.</p>
+                {/* Empty state */}
+                {variations.length === 0 ? (
+                    <div className="px-6 py-14 text-center">
+                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                            style={{ background: '#f5f0e8' }}>
+                            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#c9a84c" strokeWidth="1.5" strokeLinecap="round">
+                                <path d="M11 2l3 3-8 8H3v-3l8-8z"/>
+                            </svg>
                         </div>
-                    ) : (
-                        <>
-                            <div className="px-6 pt-5 pb-3">
-                                <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#8a7e6e', fontSize: 10 }}>
-                                    Previous Requests
-                                </span>
-                            </div>
-                            <ul>
-                                {variations.map((v, i) => (
-                                    <li key={v.id}
-                                        className="flex items-center gap-4 px-6 py-4"
-                                        style={{ borderTop: i === 0 ? 'none' : '0.5px solid #f0ebe3' }}>
-
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-semibold text-forest truncate">{v.title}</p>
-                                            <p className="text-xs mt-0.5" style={{ color: '#a09487' }}>
-                                                Submitted {v.submitted_at}
-                                                {v.project_name && ` · ${v.project_name}`}
-                                            </p>
-                                        </div>
-
-                                        <div className="flex items-center gap-2.5 flex-shrink-0">
-                                            <StatusBadge status={v.status} />
-                                            <button
-                                                onClick={() => setViewing(v)}
-                                                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold"
-                                                style={{ background: '#f5f0e8', color: '#6b5e4a', border: '1px solid #e4ddd2' }}
-                                                onMouseEnter={e => e.currentTarget.style.background = '#ede8df'}
-                                                onMouseLeave={e => e.currentTarget.style.background = '#f5f0e8'}>
-                                                View
-                                            </button>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        </>
-                    )}
-                </div>
+                        <p className="text-sm font-semibold text-forest mb-1">No requests yet</p>
+                        <p className="text-xs mb-5" style={{ color: '#a09487' }}>
+                            Submit a variation to request a change to your project scope.
+                        </p>
+                        {projects.length > 0 && (
+                            <button onClick={() => setShowForm(true)}
+                                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold"
+                                style={{ background: '#1a3c2e', color: '#c9a84c' }}>
+                                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                                    <line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/>
+                                </svg>
+                                Submit your first request
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    variations.map((v, i) => (
+                        <VariationRow
+                            key={v.id}
+                            variation={v}
+                            onView={setViewing}
+                            isLast={i === variations.length - 1}
+                        />
+                    ))
+                )}
             </div>
         </AuthenticatedLayout>
     );

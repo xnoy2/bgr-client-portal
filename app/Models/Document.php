@@ -12,6 +12,13 @@ class Document extends Model
     protected $fillable = [
         'project_id', 'uploaded_by', 'title', 'filename',
         'url', 'mime_type', 'file_size', 'category', 'visibility', 'ghl_file_id',
+        'sign_status', 'sent_at', 'signed_at', 'signer_name',
+        'docuseal_template_id', 'docuseal_submission_id', 'docuseal_slug',
+    ];
+
+    protected $casts = [
+        'sent_at'   => 'datetime',
+        'signed_at' => 'datetime',
     ];
 
     public function project()  { return $this->belongsTo(Project::class); }

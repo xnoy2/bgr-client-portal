@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VariationController as AdminVariationController;
+use App\Http\Controllers\Client\DocumentController as ClientDocumentController;
 use App\Http\Controllers\Client\ProjectController as ClientProjectController;
 use App\Http\Controllers\Client\VariationController as ClientVariationController;
 use App\Http\Controllers\Worker\ProjectController as WorkerProjectController;
@@ -84,8 +85,9 @@ Route::middleware(['auth', 'password.changed', 'role:admin'])
         Route::put('/projects/{ghlId}',                    [ProjectController::class, 'update'])->name('projects.update');
         Route::put('/projects/{ghlId}/stage',              [ProjectController::class, 'updateStage'])->name('projects.stage.update');
         Route::post('/projects/{ghlId}/refresh-ghl',       [ProjectController::class, 'refreshGHL'])->name('projects.refresh-ghl');
-        Route::post('/projects/{ghlId}/documents',         [ProjectController::class, 'uploadDocument'])->name('projects.documents.upload');
-        Route::delete('/projects/{ghlId}/documents/{document}', [ProjectController::class, 'deleteDocument'])->name('projects.documents.delete');
+        Route::post('/projects/{ghlId}/documents',                        [ProjectController::class, 'uploadDocument'])->name('projects.documents.upload');
+        Route::delete('/projects/{ghlId}/documents/{document}',           [ProjectController::class, 'deleteDocument'])->name('projects.documents.delete');
+        Route::get('/projects/{ghlId}/documents/{document}/download',     [ProjectController::class, 'downloadDocument'])->name('projects.documents.download');
     });
 
 // ─── Worker routes ───────────────────────────────────────────────────────────
@@ -105,8 +107,11 @@ Route::middleware(['auth', 'password.changed', 'role:client'])
     ->prefix('portal')
     ->name('client.')
     ->group(function () {
-        Route::get('/dashboard',            [ClientProjectController::class, 'index'])->name('dashboard');
-        Route::get('/projects/{ghlId}',     [ClientProjectController::class, 'show'])->name('projects.show');
-        Route::get('/variations',           [ClientVariationController::class, 'index'])->name('variations.index');
-        Route::post('/variations',          [ClientVariationController::class, 'store'])->name('variations.store');
+        Route::get('/dashboard',                          [ClientProjectController::class, 'index'])->name('dashboard');
+        Route::get('/projects/{ghlId}',                   [ClientProjectController::class, 'show'])->name('projects.show');
+        Route::get('/variations',                         [ClientVariationController::class, 'index'])->name('variations.index');
+        Route::post('/variations',                        [ClientVariationController::class, 'store'])->name('variations.store');
+        Route::get('/documents',                         [ClientDocumentController::class, 'index'])->name('documents.index');
+        Route::get('/documents/{document}/download',     [ClientDocumentController::class, 'download'])->name('documents.download');
+        Route::post('/documents/{document}/sign',        [ClientDocumentController::class, 'sign'])->name('documents.sign');
     });

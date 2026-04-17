@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Modal from '@/Components/Modal';
 import { Head, useForm, router, Link } from '@inertiajs/react';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -65,6 +65,108 @@ function Select({ children, ...props }) {
             onFocus={e => e.target.style.borderColor = '#c9a84c'}
             onBlur={e  => e.target.style.borderColor = '#e4ddd2'}
             {...props}>{children}</select>
+    );
+}
+
+// ── Multi-select dropdown for workers ─────────────────────────────────────────
+
+function WorkerMultiSelect({ workers, selectedIds, onChange }) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+
+    // Close when clicking outside
+    useEffect(() => {
+        function handler(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    function toggle(id) {
+        onChange(selectedIds.includes(id) ? selectedIds.filter(x => x !== id) : [...selectedIds, id]);
+    }
+
+    const selected = workers.filter(w => selectedIds.includes(w.id));
+
+    return (
+        <div ref={ref}>
+            {/* Trigger */}
+            <button type="button"
+                onClick={() => setOpen(o => !o)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-left"
+                style={{
+                    border: `0.5px solid ${open ? '#c9a84c' : '#e4ddd2'}`,
+                    background: '#fff',
+                    color: selected.length === 0 ? '#b0a090' : '#1a3c2e',
+                    outline: 'none',
+                    borderBottomLeftRadius: open ? 0 : undefined,
+                    borderBottomRightRadius: open ? 0 : undefined,
+                }}>
+                <span className="truncate pr-2">
+                    {selected.length === 0 ? 'Select workers…' : selected.map(w => w.name).join(', ')}
+                </span>
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none"
+                    stroke="#8a7e6e" strokeWidth="2" strokeLinecap="round"
+                    style={{ flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
+                    <polyline points="3,5 8,11 13,5"/>
+                </svg>
+            </button>
+
+            {/* Inline option list — renders in flow so the modal scrolls, not clips */}
+            {open && (
+                <div className="w-full rounded-b-lg overflow-hidden"
+                    style={{ border: '0.5px solid #c9a84c', borderTop: 'none', background: '#fff' }}>
+                    {workers.length === 0 ? (
+                        <p className="px-3 py-3 text-xs" style={{ color: '#b0a090' }}>No workers in system.</p>
+                    ) : workers.map(w => {
+                        const checked = selectedIds.includes(w.id);
+                        return (
+                            <button key={w.id} type="button"
+                                onClick={() => toggle(w.id)}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-left"
+                                style={{
+                                    borderTop: '0.5px solid #f0ebe3',
+                                    background: checked ? 'rgba(26,60,46,0.04)' : '#fff',
+                                    color: '#1a3c2e',
+                                }}>
+                                <span className="flex-shrink-0 flex items-center justify-center rounded"
+                                    style={{
+                                        width: 16, height: 16,
+                                        background: checked ? '#1a3c2e' : '#fff',
+                                        border: `1.5px solid ${checked ? '#1a3c2e' : '#d0c8bc'}`,
+                                    }}>
+                                    {checked && (
+                                        <svg width="8" height="8" viewBox="0 0 16 16" fill="none" stroke="#c9a84c" strokeWidth="2.8" strokeLinecap="round">
+                                            <polyline points="2,8 6,12 14,4"/>
+                                        </svg>
+                                    )}
+                                </span>
+                                {w.name}
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* Selected pills */}
+            {selected.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                    {selected.map(w => (
+                        <span key={w.id}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+                            style={{ background: 'rgba(26,60,46,0.08)', color: '#1a3c2e', border: '0.5px solid rgba(26,60,46,0.15)' }}>
+                            {w.name}
+                            <button type="button" onClick={() => toggle(w.id)}
+                                className="flex items-center justify-center"
+                                style={{ color: '#6b5e4a', lineHeight: 1 }}>
+                                <svg width="8" height="8" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                                    <line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/>
+                                </svg>
+                            </button>
+                        </span>
+                    ))}
+                </div>
+            )}
+        </div>
     );
 }
 
@@ -463,7 +565,8 @@ function DocumentsTab({ documents, ghlId }) {
                             </button>
 
                             {/* Icon */}
-                            <a href={doc.url} target="_blank" rel="noopener noreferrer" className="mb-2 mt-1">
+                            <a href={route('admin.projects.documents.download', { ghlId, document: doc.id })}
+                                className="mb-2 mt-1" title={doc.filename}>
                                 <FileIcon mimeType={doc.mime_type} size={56} />
                             </a>
 
@@ -615,29 +718,12 @@ export default function ProjectShow({ project, ghl, workers, clients, documents 
                                 <Input type="date" value={editForm.data.estimated_completion} onChange={e => editForm.setData('estimated_completion', e.target.value)} />
                             </Field>
                         </div>
-                        <Field label="GHL Opportunity ID" error={editForm.errors.ghl_opportunity_id}>
-                            <Input value={editForm.data.ghl_opportunity_id} onChange={e => editForm.setData('ghl_opportunity_id', e.target.value)}
-                                placeholder="e.g. 1fMm4Yzp5Mzzl0J1PX57" className="font-mono" />
-                        </Field>
                         <Field label="Assigned Workers" error={editForm.errors.worker_ids}>
-                            <div className="rounded-xl overflow-hidden" style={{ border: '0.5px solid #e4ddd2' }}>
-                                {workers.map(w => (
-                                    <label key={w.id} className="flex items-center gap-3 px-3 py-2.5 cursor-pointer select-none"
-                                        style={{ borderBottom: '0.5px solid #f5f0e8' }}
-                                        onMouseEnter={e => e.currentTarget.style.background = '#fdfcfa'}
-                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                                        <input type="checkbox"
-                                            checked={editForm.data.worker_ids.includes(w.id)}
-                                            onChange={e => {
-                                                const ids = editForm.data.worker_ids;
-                                                editForm.setData('worker_ids', e.target.checked ? [...ids, w.id] : ids.filter(id => id !== w.id));
-                                            }}
-                                            style={{ accentColor: '#1a3c2e' }} />
-                                        <span className="text-sm text-forest">{w.name}</span>
-                                    </label>
-                                ))}
-                                {workers.length === 0 && <p className="px-3 py-3 text-xs" style={{ color: '#b0a090' }}>No workers in system.</p>}
-                            </div>
+                            <WorkerMultiSelect
+                                workers={workers}
+                                selectedIds={editForm.data.worker_ids}
+                                onChange={ids => editForm.setData('worker_ids', ids)}
+                            />
                         </Field>
                     </div>
                     <div className="mt-5 flex justify-end gap-2">
