@@ -193,7 +193,7 @@ function Lightbox({ photos, startIndex, onClose }) {
 
 // ── Post Update Modal ─────────────────────────────────────────────────────────
 
-function PostUpdateModal({ ghlId, stages, initialStageId, onClose }) {
+function PostUpdateModal({ ghlId, stages, initialStageId, onClose, onComplete }) {
     const [title,    setTitle]    = useState('');
     const [body,     setBody]     = useState('');
     const [stageId,  setStageId]  = useState(initialStageId ?? '');
@@ -229,7 +229,7 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose }) {
         photos.forEach((f, i) => fd.append(`photos[${i}]`, f));
         router.post(route('worker.projects.update.post', ghlId), fd, {
             forceFormData: true,
-            onSuccess: () => { onClose(); },
+            onSuccess: () => { onComplete?.(); onClose(); },
             onFinish:  () => setBusy(false),
         });
     }
@@ -251,7 +251,7 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose }) {
                 <div className="flex items-center justify-between px-5 py-4 flex-shrink-0"
                     style={{ borderBottom: '1px solid #f0ebe3' }}>
                     <div>
-                        <h2 className="text-base font-bold text-forest">Post Update</h2>
+                        <h2 className="text-base font-bold text-forest">{onComplete ? 'Complete Stage' : 'Post Update'}</h2>
                         {stageId && stages?.find(s => String(s.id) === stageId)?.name && (
                             <p className="text-xs mt-0.5 flex items-center gap-1.5" style={{ color: '#8a7e6e' }}>
                                 <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: '#c9a84c' }}/>
@@ -407,7 +407,7 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose }) {
                                     </svg>
                                     Posting…
                                 </>
-                            ) : 'Post Update'}
+                            ) : onComplete ? 'Post & Complete Stage' : 'Post Update'}
                         </button>
                     </div>
                 </form>
@@ -694,18 +694,7 @@ function OverviewTab({ project, ghl }) {
 
 // ── Stages tab ────────────────────────────────────────────────────────────────
 
-function StagesTab({ project, onPostUpdate, onShowUpdates }) {
-    const [saving, setSaving] = useState(false);
-
-    function advance(order) {
-        if (saving) return;
-        setSaving(true);
-        router.put(
-            route('worker.projects.stage.update', project.ghl_opportunity_id),
-            { stage_order: order },
-            { onFinish: () => setSaving(false) }
-        );
-    }
+function StagesTab({ project, onPostUpdate, onShowUpdates, onCompleteStage, advanceStage, saving }) {
 
     const currentOrder = project.stages?.find(s => s.status === 'in_progress')?.order ?? 0;
     const currentStage = project.stages?.find(s => s.status === 'in_progress');
@@ -823,15 +812,15 @@ function StagesTab({ project, onPostUpdate, onShowUpdates }) {
                                 </p>
                             </div>
                             <div className="flex-shrink-0 flex items-center gap-2">
-                                {isActive && stage.order < 5 && (
-                                    <button onClick={e => { e.stopPropagation(); advance(stage.order + 1); }} disabled={saving}
+                                {isActive && (
+                                    <button onClick={e => { e.stopPropagation(); onCompleteStage(stage); }} disabled={saving}
                                         className="px-4 py-2 rounded-xl text-xs font-bold transition-opacity"
                                         style={{ background: '#1a3c2e', color: '#c9a84c', opacity: saving ? 0.5 : 1 }}>
                                         {saving ? '…' : 'Complete ✓'}
                                     </button>
                                 )}
                                 {canStart && (
-                                    <button onClick={e => { e.stopPropagation(); advance(stage.order); }} disabled={saving}
+                                    <button onClick={e => { e.stopPropagation(); advanceStage(stage.order); }} disabled={saving}
                                         className="px-4 py-2 rounded-xl text-xs font-bold transition-opacity"
                                         style={{ background: 'rgba(201,168,76,0.15)', color: '#b8943c', border: '1px solid rgba(201,168,76,0.3)', opacity: saving ? 0.5 : 1 }}>
                                         {saving ? '…' : 'Start →'}
@@ -1141,12 +1130,30 @@ function UpdatesTab({ updates, onPostUpdate, ghlId, stages, stageFilter, onClear
 const TABS = ['Overview', 'Stages', 'Updates'];
 
 export default function WorkerProjectShow({ project, ghl, updates }) {
-    const [tab,            setTab]         = useState('Stages');
-    const [modalOpen,      setModal]       = useState(false);
+    const [tab,            setTab]          = useState('Stages');
+    const [modalOpen,      setModal]        = useState(false);
     const [initialStageId, setInitialStage] = useState(null);
-    const [stageFilter,    setStageFilter] = useState(null);
+    const [stageFilter,    setStageFilter]  = useState(null);
+    const [pendingComplete, setPendingComplete] = useState(null);
+    const [saving,         setSaving]       = useState(false);
 
-    function openModal(stageId) { setInitialStage(stageId ? String(stageId) : null); setModal(true); }
+    function openModal(stageId) { setInitialStage(stageId ? String(stageId) : null); setPendingComplete(null); setModal(true); }
+
+    function openModalForComplete(stage) {
+        setInitialStage(String(stage.id));
+        setPendingComplete({ ...stage, advanceToOrder: stage.order + 1 });
+        setModal(true);
+    }
+
+    function advanceStage(order) {
+        if (saving) return;
+        setSaving(true);
+        router.put(
+            route('worker.projects.stage.update', project.ghl_opportunity_id),
+            { stage_order: order },
+            { onFinish: () => setSaving(false) }
+        );
+    }
 
     function showUpdatesForStage(stageName) {
         setStageFilter(stageName);
@@ -1209,7 +1216,7 @@ export default function WorkerProjectShow({ project, ghl, updates }) {
             <TabBar tabs={TABS} active={tab} onChange={t => { setTab(t); setStageFilter(null); }} />
 
             {tab === 'Overview' && <OverviewTab project={project} ghl={ghl} />}
-            {tab === 'Stages'   && <StagesTab   project={project} onPostUpdate={openModal} onShowUpdates={showUpdatesForStage} />}
+            {tab === 'Stages'   && <StagesTab   project={project} onPostUpdate={openModal} onShowUpdates={showUpdatesForStage} onCompleteStage={openModalForComplete} advanceStage={advanceStage} saving={saving} />}
             {tab === 'Updates'  && <UpdatesTab  updates={updates} onPostUpdate={openModal} ghlId={project.ghl_opportunity_id} stages={project.stages} stageFilter={stageFilter} onClearFilter={() => setStageFilter(null)} />}
 
             {modalOpen && (
@@ -1217,7 +1224,8 @@ export default function WorkerProjectShow({ project, ghl, updates }) {
                     ghlId={project.ghl_opportunity_id}
                     stages={project.stages}
                     initialStageId={initialStageId}
-                    onClose={() => setModal(false)}
+                    onClose={() => { setModal(false); setPendingComplete(null); }}
+                    onComplete={pendingComplete ? () => advanceStage(pendingComplete.advanceToOrder) : null}
                 />
             )}
         </AuthenticatedLayout>
