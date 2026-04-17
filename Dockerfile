@@ -1,51 +1,46 @@
-# ── Stage 1: PHP + Composer dependencies ─────────────────────────────────────
-FROM php:8.2-cli-alpine AS vendor
+# Single-stage build — Debian-based PHP avoids Alpine library issues
+FROM php:8.2-cli
 
-RUN apk add --no-cache \
-        git curl unzip libpng-dev libjpeg-turbo-dev freetype-dev \
-        libxml2-dev oniguruma-dev zip libzip-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+# ── System dependencies ───────────────────────────────────────────────────────
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        git curl unzip zip \
+        libpng-dev libjpeg-dev libfreetype6-dev \
+        libxml2-dev libzip-dev libonig-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── PHP extensions ────────────────────────────────────────────────────────────
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
         pdo pdo_mysql mbstring exif pcntl bcmath gd zip xml
 
+# ── Composer ──────────────────────────────────────────────────────────────────
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+# ── Node.js 20 ────────────────────────────────────────────────────────────────
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
+
+# ── Install PHP dependencies ──────────────────────────────────────────────────
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
-# ── Stage 2: Node — build frontend assets ────────────────────────────────────
-FROM node:20-alpine AS frontend
-
-WORKDIR /app
+# ── Install & build frontend ──────────────────────────────────────────────────
 COPY package.json package-lock.json ./
 RUN npm ci
+
 COPY . .
 RUN npm run build
 
-# ── Stage 3: Final runtime image ──────────────────────────────────────────────
-FROM php:8.2-cli-alpine AS runtime
+# ── Composer post-install scripts (autoload dump etc.) ───────────────────────
+RUN composer dump-autoload --optimize --no-dev
 
-RUN apk add --no-cache \
-        libpng libjpeg-turbo freetype libxml2 oniguruma libzip \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
-        pdo pdo_mysql mbstring exif pcntl bcmath gd zip xml
-
-WORKDIR /app
-
-# Copy app source
-COPY . .
-
-# Copy vendor from stage 1
-COPY --from=vendor /app/vendor ./vendor
-
-# Copy compiled frontend assets from stage 2
-COPY --from=frontend /app/public/build ./public/build
-
-# Storage & cache permissions
-RUN mkdir -p storage/logs storage/framework/cache storage/framework/sessions \
-        storage/framework/views bootstrap/cache \
+# ── Storage permissions ───────────────────────────────────────────────────────
+RUN mkdir -p storage/logs storage/framework/cache \
+        storage/framework/sessions storage/framework/views \
+        bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
 EXPOSE ${PORT:-8000}
