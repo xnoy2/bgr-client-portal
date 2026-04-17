@@ -16,7 +16,7 @@ class PdfSigningService
     {
         // Point FPDF to its bundled font directory
         if (! defined('FPDF_FONTPATH')) {
-            define('FPDF_FONTPATH', base_path('vendor/fpdf/font') . DIRECTORY_SEPARATOR);
+            define('FPDF_FONTPATH', base_path('vendor/setasign/fpdf/font') . DIRECTORY_SEPARATOR);
         }
 
         // Download original PDF

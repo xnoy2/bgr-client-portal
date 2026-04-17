@@ -13,6 +13,7 @@
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
+        "setasign/fpdf": "^1.8",
         "setasign/fpdi": "^2.6",
         "spatie/laravel-permission": "^6.25",
         "tightenco/ziggy": "^2.0"
@@ -32,10 +33,7 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        },
-        "files": [
-            "vendor/fpdf/fpdf.php"
-        ]
+        }
     },
     "autoload-dev": {
         "psr-4": {
