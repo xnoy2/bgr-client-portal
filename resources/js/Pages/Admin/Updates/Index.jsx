@@ -231,7 +231,7 @@ export default function UpdatesIndex({ updates }) {
                 <UpdateDetailModal update={detailUpdate} onClose={() => setDetailUpdate(null)} />
             )}
 
-            <div className="max-w-5xl">
+            <div className="w-full">
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-xl font-semibold text-forest">Progress Updates</h1>
@@ -252,7 +252,7 @@ export default function UpdatesIndex({ updates }) {
                         <p className="text-xs" style={{ color: '#a09487' }}>Updates posted by workers will appear here.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3">
                         {updates.map(u => {
                             const photos = u.photos ?? [];
                             return (
