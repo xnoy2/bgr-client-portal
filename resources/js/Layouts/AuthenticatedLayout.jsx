@@ -92,8 +92,6 @@ function getNav(role) {
     ];
     if (role === 'worker') return [
         { label: 'My Projects',   icon: 'briefcase', href: () => route('worker.dashboard'),   active: () => route().current('worker.dashboard') || route().current('worker.projects.*') },
-        { label: 'Upload Media',  icon: 'image',     href: '#', soon: true },
-        { label: 'Post Update',   icon: 'edit',      href: '#', soon: true },
     ];
     return [
         { label: 'My Projects',   icon: 'briefcase', href: () => route('client.dashboard'),   active: () => route().current('client.dashboard') || route().current('client.projects.*') },
