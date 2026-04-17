@@ -23,9 +23,6 @@ Route::middleware('auth')
             ->name('password.change.update');
     });
 
-// ─── Health check (Railway / load balancer) ──────────────────────────────────
-Route::get('/up', fn () => response()->json(['status' => 'ok']));
-
 // Landing + post-login redirect — both / and /dashboard route here
 Route::middleware('auth')->get('/dashboard', function () {
     $user = auth()->user();
