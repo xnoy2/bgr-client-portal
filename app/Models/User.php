@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Notifications\GHLResetPasswordNotification;
+use App\Services\GHLService;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -26,6 +28,33 @@ class User extends Authenticatable
             'must_change_password' => 'boolean',
             'is_active'            => 'boolean',
         ];
+    }
+
+    /**
+     * Send password reset email via GHL.
+     * Falls back to Laravel's default mail notification if GHL fails.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $resetUrl = url(route('password.reset', [
+            'token' => $token,
+            'email' => $this->getEmailForPasswordReset(),
+        ], false));
+
+        $html = GHLResetPasswordNotification::buildHtml($this->name ?? 'there', $resetUrl);
+
+        $sent = app(GHLService::class)->sendEmail(
+            toEmail:   $this->getEmailForPasswordReset(),
+            toName:    $this->name ?? '',
+            subject:   'Reset your BGR Client Portal password',
+            htmlBody:  $html,
+            contactId: $this->ghl_contact_id,
+        );
+
+        if (! $sent) {
+            // GHL failed — fall back to Laravel's built-in mail
+            $this->notify(new GHLResetPasswordNotification($token));
+        }
     }
 
     // Projects this user owns as a client

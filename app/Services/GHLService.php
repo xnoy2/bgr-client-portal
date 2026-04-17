@@ -283,6 +283,124 @@ class GHLService
         return false;
     }
 
+    // ── Email sending ─────────────────────────────────────────────────────────
+
+    /**
+     * Find a GHL contact by email address.
+     * Returns the contact ID or null if not found.
+     */
+    public function findContactByEmail(string $email): ?string
+    {
+        try {
+            $response = $this->http()->get('/contacts/', [
+                'locationId' => $this->locationId,
+                'query'      => $email,
+            ]);
+
+            if ($response->successful()) {
+                $contacts = $response->json('contacts') ?? [];
+                foreach ($contacts as $contact) {
+                    if (strtolower($contact['email'] ?? '') === strtolower($email)) {
+                        return $contact['id'];
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('GHL findContactByEmail exception', ['email' => $email, 'error' => $e->getMessage()]);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get or create a GHL conversation for a contact.
+     * Returns the conversation ID or null on failure.
+     */
+    public function getOrCreateConversation(string $contactId): ?string
+    {
+        try {
+            // Search for existing conversation
+            $response = $this->http()->get('/conversations/search', [
+                'locationId' => $this->locationId,
+                'contactId'  => $contactId,
+            ]);
+
+            if ($response->successful()) {
+                $conversations = $response->json('conversations') ?? [];
+                if (! empty($conversations)) {
+                    return $conversations[0]['id'];
+                }
+            }
+
+            // No conversation found — create one
+            $create = $this->http()->post('/conversations/', [
+                'locationId' => $this->locationId,
+                'contactId'  => $contactId,
+            ]);
+
+            if ($create->successful()) {
+                return $create->json('conversation.id') ?? $create->json('id');
+            }
+        } catch (\Exception $e) {
+            Log::error('GHL getOrCreateConversation exception', ['contactId' => $contactId, 'error' => $e->getMessage()]);
+        }
+
+        return null;
+    }
+
+    /**
+     * Send a transactional email via GHL conversations API.
+     * Falls back gracefully — returns false on failure so caller can fall back to log mail.
+     */
+    public function sendEmail(
+        string $toEmail,
+        string $toName,
+        string $subject,
+        string $htmlBody,
+        ?string $contactId = null
+    ): bool {
+        try {
+            // Resolve contact ID if not provided
+            $contactId ??= $this->findContactByEmail($toEmail);
+
+            if (! $contactId) {
+                Log::warning('GHL sendEmail: no contact found for email', ['email' => $toEmail]);
+                return false;
+            }
+
+            $conversationId = $this->getOrCreateConversation($contactId);
+
+            if (! $conversationId) {
+                Log::warning('GHL sendEmail: could not get/create conversation', ['contactId' => $contactId]);
+                return false;
+            }
+
+            $response = $this->http()->post('/conversations/messages', [
+                'type'           => 'Email',
+                'conversationId' => $conversationId,
+                'contactId'      => $contactId,
+                'subject'        => $subject,
+                'html'           => $htmlBody,
+                'emailFrom'      => config('mail.from.address'),
+                'emailTo'        => $toEmail,
+            ]);
+
+            if ($response->successful()) {
+                return true;
+            }
+
+            Log::warning('GHL sendEmail failed', [
+                'email'  => $toEmail,
+                'status' => $response->status(),
+                'body'   => $response->body(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('GHL sendEmail exception', ['email' => $toEmail, 'error' => $e->getMessage()]);
+        }
+
+        return false;
+    }
+
     // ── Stage sync ────────────────────────────────────────────────────────────
 
     /**

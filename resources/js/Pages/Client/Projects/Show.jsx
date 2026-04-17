@@ -154,7 +154,7 @@ function Lightbox({ photos, startIndex, onClose }) {
     useEffect(() => { document.body.style.overflow = 'hidden'; return () => { document.body.style.overflow = ''; }; }, []);
 
     return (
-        <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'rgba(0,0,0,0.95)' }} onClick={onClose}>
+        <div className="fixed inset-0 z-[80] flex flex-col" style={{ background: 'rgba(0,0,0,0.95)' }} onClick={onClose}>
             {/* Top bar */}
             <div className="flex items-center justify-between px-4 py-3 flex-shrink-0" onClick={e => e.stopPropagation()}>
                 <span className="text-white text-sm font-medium opacity-60">{idx + 1} / {photos.length}</span>
@@ -348,106 +348,137 @@ function ProgressTab({ project }) {
 
 // ── Expandable body text ──────────────────────────────────────────────────────
 
-const BODY_LIMIT = 150;
+// ── Single thumbnail with photo-count overlay (matches Admin card style) ─────
 
-function ExpandableText({ text }) {
-    const [expanded, setExpanded] = useState(false);
-    if (!text) return null;
-    if (text.length <= BODY_LIMIT) {
-        return <p className="text-sm leading-relaxed" style={{ color: '#4a3f32' }}>{text}</p>;
-    }
+function SingleThumbnail({ photos, onClick }) {
+    if (!photos?.length) return null;
+    const extra = photos.length - 1;
     return (
-        <p className="text-sm leading-relaxed" style={{ color: '#4a3f32' }}>
-            {expanded ? text : text.slice(0, BODY_LIMIT).trimEnd()}
-            {!expanded && (
-                <>
-                    {'… '}
-                    <button onClick={() => setExpanded(true)}
-                        className="font-semibold hover:underline"
-                        style={{ color: '#b8943c', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
-                        See more
-                    </button>
-                </>
+        <div className="relative overflow-hidden cursor-pointer"
+            style={{ aspectRatio: '16/9', maxHeight: 200 }}
+            onClick={onClick}>
+            <img src={photos[0]} alt=""
+                className="w-full h-full object-cover"
+                style={{ transition: 'transform 0.25s' }}
+                onMouseEnter={e => !extra && (e.currentTarget.style.transform = 'scale(1.04)')}
+                onMouseLeave={e => !extra && (e.currentTarget.style.transform = 'scale(1)')}
+            />
+            {extra > 0 && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 pointer-events-none"
+                    style={{ background: 'rgba(0,0,0,0.55)' }}>
+                    <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round">
+                        <rect x="1" y="3" width="9" height="7" rx="1.2"/><rect x="6" y="6" width="9" height="7" rx="1.2"/>
+                    </svg>
+                    <span className="text-white font-bold leading-none" style={{ fontSize: 22 }}>+{extra}</span>
+                    <span className="text-white font-medium" style={{ fontSize: 11, opacity: 0.85 }}>View more</span>
+                </div>
             )}
-            {expanded && (
-                <>
-                    {' '}
-                    <button onClick={() => setExpanded(false)}
-                        className="font-semibold hover:underline"
-                        style={{ color: '#b8943c', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
-                        See less
-                    </button>
-                </>
-            )}
-        </p>
+        </div>
     );
 }
 
-function PhotoGrid({ photos, onOpen }) {
-    const count = photos.length;
-    if (count === 0) return null;
+// ── Update detail modal ───────────────────────────────────────────────────────
 
-    // Always show max 4 slots; 4th slot gets "+N more" overlay if count > 4
+function UpdateDetailModal({ update, onClose }) {
+    const [lightboxIdx, setLightboxIdx] = useState(null);
+    const photos = update.photos ?? [];
 
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = ''; };
+    }, []);
 
-    const wrap = {
-        borderRadius: 12,
-        overflow: 'hidden',
-        border: '1.5px solid #e4ddd2',
-        background: '#e4ddd2',
-        // Use aspect-ratio so the grid scales naturally on any screen width
-    };
-
-    function Cell({ src, idx, moreCount }) {
-        return (
-            <div className="relative overflow-hidden"
-                style={{ cursor: 'pointer', height: '100%' }}
-                onClick={() => onOpen(idx)}
-                onMouseEnter={e => e.currentTarget.querySelector('img').style.transform = 'scale(1.04)'}
-                onMouseLeave={e => e.currentTarget.querySelector('img').style.transform = 'scale(1)'}>
-                <img src={src} alt=""
-                    className="w-full h-full object-cover block"
-                    style={{ transition: 'transform 0.2s' }} />
-                {moreCount > 0 && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-1"
-                        style={{ background: 'rgba(0,0,0,0.55)' }}>
-                        <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round">
-                            <rect x="1" y="3" width="9" height="7" rx="1.2"/><rect x="6" y="6" width="9" height="7" rx="1.2"/>
-                        </svg>
-                        <span className="text-white font-bold leading-none" style={{ fontSize: 22 }}>+{moreCount}</span>
-                        <span className="text-white font-medium" style={{ fontSize: 11, opacity: 0.85 }}>View more</span>
-                    </div>
-                )}
-            </div>
-        );
-    }
-
-    // ── 1 photo: same 2/1 ratio as multi-photo grid ──────────────────────────
-    if (count === 1) return (
-        <div style={{ ...wrap, aspectRatio: '2/1', overflow: 'hidden', cursor: 'pointer' }}
-            onClick={() => onOpen(0)}>
-            <img src={photos[0]} alt=""
-                className="w-full h-full object-cover block"
-                style={{ transition: 'transform 0.2s' }}
-                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.04)'}
-                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-            />
-        </div>
-    );
-
-    // ── 2+ photos: always 2 side by side; second cell shows +N if more ─────────
     return (
-        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, aspectRatio: '2/1' }}>
-            <Cell src={photos[0]} idx={0} />
-            <Cell src={photos[1]} idx={1} moreCount={count > 2 ? count - 2 : 0} />
-        </div>
+        <>
+            {lightboxIdx !== null && (
+                <Lightbox photos={photos} startIndex={lightboxIdx} onClose={() => setLightboxIdx(null)} />
+            )}
+            <div className="fixed inset-0 z-[52] flex items-center justify-center p-4"
+                style={{ background: 'rgba(14,32,25,0.75)', backdropFilter: 'blur(4px)' }}
+                onClick={e => e.target === e.currentTarget && onClose()}>
+
+                <div className="w-full max-w-lg bg-white rounded-2xl overflow-hidden flex flex-col"
+                    style={{ maxHeight: '88vh' }}>
+
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-5 py-4 flex-shrink-0"
+                        style={{ borderBottom: '0.5px solid #f0ebe3' }}>
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                                style={{ background: 'linear-gradient(135deg, #1a3c2e, #2d5a42)', color: '#c9a84c' }}>
+                                {(update.author ?? 'T')[0]?.toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-sm font-semibold text-forest">{update.author ?? 'Project Team'}</p>
+                                <p className="text-xs" style={{ color: '#a09487' }}>{update.created_at}</p>
+                            </div>
+                        </div>
+                        <button onClick={onClose}
+                            className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
+                            style={{ background: '#f5f0e8', color: '#6b5e4a' }}>
+                            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                                <line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    {/* Scrollable content */}
+                    <div className="overflow-y-auto flex-1">
+                        <div className="px-5 pt-4 pb-3">
+                            <p className="text-base font-bold text-forest mb-1.5">{update.title}</p>
+                            {update.stage_name && (
+                                <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                                    style={{ background: 'rgba(201,168,76,0.12)', color: '#b8943c' }}>
+                                    {update.stage_name}
+                                </span>
+                            )}
+                        </div>
+                        <div className="px-5 pb-4">
+                            <p className="text-sm leading-relaxed whitespace-pre-line" style={{ color: '#4a3f30' }}>
+                                {update.body}
+                            </p>
+                        </div>
+                        <div className="px-5 pb-5">
+                            <p className="text-xs font-semibold uppercase tracking-wider mb-2.5" style={{ color: '#a09487' }}>
+                                Photos{photos.length > 0 ? ` · ${photos.length}` : ''}
+                            </p>
+                            {photos.length > 0 ? (
+                                <div className="grid grid-cols-3 gap-1.5">
+                                    {photos.map((url, i) => (
+                                        <div key={i} className="relative rounded-xl overflow-hidden cursor-pointer"
+                                            style={{ aspectRatio: '1' }}
+                                            onClick={() => setLightboxIdx(i)}>
+                                            <img src={url} alt="" className="w-full h-full object-cover"
+                                                style={{ transition: 'transform 0.2s' }}
+                                                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.06)'}
+                                                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl"
+                                    style={{ aspectRatio: '2/1', background: '#f5f0e8', border: '1.5px dashed #e4ddd2' }}>
+                                    <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="#c9c0b3" strokeWidth="1.4" strokeLinecap="round">
+                                        <rect x="1" y="3" width="14" height="10" rx="1.5"/>
+                                        <circle cx="8" cy="8" r="2.2"/>
+                                        <path d="M5 3l1-2h4l1 2"/>
+                                    </svg>
+                                    <span className="text-xs font-medium" style={{ color: '#c9c0b3' }}>No images uploaded</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </>
     );
 }
 
 // ── Updates tab ───────────────────────────────────────────────────────────────
 
 function UpdatesTab({ updates }) {
-    const [lightbox, setLightbox] = useState(null);
+    const [detailUpdate, setDetailUpdate] = useState(null);
 
     if (!updates?.length) {
         return (
@@ -466,65 +497,67 @@ function UpdatesTab({ updates }) {
 
     return (
         <>
-            {lightbox && (
-                <Lightbox photos={lightbox.photos} startIndex={lightbox.idx} onClose={() => setLightbox(null)} />
+            {detailUpdate && (
+                <UpdateDetailModal update={detailUpdate} onClose={() => setDetailUpdate(null)} />
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 items-start">
-                {updates.map(update => {
-                    const photos = update.photos ?? [];
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                {updates.map(u => {
+                    const photos = u.photos ?? [];
                     return (
-                        <div key={update.id} className="bg-white rounded-2xl overflow-hidden"
-                            style={{ border: '0.5px solid #e4ddd2' }}>
+                        <div key={u.id}
+                            className="bg-white rounded-2xl overflow-hidden cursor-pointer flex flex-col"
+                            style={{ border: '1px solid #f0ebe3' }}
+                            onClick={() => setDetailUpdate(u)}
+                            onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(26,60,46,0.08)'}
+                            onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
 
-                            {/* Post header */}
-                            <div className="flex items-start justify-between gap-3 px-4 pt-4 pb-3">
-                                <div className="flex items-center gap-2.5 min-w-0">
-                                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                                        style={{ background: 'linear-gradient(135deg, #1a3c2e, #2d5a42)', color: '#c9a84c' }}>
-                                        {initials(update.author ?? 'T')}
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="text-sm font-semibold leading-tight" style={{ color: '#1a3c2e' }}>
-                                            {update.author ?? 'Project Team'}
-                                        </p>
-                                        <div className="flex items-center gap-1.5 flex-wrap">
-                                            <p className="text-xs" style={{ color: '#b0a090' }}>{update.created_at}</p>
-                                            {update.stage_name && (
-                                                <>
-                                                    <span style={{ color: '#d0c8bc', fontSize: 10 }}>·</span>
-                                                    <span className="text-xs px-1.5 py-0.5 rounded-full font-medium"
-                                                        style={{ background: 'rgba(201,168,76,0.12)', color: '#b8943c' }}>
-                                                        {update.stage_name}
-                                                    </span>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
+                            {/* Card header */}
+                            <div className="flex items-start gap-3 px-4 pt-4 pb-3">
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                                    style={{ background: 'linear-gradient(135deg, #1a3c2e, #2d5a42)', color: '#c9a84c' }}>
+                                    {(u.author ?? 'T')[0]?.toUpperCase()}
                                 </div>
-                                <div className="w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center"
-                                    style={{ background: '#f5f0e8' }}>
-                                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#8a7e6e" strokeWidth="2" strokeLinecap="round">
-                                        <path d="M3 8h.01M8 8h.01M13 8h.01"/>
-                                    </svg>
+                                <div className="min-w-0">
+                                    <p className="text-sm font-semibold leading-tight text-forest">
+                                        {u.author ?? 'Project Team'}
+                                    </p>
+                                    <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                                        <p className="text-xs" style={{ color: '#a09487' }}>{u.created_at}</p>
+                                        {u.stage_name && (
+                                            <>
+                                                <span style={{ color: '#d4c9b7', fontSize: 10 }}>·</span>
+                                                <span className="text-xs px-1.5 py-0.5 rounded-full font-medium"
+                                                    style={{ background: 'rgba(201,168,76,0.12)', color: '#b8943c' }}>
+                                                    {u.stage_name}
+                                                </span>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Post title */}
-                            <div className="px-4 pb-2">
-                                <p className="text-base font-semibold" style={{ color: '#1a3c2e' }}>{update.title}</p>
+                            {/* Title + 2-line clamped body */}
+                            <div className="px-4 pb-3 flex-1">
+                                <p className="text-base font-semibold text-forest mb-1">{u.title}</p>
+                                <p className="text-sm leading-relaxed"
+                                    style={{
+                                        color: '#4a3f30',
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: 'vertical',
+                                        overflow: 'hidden',
+                                    }}>
+                                    {u.body}
+                                </p>
                             </div>
 
-                            {/* Post body */}
-                            <div className="px-4 pb-3">
-                                <ExpandableText text={update.body} />
-                            </div>
-
-                            {/* Photo grid — full bleed, or no-image placeholder */}
+                            {/* Thumbnail or no-image placeholder */}
                             {photos.length > 0 ? (
-                                <div className="px-0">
-                                    <PhotoGrid photos={photos} onOpen={idx => setLightbox({ photos, idx })} />
-                                </div>
+                                <SingleThumbnail
+                                    photos={photos}
+                                    onClick={e => { e.stopPropagation(); setDetailUpdate(u); }}
+                                />
                             ) : (
                                 <div className="mx-4 mb-3 flex flex-col items-center justify-center gap-1.5 rounded-xl"
                                     style={{ aspectRatio: '2/1', background: '#f5f0e8', border: '1.5px dashed #e4ddd2' }}>
@@ -537,7 +570,7 @@ function UpdatesTab({ updates }) {
                                 </div>
                             )}
 
-                            {/* Footer divider */}
+                            {/* Footer */}
                             <div className="px-4 py-3 flex items-center gap-1.5"
                                 style={{ borderTop: '0.5px solid #f5f0e8' }}>
                                 <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#b0a090" strokeWidth="1.5" strokeLinecap="round">

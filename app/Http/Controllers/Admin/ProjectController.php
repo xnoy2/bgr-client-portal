@@ -10,6 +10,7 @@ use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use App\Services\GHLService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
 
 class ProjectController extends Controller
@@ -241,7 +242,7 @@ class ProjectController extends Controller
 
         $result = Cloudinary::uploadApi()->upload($file->getRealPath(), [
             'folder'        => "bgr/documents/{$project->id}",
-            'resource_type' => 'auto',
+            'resource_type' => 'raw',
             'public_id'     => pathinfo($filename, PATHINFO_FILENAME) . '_' . time(),
         ]);
 
@@ -256,6 +257,8 @@ class ProjectController extends Controller
             'category'    => $request->input('category', 'other'),
             'visibility'  => 'client',
             'ghl_file_id' => $result['public_id'],
+            'sign_status' => 'pending',
+            'sent_at'     => now(),
         ]);
 
         return back()->with('success', 'Document uploaded.');
@@ -279,5 +282,29 @@ class ProjectController extends Controller
         $document->delete();
 
         return back()->with('success', 'Document deleted.');
+    }
+
+    /**
+     * GET /admin/projects/{ghlId}/documents/{document}/download
+     * Proxies the file from Cloudinary with proper Content-Disposition headers.
+     */
+    public function downloadDocument(string $ghlId, Document $document)
+    {
+        $project = Project::where('ghl_opportunity_id', $ghlId)->firstOrFail();
+        abort_unless($document->project_id === $project->id, 403);
+
+        $response = Http::timeout(30)->get($document->url);
+
+        abort_unless($response->successful(), 502, 'Could not retrieve the file.');
+
+        $mime     = $document->mime_type ?? $response->header('Content-Type') ?? 'application/octet-stream';
+        $filename = $document->filename  ?? 'document';
+
+        return response($response->body(), 200, [
+            'Content-Type'        => $mime,
+            'Content-Disposition' => 'attachment; filename="' . str_replace('"', '', $filename) . '"',
+            'Content-Length'      => strlen($response->body()),
+            'Cache-Control'       => 'no-store',
+        ]);
     }
 }
