@@ -29,8 +29,10 @@ class ProjectController extends Controller
                 ? $this->ghl->getCachedOpportunity($project->ghl_opportunity_id)
                 : null;
 
-            // Sync stages from GHL before computing progress
-            if ($ghl && ! empty($ghl['stage_id'])) {
+            $allCompleted = $project->stages->isNotEmpty()
+                && $project->stages->every(fn ($s) => $s->status === 'completed');
+
+            if ($ghl && ! empty($ghl['stage_id']) && ! $allCompleted) {
                 $this->ghl->syncProjectStages($project, $ghl['stage_id']);
             }
 
@@ -72,8 +74,12 @@ class ProjectController extends Controller
 
         $ghl = $this->ghl->getCachedOpportunity($ghlId);
 
-        // Sync local stages from GHL pipeline stage
-        if ($ghl && ! empty($ghl['stage_id'])) {
+        // Sync local stages from GHL — skip if all stages are already completed
+        // so GHL cannot revert a completed project back to in_progress.
+        $allCompleted = $project->stages->isNotEmpty()
+            && $project->stages->every(fn ($s) => $s->status === 'completed');
+
+        if ($ghl && ! empty($ghl['stage_id']) && ! $allCompleted) {
             $this->ghl->syncProjectStages($project, $ghl['stage_id']);
             $project->load('stages');
         }

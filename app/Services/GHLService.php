@@ -204,11 +204,15 @@ class GHLService
             $project->load('stages');
         }
 
+        $maxOrder = $project->stages->max('order') ?? 5;
+
+        // newOrder > maxOrder means "complete everything" (no next in_progress stage)
         foreach ($project->stages as $stage) {
             $newStatus = match (true) {
-                $stage->order < $newOrder  => 'completed',
-                $stage->order === $newOrder => 'in_progress',
-                default                    => 'pending',
+                $newOrder > $maxOrder          => 'completed',          // final-stage complete
+                $stage->order < $newOrder      => 'completed',
+                $stage->order === $newOrder    => 'in_progress',
+                default                        => 'pending',
             };
 
             if ($stage->status !== $newStatus) {
@@ -217,11 +221,16 @@ class GHLService
             }
         }
 
-        // 2. Write back to GHL — move opportunity to the matching GHL stage ID
+        // 2. Write back to GHL — always clear cache so the next page load
+        //    reads fresh GHL data instead of overwriting our local changes.
         if ($project->ghl_opportunity_id) {
             $ghlStageId = config("services.ghl.stage_id_by_order.{$newOrder}");
             if ($ghlStageId) {
                 $this->updateOpportunityStage($project->ghl_opportunity_id, $ghlStageId);
+            } else {
+                // Unknown/final order — still bust the cache so syncProjectStages
+                // doesn't revert our local changes on the next request.
+                $this->forgetOpportunityCache($project->ghl_opportunity_id);
             }
         }
     }

@@ -191,17 +191,128 @@ function Lightbox({ photos, startIndex, onClose }) {
     );
 }
 
+// ── Camera capture (getUserMedia) ─────────────────────────────────────────────
+
+function CameraCapture({ onCapture, onClose }) {
+    const videoRef  = useRef(null);
+    const streamRef = useRef(null);
+    const [facing,  setFacing]  = useState('environment');
+    const [error,   setError]   = useState(null);
+    const [ready,   setReady]   = useState(false);
+
+    const startStream = useCallback(async (facingMode) => {
+        // Stop any existing stream first
+        streamRef.current?.getTracks().forEach(t => t.stop());
+        setReady(false);
+        setError(null);
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
+            });
+            streamRef.current = stream;
+            if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                videoRef.current.onloadedmetadata = () => setReady(true);
+            }
+        } catch {
+            setError('Camera access denied. Please allow camera permissions and try again.');
+        }
+    }, []);
+
+    useEffect(() => {
+        startStream(facing);
+        return () => streamRef.current?.getTracks().forEach(t => t.stop());
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    function flipCamera() {
+        const next = facing === 'environment' ? 'user' : 'environment';
+        setFacing(next);
+        startStream(next);
+    }
+
+    function capture() {
+        const video  = videoRef.current;
+        if (!video) return;
+        const canvas = document.createElement('canvas');
+        canvas.width  = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        canvas.toBlob(blob => {
+            if (!blob) return;
+            const file = new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+            onCapture(file);
+            onClose();
+        }, 'image/jpeg', 0.9);
+    }
+
+    return (
+        <div className="fixed inset-0 z-[60] flex flex-col" style={{ background: '#000' }}>
+            {/* Top bar */}
+            <div className="flex items-center justify-between px-4 py-3 flex-shrink-0"
+                style={{ background: 'rgba(0,0,0,0.6)' }}>
+                <button onClick={onClose}
+                    className="flex items-center justify-center w-9 h-9 rounded-full"
+                    style={{ background: 'rgba(255,255,255,0.12)', color: '#fff' }}>
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/>
+                    </svg>
+                </button>
+                <span className="text-sm font-semibold text-white">Camera</span>
+                <button onClick={flipCamera}
+                    className="flex items-center justify-center w-9 h-9 rounded-full"
+                    style={{ background: 'rgba(255,255,255,0.12)', color: '#fff' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 4v6h6"/><path d="M23 20v-6h-6"/>
+                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                    </svg>
+                </button>
+            </div>
+
+            {/* Viewfinder */}
+            <div className="flex-1 relative flex items-center justify-center overflow-hidden">
+                {error ? (
+                    <div className="text-center px-8">
+                        <p className="text-white text-sm mb-4">{error}</p>
+                        <button onClick={onClose}
+                            className="px-5 py-2.5 rounded-xl text-sm font-semibold"
+                            style={{ background: '#c9a84c', color: '#0e2019' }}>
+                            Close
+                        </button>
+                    </div>
+                ) : (
+                    <video ref={videoRef} autoPlay playsInline muted
+                        className="w-full h-full object-cover" />
+                )}
+            </div>
+
+            {/* Shutter */}
+            {!error && (
+                <div className="flex-shrink-0 flex items-center justify-center py-8"
+                    style={{ background: 'rgba(0,0,0,0.6)' }}>
+                    <button onClick={capture} disabled={!ready}
+                        className="w-18 h-18 rounded-full flex items-center justify-center transition-transform active:scale-95"
+                        style={{
+                            width: 72, height: 72,
+                            background: ready ? '#fff' : 'rgba(255,255,255,0.3)',
+                            border: '4px solid rgba(255,255,255,0.5)',
+                        }} />
+                </div>
+            )}
+        </div>
+    );
+}
+
 // ── Post Update Modal ─────────────────────────────────────────────────────────
 
-function PostUpdateModal({ ghlId, stages, initialStageId, onClose }) {
-    const [title,    setTitle]    = useState('');
-    const [body,     setBody]     = useState('');
-    const [stageId,  setStageId]  = useState(initialStageId ?? '');
-    const [photos,   setPhotos]   = useState([]);
-    const [previews, setPreviews] = useState([]);
-    const [busy,     setBusy]     = useState(false);
-    const fileRef   = useRef(null);
-    const cameraRef = useRef(null);
+function PostUpdateModal({ ghlId, stages, initialStageId, onClose, onComplete }) {
+    const [title,      setTitle]      = useState('');
+    const [body,       setBody]       = useState('');
+    const [stageId,    setStageId]    = useState(initialStageId ?? '');
+    const [photos,     setPhotos]     = useState([]);
+    const [previews,   setPreviews]   = useState([]);
+    const [busy,       setBusy]       = useState(false);
+    const [showCamera, setShowCamera] = useState(false);
+    const fileRef = useRef(null);
 
     function addFiles(files) {
         const arr = Array.from(files);
@@ -229,10 +340,14 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose }) {
         photos.forEach((f, i) => fd.append(`photos[${i}]`, f));
         router.post(route('worker.projects.update.post', ghlId), fd, {
             forceFormData: true,
-            onSuccess: () => { onClose(); },
+            onSuccess: () => { onComplete?.(); onClose(); },
             onFinish:  () => setBusy(false),
         });
     }
+
+    if (showCamera) return (
+        <CameraCapture onCapture={file => addFiles([file])} onClose={() => setShowCamera(false)} />
+    );
 
     return (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
@@ -249,13 +364,19 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose }) {
 
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-4 flex-shrink-0"
-                    style={{ borderBottom: '1px solid #f0ebe3' }}>
+                    style={{
+                        borderBottom: '1px solid #f0ebe3',
+                        background: onComplete ? 'linear-gradient(135deg, rgba(26,60,46,0.04), rgba(201,168,76,0.04))' : 'white',
+                    }}>
                     <div>
-                        <h2 className="text-base font-bold text-forest">Post Update</h2>
+                        <h2 className="text-base font-bold text-forest">
+                            {onComplete ? 'Complete Stage' : 'Post Update'}
+                        </h2>
                         {stageId && stages?.find(s => String(s.id) === stageId)?.name && (
                             <p className="text-xs mt-0.5 flex items-center gap-1.5" style={{ color: '#8a7e6e' }}>
                                 <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: '#c9a84c' }}/>
                                 {stages.find(s => String(s.id) === stageId).name}
+                                {onComplete && <span className="ml-1 font-semibold" style={{ color: '#1a3c2e' }}>· will be marked complete</span>}
                             </p>
                         )}
                     </div>
@@ -367,7 +488,7 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose }) {
                                     </svg>
                                     {previews.length > 0 ? 'Add More' : 'Gallery'}
                                 </button>
-                                <button type="button" onClick={() => cameraRef.current?.click()}
+                                <button type="button" onClick={() => setShowCamera(true)}
                                     className="flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-semibold transition-colors"
                                     style={{ border: '1.5px dashed #d4c9b7', background: '#fafaf8', color: '#6b5e4a' }}>
                                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
@@ -380,8 +501,6 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose }) {
                         )}
 
                         <input ref={fileRef} type="file" accept="image/*" multiple className="hidden"
-                            onChange={e => { addFiles(e.target.files); e.target.value = ''; }} />
-                        <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden"
                             onChange={e => { addFiles(e.target.files); e.target.value = ''; }} />
                     </div>
 
@@ -405,9 +524,9 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose }) {
                                     <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                         <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
                                     </svg>
-                                    Posting…
+                                    {onComplete ? 'Completing…' : 'Posting…'}
                                 </>
-                            ) : 'Post Update'}
+                            ) : onComplete ? 'Post & Complete Stage' : 'Post Update'}
                         </button>
                     </div>
                 </form>
@@ -694,21 +813,9 @@ function OverviewTab({ project, ghl }) {
 
 // ── Stages tab ────────────────────────────────────────────────────────────────
 
-function StagesTab({ project, onPostUpdate, onShowUpdates }) {
-    const [saving, setSaving] = useState(false);
-
-    function advance(order) {
-        if (saving) return;
-        setSaving(true);
-        router.put(
-            route('worker.projects.stage.update', project.ghl_opportunity_id),
-            { stage_order: order },
-            { onFinish: () => setSaving(false) }
-        );
-    }
+function StagesTab({ project, onShowUpdates, onCompleteStage, advanceStage, saving }) {
 
     const currentOrder = project.stages?.find(s => s.status === 'in_progress')?.order ?? 0;
-    const currentStage = project.stages?.find(s => s.status === 'in_progress');
 
     return (
         <div className="space-y-3">
@@ -823,15 +930,15 @@ function StagesTab({ project, onPostUpdate, onShowUpdates }) {
                                 </p>
                             </div>
                             <div className="flex-shrink-0 flex items-center gap-2">
-                                {isActive && stage.order < 5 && (
-                                    <button onClick={e => { e.stopPropagation(); advance(stage.order + 1); }} disabled={saving}
+                                {isActive && (
+                                    <button onClick={e => { e.stopPropagation(); onCompleteStage(stage); }} disabled={saving}
                                         className="px-4 py-2 rounded-xl text-xs font-bold transition-opacity"
                                         style={{ background: '#1a3c2e', color: '#c9a84c', opacity: saving ? 0.5 : 1 }}>
                                         {saving ? '…' : 'Complete ✓'}
                                     </button>
                                 )}
                                 {canStart && (
-                                    <button onClick={e => { e.stopPropagation(); advance(stage.order); }} disabled={saving}
+                                    <button onClick={e => { e.stopPropagation(); advanceStage(stage.order); }} disabled={saving}
                                         className="px-4 py-2 rounded-xl text-xs font-bold transition-opacity"
                                         style={{ background: 'rgba(201,168,76,0.15)', color: '#b8943c', border: '1px solid rgba(201,168,76,0.3)', opacity: saving ? 0.5 : 1 }}>
                                         {saving ? '…' : 'Start →'}
@@ -1099,9 +1206,19 @@ function UpdatesTab({ updates, onPostUpdate, ghlId, stages, stageFilter, onClear
                             <ExpandableText text={u.body} />
                         </div>
 
-                        {/* Photo grid — full bleed */}
-                        {photos.length > 0 && (
+                        {/* Photo grid — full bleed, or no-image placeholder */}
+                        {photos.length > 0 ? (
                             <PhotoGrid photos={photos} onOpen={idx => setLightbox({ photos, index: idx })} />
+                        ) : (
+                            <div className="mx-4 mb-3 flex flex-col items-center justify-center gap-1.5 rounded-xl"
+                                style={{ aspectRatio: '2/1', background: '#f5f0e8', border: '1.5px dashed #e4ddd2' }}>
+                                <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="#c9c0b3" strokeWidth="1.4" strokeLinecap="round">
+                                    <rect x="1" y="3" width="14" height="10" rx="1.5"/>
+                                    <circle cx="8" cy="8" r="2.2"/>
+                                    <path d="M5 3l1-2h4l1 2"/>
+                                </svg>
+                                <span className="text-xs font-medium" style={{ color: '#c9c0b3' }}>No images uploaded</span>
+                            </div>
                         )}
 
                         {/* Footer */}
@@ -1141,12 +1258,36 @@ function UpdatesTab({ updates, onPostUpdate, ghlId, stages, stageFilter, onClear
 const TABS = ['Overview', 'Stages', 'Updates'];
 
 export default function WorkerProjectShow({ project, ghl, updates }) {
-    const [tab,            setTab]         = useState('Stages');
-    const [modalOpen,      setModal]       = useState(false);
-    const [initialStageId, setInitialStage] = useState(null);
-    const [stageFilter,    setStageFilter] = useState(null);
+    const [tab,             setTab]          = useState('Stages');
+    const [modalOpen,       setModal]        = useState(false);
+    const [initialStageId,  setInitialStage] = useState(null);
+    const [stageFilter,     setStageFilter]  = useState(null);
+    const [pendingComplete, setPendingComplete] = useState(null); // stage object
+    const [saving,          setSaving]       = useState(false);
 
-    function openModal(stageId) { setInitialStage(stageId ? String(stageId) : null); setModal(true); }
+    function openModal(stageId) {
+        setInitialStage(stageId ? String(stageId) : null);
+        setPendingComplete(null);
+        setModal(true);
+    }
+
+    function openModalForComplete(stage) {
+        setInitialStage(String(stage.id));
+        // order to advance TO: stage.order + 1. For the last stage this exceeds
+        // maxOrder, which the backend interprets as "complete everything".
+        setPendingComplete({ ...stage, advanceToOrder: stage.order + 1 });
+        setModal(true);
+    }
+
+    function advanceStage(order) {
+        if (saving) return;
+        setSaving(true);
+        router.put(
+            route('worker.projects.stage.update', project.ghl_opportunity_id),
+            { stage_order: order },
+            { onFinish: () => setSaving(false) }
+        );
+    }
 
     function showUpdatesForStage(stageName) {
         setStageFilter(stageName);
@@ -1209,7 +1350,7 @@ export default function WorkerProjectShow({ project, ghl, updates }) {
             <TabBar tabs={TABS} active={tab} onChange={t => { setTab(t); setStageFilter(null); }} />
 
             {tab === 'Overview' && <OverviewTab project={project} ghl={ghl} />}
-            {tab === 'Stages'   && <StagesTab   project={project} onPostUpdate={openModal} onShowUpdates={showUpdatesForStage} />}
+            {tab === 'Stages'   && <StagesTab   project={project} onShowUpdates={showUpdatesForStage} onCompleteStage={openModalForComplete} advanceStage={advanceStage} saving={saving} />}
             {tab === 'Updates'  && <UpdatesTab  updates={updates} onPostUpdate={openModal} ghlId={project.ghl_opportunity_id} stages={project.stages} stageFilter={stageFilter} onClearFilter={() => setStageFilter(null)} />}
 
             {modalOpen && (
@@ -1217,7 +1358,8 @@ export default function WorkerProjectShow({ project, ghl, updates }) {
                     ghlId={project.ghl_opportunity_id}
                     stages={project.stages}
                     initialStageId={initialStageId}
-                    onClose={() => setModal(false)}
+                    onClose={() => { setPendingComplete(null); setModal(false); }}
+                    onComplete={pendingComplete ? () => advanceStage(pendingComplete.advanceToOrder) : null}
                 />
             )}
         </AuthenticatedLayout>

@@ -91,10 +91,14 @@ class ProjectController extends Controller
 
         $project->load(['client', 'workers', 'stages', 'documents.uploader']);
 
-        // Sync local stage statuses from GHL pipeline stage (GHL is source of truth)
-        if ($ghl && ! empty($ghl['stage_id'])) {
+        // Sync local stage statuses from GHL — skip if all stages are already completed
+        // so GHL cannot revert a completed project back to in_progress.
+        $allCompleted = $project->stages->isNotEmpty()
+            && $project->stages->every(fn ($s) => $s->status === 'completed');
+
+        if (! $allCompleted && ! empty($ghl['stage_id'])) {
             $this->ghl->syncProjectStages($project, $ghl['stage_id']);
-            $project->load('stages'); // reload after sync
+            $project->load('stages');
         }
 
         return Inertia::render('Admin/Projects/Show', [
