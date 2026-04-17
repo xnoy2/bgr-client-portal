@@ -9,11 +9,12 @@
         "php": "^8.2",
         "barryvdh/laravel-dompdf": "^3.1",
         "cloudinary-labs/cloudinary-laravel": "^3.0",
+        "fpdf/fpdf": "*",
         "inertiajs/inertia-laravel": "^2.0",
         "laravel/framework": "^12.0",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
-        "setasign/fpdi": "^2.6",
+        "setasign/fpdi": "*",
         "spatie/laravel-permission": "^6.25",
         "tightenco/ziggy": "^2.0"
     },
@@ -34,7 +35,7 @@
             "Database\\Seeders\\": "database/seeders/"
         },
         "files": [
-            "vendor/fpdf/fpdf.php"
+            "bootstrap/fpdf-compat.php"
         ]
     },
     "autoload-dev": {
