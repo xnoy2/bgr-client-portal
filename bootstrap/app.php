@@ -12,6 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Trust Railway's reverse proxy so HTTPS is detected correctly
+        $middleware->trustProxies(at: '*');
+
         // Inertia
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
