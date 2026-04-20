@@ -191,17 +191,91 @@ function Lightbox({ photos, startIndex, onClose }) {
     );
 }
 
+// ── Camera Capture ────────────────────────────────────────────────────────────
+
+function CameraCapture({ onCapture, onClose }) {
+    const videoRef   = useRef(null);
+    const streamRef  = useRef(null);
+    const [facingMode, setFacingMode] = useState('environment');
+    const [error,      setError]      = useState(null);
+
+    const startCamera = useCallback(async (mode) => {
+        if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode }, audio: false });
+            streamRef.current = stream;
+            if (videoRef.current) videoRef.current.srcObject = stream;
+            setError(null);
+        } catch {
+            setError('Camera access denied or unavailable.');
+        }
+    }, []);
+
+    useEffect(() => {
+        startCamera(facingMode);
+        return () => { if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop()); };
+    }, [facingMode, startCamera]);
+
+    function capture() {
+        const video  = videoRef.current;
+        if (!video) return;
+        const canvas = document.createElement('canvas');
+        canvas.width  = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        canvas.toBlob(blob => {
+            if (blob) onCapture(new File([blob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' }));
+            onClose();
+        }, 'image/jpeg', 0.9);
+    }
+
+    return (
+        <div className="fixed inset-0 z-[60] flex flex-col" style={{ background: '#000' }}>
+            {error ? (
+                <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
+                    <p className="text-white text-sm">{error}</p>
+                    <button onClick={onClose} className="px-6 py-2 rounded-xl text-sm font-semibold"
+                        style={{ background: '#1a3c2e', color: '#c9a84c' }}>Close</button>
+                </div>
+            ) : (
+                <>
+                    <video ref={videoRef} autoPlay playsInline muted className="flex-1 w-full object-cover" />
+                    <div className="flex items-center justify-between px-8 py-6 flex-shrink-0" style={{ background: 'rgba(0,0,0,0.6)' }}>
+                        <button onClick={onClose} className="w-12 h-12 rounded-full flex items-center justify-center"
+                            style={{ background: 'rgba(255,255,255,0.15)' }}>
+                            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
+                                <line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/>
+                            </svg>
+                        </button>
+                        <button onClick={capture} className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center"
+                            style={{ background: 'rgba(255,255,255,0.2)' }}>
+                            <div className="w-12 h-12 rounded-full bg-white" />
+                        </button>
+                        <button onClick={() => setFacingMode(m => m === 'environment' ? 'user' : 'environment')}
+                            className="w-12 h-12 rounded-full flex items-center justify-center"
+                            style={{ background: 'rgba(255,255,255,0.15)' }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
+                                <path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                            </svg>
+                        </button>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
 // ── Post Update Modal ─────────────────────────────────────────────────────────
 
 function PostUpdateModal({ ghlId, stages, initialStageId, onClose, onComplete }) {
-    const [title,    setTitle]    = useState('');
-    const [body,     setBody]     = useState('');
-    const [stageId,  setStageId]  = useState(initialStageId ?? '');
-    const [photos,   setPhotos]   = useState([]);
-    const [previews, setPreviews] = useState([]);
-    const [busy,     setBusy]     = useState(false);
-    const fileRef   = useRef(null);
-    const cameraRef = useRef(null);
+    const [title,      setTitle]      = useState('');
+    const [body,       setBody]       = useState('');
+    const [stageId,    setStageId]    = useState(initialStageId ?? '');
+    const [photos,     setPhotos]     = useState([]);
+    const [previews,   setPreviews]   = useState([]);
+    const [busy,       setBusy]       = useState(false);
+    const [showCamera, setShowCamera] = useState(false);
+    const fileRef = useRef(null);
 
     function addFiles(files) {
         const arr = Array.from(files);
@@ -233,6 +307,10 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose, onComplete })
             onFinish:  () => setBusy(false),
         });
     }
+
+    if (showCamera) return (
+        <CameraCapture onCapture={file => addFiles([file])} onClose={() => setShowCamera(false)} />
+    );
 
     return (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
@@ -367,7 +445,7 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose, onComplete })
                                     </svg>
                                     {previews.length > 0 ? 'Add More' : 'Gallery'}
                                 </button>
-                                <button type="button" onClick={() => cameraRef.current?.click()}
+                                <button type="button" onClick={() => setShowCamera(true)}
                                     className="flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-semibold transition-colors"
                                     style={{ border: '1.5px dashed #d4c9b7', background: '#fafaf8', color: '#6b5e4a' }}>
                                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
@@ -380,8 +458,6 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose, onComplete })
                         )}
 
                         <input ref={fileRef} type="file" accept="image/*" multiple className="hidden"
-                            onChange={e => { addFiles(e.target.files); e.target.value = ''; }} />
-                        <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="hidden"
                             onChange={e => { addFiles(e.target.files); e.target.value = ''; }} />
                     </div>
 
@@ -694,10 +770,9 @@ function OverviewTab({ project, ghl }) {
 
 // ── Stages tab ────────────────────────────────────────────────────────────────
 
-function StagesTab({ project, onPostUpdate, onShowUpdates, onCompleteStage, advanceStage, saving }) {
+function StagesTab({ project, onShowUpdates, onCompleteStage, advanceStage, saving }) {
 
     const currentOrder = project.stages?.find(s => s.status === 'in_progress')?.order ?? 0;
-    const currentStage = project.stages?.find(s => s.status === 'in_progress');
 
     return (
         <div className="space-y-3">
