@@ -2,8 +2,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
 const STATUS_COLOR = {
-    active:    { bg: 'rgba(201,168,76,0.1)',  border: 'rgba(201,168,76,0.3)',  text: '#b8943c'  },
-    completed: { bg: 'rgba(26,60,46,0.08)',   border: 'rgba(26,60,46,0.2)',    text: '#1a3c2e'  },
+    active:    { bg: 'rgba(18,20,23,0.06)',   border: 'rgba(18,20,23,0.15)',   text: '#121417'  },
+    completed: { bg: 'rgba(21,128,61,0.08)',  border: 'rgba(21,128,61,0.2)',   text: '#15803d'  },
     on_hold:   { bg: 'rgba(180,80,60,0.08)',  border: 'rgba(180,80,60,0.25)',  text: '#b44c3c'  },
 };
 
@@ -13,9 +13,9 @@ function ProgressRing({ pct, size = 40, stroke = 3 }) {
     const offset = circ - (pct / 100) * circ;
     return (
         <svg width={size} height={size} className="flex-shrink-0 -rotate-90">
-            <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e4ddd2" strokeWidth={stroke} />
+            <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#D1CDC7" strokeWidth={stroke} />
             <circle cx={size / 2} cy={size / 2} r={r} fill="none"
-                stroke="#c9a84c" strokeWidth={stroke}
+                stroke="#121417" strokeWidth={stroke}
                 strokeDasharray={circ} strokeDashoffset={offset}
                 strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.5s ease' }}
             />
@@ -29,7 +29,7 @@ function ProjectCard({ project }) {
     return (
         <Link href={route('worker.projects.show', project.ghl_opportunity_id)}
             className="block bg-white rounded-xl p-5 transition-shadow duration-200 hover:shadow-md"
-            style={{ border: '0.5px solid #e4ddd2' }}>
+            style={{ border: '0.5px solid #D1CDC7' }}>
 
             {/* Header row */}
             <div className="flex items-start justify-between gap-3 mb-4">
@@ -56,9 +56,9 @@ function ProjectCard({ project }) {
                         <span className="text-sm font-bold text-forest">{project.progress_pct}%</span>
                         <span className="text-xs" style={{ color: '#8a7e6e' }}>complete</span>
                     </div>
-                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#ede8df' }}>
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#F0EDEA' }}>
                         <div className="h-full rounded-full transition-all duration-500"
-                            style={{ width: `${project.progress_pct}%`, background: '#c9a84c' }} />
+                            style={{ width: `${project.progress_pct}%`, background: '#121417' }} />
                     </div>
                 </div>
                 <div className="text-right flex-shrink-0">
@@ -72,7 +72,7 @@ function ProjectCard({ project }) {
             {/* Current stage */}
             {project.current_stage && (
                 <div className="mt-3 pt-3 flex items-center gap-2" style={{ borderTop: '0.5px solid #ede8df' }}>
-                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#c9a84c' }} />
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#121417' }} />
                     <span className="text-xs" style={{ color: '#6b5e4a' }}>
                         Currently: <span className="font-medium text-forest">{project.current_stage}</span>
                     </span>
@@ -89,7 +89,7 @@ export default function WorkerDashboard({ projects }) {
 
             {/* Header */}
             <div className="rounded-2xl p-6 mb-5 flex items-start justify-between"
-                style={{ background: '#1a3c2e', border: '0.5px solid rgba(201,168,76,0.15)' }}>
+                style={{ background: '#121417', border: '0.5px solid rgba(255,255,255,0.08)' }}>
                 <div>
                     <h1 className="text-2xl text-white font-serif font-normal mb-1">My Projects</h1>
                     <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
@@ -97,7 +97,7 @@ export default function WorkerDashboard({ projects }) {
                     </p>
                 </div>
                 <span className="text-sm font-medium px-3 py-1.5 rounded-full mt-1"
-                    style={{ color: '#c9a84c', background: 'rgba(201,168,76,0.1)', border: '0.5px solid rgba(201,168,76,0.25)' }}>
+                    style={{ color: 'rgba(255,255,255,0.8)', background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.12)' }}>
                     Worker
                 </span>
             </div>
@@ -108,8 +108,8 @@ export default function WorkerDashboard({ projects }) {
                     {projects.map(p => <ProjectCard key={p.id} project={p} />)}
                 </div>
             ) : (
-                <div className="bg-white rounded-xl p-10 text-center" style={{ border: '0.5px solid #e4ddd2' }}>
-                    <svg width="40" height="40" viewBox="0 0 16 16" fill="none" stroke="#e4ddd2" strokeWidth="1.2"
+                <div className="bg-white rounded-xl p-10 text-center" style={{ border: '0.5px solid #D1CDC7' }}>
+                    <svg width="40" height="40" viewBox="0 0 16 16" fill="none" stroke="#D1CDC7" strokeWidth="1.2"
                         strokeLinecap="round" className="mx-auto mb-3">
                         <rect x="2" y="5" width="12" height="9" rx="1.5"/>
                         <path d="M5 5V3.5A1.5 1.5 0 016.5 2h3A1.5 1.5 0 0111 3.5V5"/>

@@ -8,10 +8,10 @@ function Btn({ variant = 'default', size = 'sm', className = '', ...props }) {
     const base = 'inline-flex items-center gap-1.5 rounded-lg font-medium transition-opacity disabled:opacity-50 whitespace-nowrap';
     const sizes = { sm: 'px-3 py-1.5 text-xs', md: 'px-4 py-2 text-sm' };
     const styles = {
-        default: { background: '#fff',        color: '#1a3c2e', border: '0.5px solid #e4ddd2' },
-        primary: { background: '#1a3c2e',     color: '#fff',    border: '0.5px solid #142e23' },
-        gold:    { background: '#c9a84c',     color: '#0e2019', border: '0.5px solid #b8943c' },
-        ghost:   { background: 'transparent', color: '#6b5e4a', border: '0.5px solid #e4ddd2' },
+        default: { background: '#fff',        color: '#121417', border: '0.5px solid #D1CDC7' },
+        primary: { background: '#121417',     color: '#fff',    border: '0.5px solid #0e1012' },
+        gold:    { background: '#121417',     color: '#121417', border: '0.5px solid #121417' },
+        ghost:   { background: 'transparent', color: '#4A4A4A', border: '0.5px solid #D1CDC7' },
     };
     return <button className={`${base} ${sizes[size]} ${className}`} style={styles[variant]} {...props} />;
 }
@@ -39,7 +39,7 @@ function StageBadge({ name }) {
     if (!name) return null;
     return (
         <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-            style={{ background: 'rgba(201,168,76,0.12)', color: '#b8943c', border: '0.5px solid rgba(201,168,76,0.3)' }}>
+            style={{ background: 'rgba(18,20,23,0.06)', color: '#121417', border: '0.5px solid rgba(18,20,23,0.12)' }}>
             {name}
         </span>
     );
@@ -69,19 +69,19 @@ function OpportunityCard({ opp }) {
         <div
             onClick={open}
             className="bg-white rounded-xl p-5 flex flex-col gap-3 cursor-pointer"
-            style={{ border: '0.5px solid #e4ddd2', transition: 'border-color 0.15s, box-shadow 0.15s' }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = '#c9a84c'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(201,168,76,0.12)'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = '#e4ddd2'; e.currentTarget.style.boxShadow = 'none'; }}>
+            style={{ border: '0.5px solid #D1CDC7', transition: 'border-color 0.15s, box-shadow 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = '#121417'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(18,20,23,0.06)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = '#D1CDC7'; e.currentTarget.style.boxShadow = 'none'; }}>
 
             {/* Header row */}
             <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-semibold text-forest leading-snug">{opp.name}</h3>
                     {opp.contact?.name && (
-                        <p className="text-xs mt-0.5 truncate" style={{ color: '#8a7e6e' }}>
+                        <p className="text-xs mt-0.5 truncate" style={{ color: '#888480' }}>
                             {opp.contact.name}
                             {opp.contact.email && (
-                                <span style={{ color: '#b0a090' }}> · {opp.contact.email}</span>
+                                <span style={{ color: '#888480' }}> · {opp.contact.email}</span>
                             )}
                         </p>
                     )}
@@ -99,25 +99,25 @@ function OpportunityCard({ opp }) {
             {hasLocal ? (
                 <div className="flex items-center gap-2 text-xs rounded-lg px-3 py-2"
                     style={{ background: 'rgba(26,60,46,0.05)', border: '0.5px solid rgba(26,60,46,0.12)' }}>
-                    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#1a3c2e" strokeWidth="2.5" strokeLinecap="round">
+                    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#121417" strokeWidth="2.5" strokeLinecap="round">
                         <polyline points="2,8 6,12 14,4"/>
                     </svg>
-                    <span style={{ color: '#1a3c2e' }}>
+                    <span style={{ color: '#121417' }}>
                         Project open
-                        {opp.local.client && <span style={{ color: '#6b5e4a' }}> · {opp.local.client.name}</span>}
+                        {opp.local.client && <span style={{ color: '#4A4A4A' }}> · {opp.local.client.name}</span>}
                         {opp.local.workers_count > 0 && (
-                            <span style={{ color: '#6b5e4a' }}> · {opp.local.workers_count} worker{opp.local.workers_count !== 1 ? 's' : ''}</span>
+                            <span style={{ color: '#4A4A4A' }}> · {opp.local.workers_count} worker{opp.local.workers_count !== 1 ? 's' : ''}</span>
                         )}
                     </span>
                 </div>
             ) : (
-                <div className="text-xs" style={{ color: '#b0a090' }}>Not yet opened as project</div>
+                <div className="text-xs" style={{ color: '#888480' }}>Not yet opened as project</div>
             )}
 
             {/* Footer */}
-            <div className="flex items-center justify-between pt-1 border-t" style={{ borderColor: '#f5f0e8' }}>
-                {created && <span className="text-xs" style={{ color: '#b0a090' }}>{created}</span>}
-                <span className="text-xs font-medium ml-auto" style={{ color: '#c9a84c' }}>
+            <div className="flex items-center justify-between pt-1 border-t" style={{ borderColor: '#F9F8F6' }}>
+                {created && <span className="text-xs" style={{ color: '#888480' }}>{created}</span>}
+                <span className="text-xs font-medium ml-auto" style={{ color: '#121417' }}>
                     Open →
                 </span>
             </div>
@@ -169,15 +169,15 @@ export default function ProjectsIndex({ opportunities, ghl_meta }) {
             {/* Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
                 {[
-                    { label: 'Total',          value: stats.total,  accent: '#e4ddd2' },
+                    { label: 'Total',          value: stats.total,  accent: '#D1CDC7' },
                     { label: 'Open',           value: stats.open,   accent: '#3b82f6' },
                     { label: 'Won',            value: stats.won,    accent: '#22c55e' },
-                    { label: 'Projects Opened', value: stats.opened, accent: '#c9a84c' },
+                    { label: 'Projects Opened', value: stats.opened, accent: '#121417' },
                 ].map(s => (
                     <div key={s.label} className="bg-white rounded-xl p-4"
-                        style={{ border: '0.5px solid #e4ddd2', borderLeft: `4px solid ${s.accent}` }}>
+                        style={{ border: '0.5px solid #D1CDC7', borderLeft: `4px solid ${s.accent}` }}>
                         <p className="text-2xl font-semibold text-forest">{s.value}</p>
-                        <p className="text-xs mt-0.5" style={{ color: '#8a7e6e' }}>{s.label}</p>
+                        <p className="text-xs mt-0.5" style={{ color: '#888480' }}>{s.label}</p>
                     </div>
                 ))}
             </div>
@@ -190,8 +190,8 @@ export default function ProjectsIndex({ opportunities, ghl_meta }) {
                         <button key={s} onClick={() => setStatusFilter(s)}
                             className="px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-colors"
                             style={statusFilter === s
-                                ? { background: '#1a3c2e', color: '#fff',    border: '0.5px solid #142e23' }
-                                : { background: '#fff',    color: '#6b5e4a', border: '0.5px solid #e4ddd2' }}>
+                                ? { background: '#121417', color: '#fff',    border: '0.5px solid #0e1012' }
+                                : { background: '#fff',    color: '#4A4A4A', border: '0.5px solid #D1CDC7' }}>
                             {s === 'all' ? 'All' : s}
                         </button>
                     ))}
@@ -201,15 +201,15 @@ export default function ProjectsIndex({ opportunities, ghl_meta }) {
                 <div className="flex items-center gap-2 w-full sm:w-auto">
                     <div className="relative flex-1 sm:w-56">
                         <svg className="absolute left-2.5 top-1/2 -translate-y-1/2" width="13" height="13"
-                            viewBox="0 0 16 16" fill="none" stroke="#b0a090" strokeWidth="2" strokeLinecap="round">
+                            viewBox="0 0 16 16" fill="none" stroke="#888480" strokeWidth="2" strokeLinecap="round">
                             <circle cx="6.5" cy="6.5" r="4.5"/><line x1="10" y1="10" x2="14" y2="14"/>
                         </svg>
                         <input value={search} onChange={e => setSearch(e.target.value)}
                             placeholder="Search opportunities…"
                             className="w-full pl-8 pr-3 py-1.5 rounded-lg text-xs outline-none"
-                            style={{ border: '0.5px solid #e4ddd2', background: '#fff', color: '#1a3c2e' }}
-                            onFocus={e => e.target.style.borderColor = '#c9a84c'}
-                            onBlur={e  => e.target.style.borderColor = '#e4ddd2'} />
+                            style={{ border: '0.5px solid #D1CDC7', background: '#fff', color: '#121417' }}
+                            onFocus={e => e.target.style.borderColor = '#121417'}
+                            onBlur={e  => e.target.style.borderColor = '#D1CDC7'} />
                     </div>
                     <Btn variant="ghost" size="sm" onClick={refresh} disabled={refreshing}>
                         <svg className={refreshing ? 'animate-spin' : ''} width="12" height="12" viewBox="0 0 16 16"
@@ -224,8 +224,8 @@ export default function ProjectsIndex({ opportunities, ghl_meta }) {
 
             {/* Grid */}
             {filtered.length === 0 ? (
-                <div className="bg-white rounded-xl py-16 text-center" style={{ border: '0.5px solid #e4ddd2' }}>
-                    <p className="text-sm" style={{ color: '#b0a090' }}>
+                <div className="bg-white rounded-xl py-16 text-center" style={{ border: '0.5px solid #D1CDC7' }}>
+                    <p className="text-sm" style={{ color: '#888480' }}>
                         {(opportunities?.length ?? 0) === 0
                             ? 'No opportunities in GHL pipeline.'
                             : 'No opportunities match your filters.'}
@@ -238,7 +238,7 @@ export default function ProjectsIndex({ opportunities, ghl_meta }) {
             )}
 
             {ghl_meta?.total > 0 && (
-                <p className="mt-4 text-xs text-center" style={{ color: '#b0a090' }}>
+                <p className="mt-4 text-xs text-center" style={{ color: '#888480' }}>
                     {filtered.length} of {ghl_meta.total} opportunities · cached 5 min
                 </p>
             )}

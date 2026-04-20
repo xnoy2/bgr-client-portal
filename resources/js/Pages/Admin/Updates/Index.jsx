@@ -71,7 +71,7 @@ function Lightbox({ photos, startIndex, onClose }) {
                             style={{
                                 width: 48, height: 48,
                                 opacity: i === idx ? 1 : 0.4,
-                                border: i === idx ? '2px solid #c9a84c' : '2px solid transparent',
+                                border: i === idx ? '2px solid #121417' : '2px solid transparent',
                             }}>
                             <img src={src} alt="" className="w-full h-full object-cover" />
                         </button>
@@ -139,17 +139,17 @@ function UpdateDetailModal({ update, onClose }) {
                         style={{ borderBottom: '0.5px solid #f0ebe3' }}>
                         <div className="flex items-center gap-2.5 min-w-0">
                             <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                                style={{ background: 'linear-gradient(135deg, #1a3c2e, #2d5a42)', color: '#c9a84c' }}>
+                                style={{ background: 'linear-gradient(135deg, #121417, #2d5a42)', color: '#121417' }}>
                                 {(update.author_name ?? 'T')[0]?.toUpperCase()}
                             </div>
                             <div className="min-w-0">
                                 <p className="text-sm font-semibold text-forest">{update.author_name ?? 'Project Team'}</p>
-                                <p className="text-xs" style={{ color: '#a09487' }}>{update.date}</p>
+                                <p className="text-xs" style={{ color: '#888480' }}>{update.date}</p>
                             </div>
                         </div>
                         <button onClick={onClose}
                             className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
-                            style={{ background: '#f5f0e8', color: '#6b5e4a' }}>
+                            style={{ background: '#F9F8F6', color: '#4A4A4A' }}>
                             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                                 <line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/>
                             </svg>
@@ -163,13 +163,13 @@ function UpdateDetailModal({ update, onClose }) {
                             <div className="flex flex-wrap items-center gap-1.5">
                                 {update.project_name && (
                                     <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                                        style={{ background: 'rgba(26,60,46,0.08)', color: '#1a3c2e' }}>
+                                        style={{ background: 'rgba(18,20,23,0.05)', color: '#121417' }}>
                                         {update.project_name}
                                     </span>
                                 )}
                                 {update.stage_name && (
                                     <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                                        style={{ background: 'rgba(201,168,76,0.12)', color: '#b8943c' }}>
+                                        style={{ background: 'rgba(18,20,23,0.06)', color: '#121417' }}>
                                         {update.stage_name}
                                     </span>
                                 )}
@@ -183,7 +183,7 @@ function UpdateDetailModal({ update, onClose }) {
                         </div>
 
                         <div className="px-5 pb-5">
-                            <p className="text-xs font-semibold uppercase tracking-wider mb-2.5" style={{ color: '#a09487' }}>
+                            <p className="text-xs font-semibold uppercase tracking-wider mb-2.5" style={{ color: '#888480' }}>
                                 Photos{photos.length > 0 ? ` · ${photos.length}` : ''}
                             </p>
                             {photos.length > 0 ? (
@@ -202,7 +202,7 @@ function UpdateDetailModal({ update, onClose }) {
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl"
-                                    style={{ aspectRatio: '2/1', background: '#f5f0e8', border: '1.5px dashed #e4ddd2' }}>
+                                    style={{ aspectRatio: '2/1', background: '#F9F8F6', border: '1.5px dashed #D1CDC7' }}>
                                     <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="#c9c0b3" strokeWidth="1.4" strokeLinecap="round">
                                         <rect x="1" y="3" width="14" height="10" rx="1.5"/>
                                         <circle cx="8" cy="8" r="2.2"/>
@@ -235,21 +235,21 @@ export default function UpdatesIndex({ updates }) {
                 {/* Header */}
                 <div className="mb-6">
                     <h1 className="text-xl font-semibold text-forest">Progress Updates</h1>
-                    <p className="text-sm mt-0.5" style={{ color: '#8a7e6e' }}>
+                    <p className="text-sm mt-0.5" style={{ color: '#888480' }}>
                         {updates.length} update{updates.length !== 1 ? 's' : ''} across all projects
                     </p>
                 </div>
 
                 {updates.length === 0 ? (
-                    <div className="bg-white rounded-2xl p-12 text-center" style={{ border: '0.5px solid #e4ddd2' }}>
+                    <div className="bg-white rounded-2xl p-12 text-center" style={{ border: '0.5px solid #D1CDC7' }}>
                         <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
-                            style={{ background: '#f5f0e8' }}>
-                            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#c9a84c" strokeWidth="1.5" strokeLinecap="round">
+                            style={{ background: '#F9F8F6' }}>
+                            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#121417" strokeWidth="1.5" strokeLinecap="round">
                                 <path d="M14 10c0 .6-.4 1-1 1H4l-2 3V3c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v7z"/>
                             </svg>
                         </div>
                         <p className="text-sm font-bold text-forest mb-1">No updates yet</p>
-                        <p className="text-xs" style={{ color: '#a09487' }}>Updates posted by workers will appear here.</p>
+                        <p className="text-xs" style={{ color: '#888480' }}>Updates posted by workers will appear here.</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3">
@@ -260,14 +260,14 @@ export default function UpdatesIndex({ updates }) {
                                     className="bg-white rounded-2xl overflow-hidden cursor-pointer flex flex-col"
                                     style={{ border: '1px solid #f0ebe3' }}
                                     onClick={() => setDetailUpdate(u)}
-                                    onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(26,60,46,0.08)'}
+                                    onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(18,20,23,0.05)'}
                                     onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
 
                                     {/* Card header */}
                                     <div className="flex items-start justify-between gap-3 px-4 pt-4 pb-3">
                                         <div className="flex items-center gap-2.5 min-w-0">
                                             <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                                                style={{ background: 'linear-gradient(135deg, #1a3c2e, #2d5a42)', color: '#c9a84c' }}>
+                                                style={{ background: 'linear-gradient(135deg, #121417, #2d5a42)', color: '#121417' }}>
                                                 {(u.author_name ?? 'T')[0]?.toUpperCase()}
                                             </div>
                                             <div className="min-w-0">
@@ -275,12 +275,12 @@ export default function UpdatesIndex({ updates }) {
                                                     {u.author_name ?? 'Project Team'}
                                                 </p>
                                                 <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                                                    <p className="text-xs" style={{ color: '#a09487' }}>{u.date}</p>
+                                                    <p className="text-xs" style={{ color: '#888480' }}>{u.date}</p>
                                                     {u.stage_name && (
                                                         <>
-                                                            <span style={{ color: '#d4c9b7', fontSize: 10 }}>·</span>
+                                                            <span style={{ color: '#D1CDC7', fontSize: 10 }}>·</span>
                                                             <span className="text-xs px-1.5 py-0.5 rounded-full font-medium"
-                                                                style={{ background: 'rgba(201,168,76,0.12)', color: '#b8943c' }}>
+                                                                style={{ background: 'rgba(18,20,23,0.06)', color: '#121417' }}>
                                                                 {u.stage_name}
                                                             </span>
                                                         </>
@@ -294,7 +294,7 @@ export default function UpdatesIndex({ updates }) {
                                     {u.project_name && (
                                         <div className="px-4 pb-2">
                                             <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                                                style={{ background: 'rgba(26,60,46,0.07)', color: '#1a3c2e' }}>
+                                                style={{ background: 'rgba(26,60,46,0.07)', color: '#121417' }}>
                                                 {u.project_name}
                                             </span>
                                         </div>
@@ -323,7 +323,7 @@ export default function UpdatesIndex({ updates }) {
                                         />
                                     ) : (
                                         <div className="mx-4 mb-3 flex flex-col items-center justify-center gap-1.5 rounded-xl"
-                                            style={{ aspectRatio: '2/1', background: '#f5f0e8', border: '1.5px dashed #e4ddd2' }}>
+                                            style={{ aspectRatio: '2/1', background: '#F9F8F6', border: '1.5px dashed #D1CDC7' }}>
                                             <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="#c9c0b3" strokeWidth="1.4" strokeLinecap="round">
                                                 <rect x="1" y="3" width="14" height="10" rx="1.5"/>
                                                 <circle cx="8" cy="8" r="2.2"/>
@@ -335,11 +335,11 @@ export default function UpdatesIndex({ updates }) {
 
                                     {/* Footer */}
                                     <div className="px-4 py-3 flex items-center gap-1.5"
-                                        style={{ borderTop: '0.5px solid #f5f0e8' }}>
-                                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#b0a090" strokeWidth="1.5" strokeLinecap="round">
+                                        style={{ borderTop: '0.5px solid #F9F8F6' }}>
+                                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#888480" strokeWidth="1.5" strokeLinecap="round">
                                             <path d="M14 10c0 .6-.4 1-1 1H4l-2 3V3c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v7z"/>
                                         </svg>
-                                        <span className="text-xs" style={{ color: '#b0a090' }}>Project update from BGR Building</span>
+                                        <span className="text-xs" style={{ color: '#888480' }}>Project update from BGR Building</span>
                                     </div>
                                 </div>
                             );

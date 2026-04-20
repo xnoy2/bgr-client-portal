@@ -26,8 +26,8 @@ export default function Dashboard({ stats = {} }) {
                 <path d="M8 8a3 3 0 100-6 3 3 0 000 6z"/><path d="M2 14a6 6 0 0112 0"/>
             </svg>
         )},
-        { label: 'Total Users', value: total_users, border: '#c9a84c', icon: (
-            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#c9a84c" strokeWidth="1.4" strokeLinecap="round">
+        { label: 'Total Users', value: total_users, border: '#6b7280', icon: (
+            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#6b7280" strokeWidth="1.4" strokeLinecap="round">
                 <path d="M10 8a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2 14a5 5 0 0110 0"/>
                 <path d="M12 6a2 2 0 110-4 2 2 0 010 4M14 13a4 4 0 00-3-3.87"/>
             </svg>
@@ -54,18 +54,18 @@ export default function Dashboard({ stats = {} }) {
 
             {/* Welcome banner */}
             <div className="rounded-2xl p-6 mb-5 flex items-start justify-between"
-                style={{ background: '#1a3c2e', border: '0.5px solid rgba(201,168,76,0.15)' }}>
+                style={{ background: '#121417', border: '0.5px solid rgba(255,255,255,0.08)' }}>
                 <div>
                     <h1 className="text-2xl text-white font-serif font-normal mb-1" style={{ letterSpacing: '-0.01em' }}>
                         Admin Dashboard
                     </h1>
                     <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                        BGR Client Portal &nbsp;·&nbsp; <span style={{ color: 'rgba(201,168,76,0.8)' }}>Administration</span>
+                        BGR Client Portal &nbsp;·&nbsp; <span style={{ color: 'rgba(255,255,255,0.55)' }}>Administration</span>
                     </p>
                 </div>
                 <div className="text-right">
-                    <p className="text-xs uppercase tracking-widest mb-1.5" style={{ color: 'rgba(201,168,76,0.6)', fontSize: 9 }}>Portal</p>
-                    <span className="text-sm font-medium px-3 py-1.5 rounded-full" style={{ color: '#c9a84c', background: 'rgba(201,168,76,0.1)', border: '0.5px solid rgba(201,168,76,0.25)' }}>
+                    <p className="text-xs uppercase tracking-widest mb-1.5" style={{ color: 'rgba(255,255,255,0.4)', fontSize: 9 }}>Portal</p>
+                    <span className="text-sm font-medium px-3 py-1.5 rounded-full" style={{ color: 'rgba(255,255,255,0.8)', background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.12)' }}>
                         Active
                     </span>
                 </div>
@@ -75,7 +75,7 @@ export default function Dashboard({ stats = {} }) {
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-5">
                 {statCards.map(s => (
                     <div key={s.label} className="bg-white rounded-xl p-5 shadow-sm flex items-center justify-between"
-                        style={{ border: `0.5px solid #e4ddd2`, borderLeft: `4px solid ${s.border}` }}>
+                        style={{ border: `0.5px solid #D1CDC7`, borderLeft: `4px solid ${s.border}` }}>
                         <div>
                             <p className="text-3xl font-semibold text-forest">{s.value}</p>
                             <p className="text-xs mt-1" style={{ color: '#8a7e6e' }}>{s.label}</p>
@@ -92,9 +92,9 @@ export default function Dashboard({ stats = {} }) {
                     {quickLinks.map(link => (
                         <Link key={link.label} href={link.href}
                             className="group bg-white rounded-xl p-5 shadow-sm transition-all hover:shadow-md flex items-start gap-4"
-                            style={{ border: '0.5px solid #e4ddd2' }}>
+                            style={{ border: '0.5px solid #D1CDC7' }}>
                             <div className="flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0"
-                                style={{ background: 'rgba(201,168,76,0.08)', border: '0.5px solid rgba(201,168,76,0.2)', color: '#b8943c' }}>
+                                style={{ background: 'rgba(18,20,23,0.05)', border: '0.5px solid #D1CDC7', color: '#121417' }}>
                                 {link.icon}
                             </div>
                             <div>

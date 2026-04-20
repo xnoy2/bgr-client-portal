@@ -41,18 +41,18 @@ function ProjectCard({ project }) {
     return (
         <div onClick={open}
             className="bg-white rounded-2xl overflow-hidden cursor-pointer"
-            style={{ border: '0.5px solid #e4ddd2', transition: 'border-color .15s, box-shadow .15s' }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = '#c9a84c'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(201,168,76,0.1)'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = '#e4ddd2'; e.currentTarget.style.boxShadow = 'none'; }}>
+            style={{ border: '0.5px solid #D1CDC7', transition: 'border-color .15s, box-shadow .15s' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = '#121417'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(18,20,23,0.08)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = '#D1CDC7'; e.currentTarget.style.boxShadow = 'none'; }}>
 
             {/* Progress bar header */}
-            <div className="h-1.5" style={{ background: '#f5f0e8' }}>
+            <div className="h-1.5" style={{ background: '#F0EDEA' }}>
                 <div className="h-full transition-all duration-700"
                     style={{
                         width: `${project.progress_pct}%`,
                         background: project.progress_pct === 100
                             ? 'linear-gradient(90deg, #15803d, #22c55e)'
-                            : 'linear-gradient(90deg, #1a3c2e, #c9a84c)',
+                            : '#121417',
                     }} />
             </div>
 
@@ -66,8 +66,8 @@ function ProjectCard({ project }) {
                 {/* Current stage */}
                 <div className="flex items-center gap-2 mb-4">
                     <div className="w-2 h-2 rounded-full flex-shrink-0"
-                        style={{ background: project.current_stage ? '#c9a84c' : '#e4ddd2' }} />
-                    <span className="text-sm" style={{ color: project.current_stage ? '#b8943c' : '#b0a090' }}>
+                        style={{ background: project.current_stage ? '#121417' : '#D1CDC7' }} />
+                    <span className="text-sm" style={{ color: project.current_stage ? '#121417' : '#b0a090' }}>
                         {project.current_stage
                             ? <><span style={{ color: '#8a7e6e' }}>Currently: </span>{project.current_stage}</>
                             : project.ghl_stage ?? 'Not started'}
@@ -79,11 +79,11 @@ function ProjectCard({ project }) {
                     <span className="text-xs" style={{ color: '#8a7e6e' }}>Progress</span>
                     <span className="text-xs font-semibold text-forest">{project.progress_pct}%</span>
                 </div>
-                <div className="h-1 rounded-full mb-4" style={{ background: '#f5f0e8' }}>
+                <div className="h-1 rounded-full mb-4" style={{ background: '#F0EDEA' }}>
                     <div className="h-full rounded-full"
                         style={{
                             width: `${project.progress_pct}%`,
-                            background: 'linear-gradient(90deg, #1a3c2e, #c9a84c)',
+                            background: '#121417',
                         }} />
                 </div>
 
@@ -118,16 +118,16 @@ function ProjectCard({ project }) {
 
             {/* Footer */}
             <div className="px-5 py-3 flex items-center justify-between"
-                style={{ borderTop: '0.5px solid #f5f0e8', background: '#fdfcfa' }}>
+                style={{ borderTop: '0.5px solid #F0EDEA', background: '#fdfcfa' }}>
                 <span className="text-xs" style={{ color: '#8a7e6e' }}>
                     {project.ghl_stage && (
                         <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs"
-                            style={{ background: 'rgba(201,168,76,0.1)', color: '#b8943c' }}>
+                            style={{ background: 'rgba(18,20,23,0.06)', color: '#121417' }}>
                             {project.ghl_stage}
                         </span>
                     )}
                 </span>
-                <span className="text-xs font-medium" style={{ color: '#c9a84c' }}>View details →</span>
+                <span className="text-xs font-medium" style={{ color: '#121417' }}>View details →</span>
             </div>
         </div>
     );
@@ -137,10 +137,10 @@ function ProjectCard({ project }) {
 
 function EmptyState() {
     return (
-        <div className="bg-white rounded-2xl p-12 text-center" style={{ border: '0.5px solid #e4ddd2' }}>
+        <div className="bg-white rounded-2xl p-12 text-center" style={{ border: '0.5px solid #D1CDC7' }}>
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                style={{ background: '#f5f0e8' }}>
-                <svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="#c9a84c" strokeWidth="1.5" strokeLinecap="round">
+                style={{ background: '#F9F8F6' }}>
+                <svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="#121417" strokeWidth="1.5" strokeLinecap="round">
                     <rect x="2" y="3" width="12" height="10" rx="1.5"/>
                     <line x1="5" y1="7" x2="11" y2="7"/><line x1="5" y1="9.5" x2="8.5" y2="9.5"/>
                 </svg>
@@ -165,9 +165,9 @@ export default function ClientDashboard({ projects }) {
 
             {/* Welcome banner */}
             <div className="rounded-2xl p-6 mb-6 flex items-center justify-between gap-4"
-                style={{ background: 'linear-gradient(135deg, #1a3c2e 0%, #142e23 100%)', border: '0.5px solid rgba(201,168,76,0.15)' }}>
+                style={{ background: '#121417', border: '0.5px solid rgba(255,255,255,0.08)' }}>
                 <div>
-                    <p className="text-xs uppercase tracking-widest mb-1.5" style={{ color: 'rgba(201,168,76,0.7)', fontSize: 10 }}>
+                    <p className="text-xs uppercase tracking-widest mb-1.5" style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>
                         BGR Client Portal
                     </p>
                     <h1 className="text-2xl text-white font-serif font-normal">
@@ -180,8 +180,8 @@ export default function ClientDashboard({ projects }) {
                     </p>
                 </div>
                 <div className="flex-shrink-0 w-16 h-16 rounded-2xl hidden sm:flex items-center justify-center"
-                    style={{ background: 'rgba(201,168,76,0.1)', border: '0.5px solid rgba(201,168,76,0.2)' }}>
-                    <svg width="28" height="28" viewBox="0 0 16 16" fill="none" stroke="#c9a84c" strokeWidth="1.2" strokeLinecap="round">
+                    style={{ background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.12)' }}>
+                    <svg width="28" height="28" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" strokeLinecap="round">
                         <rect x="1" y="4" width="14" height="10" rx="1.5"/>
                         <path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/>
                         <line x1="8" y1="8" x2="8" y2="11"/><line x1="6.5" y1="9.5" x2="9.5" y2="9.5"/>

@@ -11,15 +11,15 @@ function Toast({ toasts, remove }) {
                 <div key={t.id}
                     className="flex items-start gap-3 px-4 py-3 rounded-2xl shadow-lg pointer-events-auto"
                     style={{
-                        background: t.type === 'success' ? '#1a3c2e' : '#7f1d1d',
-                        border: `0.5px solid ${t.type === 'success' ? 'rgba(201,168,76,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                        background: t.type === 'success' ? '#1e2226' : '#7f1d1d',
+                        border: `0.5px solid ${t.type === 'success' ? 'rgba(255,255,255,0.1)' : 'rgba(239,68,68,0.3)'}`,
                         animation: 'toast-in 0.25s ease',
                         minWidth: 260,
                     }}>
                     {/* Icon */}
                     <div className="flex-shrink-0 mt-0.5">
                         {t.type === 'success' ? (
-                            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#c9a84c" strokeWidth="2.5" strokeLinecap="round">
+                            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.8)" strokeWidth="2.5" strokeLinecap="round">
                                 <polyline points="2,8 6,12 14,4"/>
                             </svg>
                         ) : (
@@ -30,14 +30,14 @@ function Toast({ toasts, remove }) {
                     </div>
                     {/* Message */}
                     <p className="flex-1 text-sm font-medium leading-snug"
-                        style={{ color: t.type === 'success' ? '#f5f0e8' : '#fecaca' }}>
+                        style={{ color: t.type === 'success' ? 'rgba(255,255,255,0.9)' : '#fecaca' }}>
                         {t.message}
                     </p>
                     {/* Dismiss */}
                     <button onClick={() => remove(t.id)}
                         className="flex-shrink-0 mt-0.5 opacity-50 hover:opacity-100 transition-opacity">
                         <svg width="12" height="12" viewBox="0 0 16 16" fill="none"
-                            stroke={t.type === 'success' ? '#c9a84c' : '#fca5a5'}
+                            stroke={t.type === 'success' ? 'rgba(255,255,255,0.6)' : '#fca5a5'}
                             strokeWidth="2.5" strokeLinecap="round">
                             <line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/>
                         </svg>
@@ -111,23 +111,23 @@ function SidebarContent({ user, role, nav, onNavigate }) {
     return (
         <>
             {/* Brand */}
-            <div style={{ padding: '24px 20px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ padding: '24px 20px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
                 <div className="flex items-center gap-2.5 mb-1">
                     <div className="flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0"
-                        style={{ background: '#c9a84c' }}>
+                        style={{ background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.1)' }}>
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path d="M8 1.5L13 4.5V10.5L8 13.5L3 10.5V4.5L8 1.5Z" stroke="white" strokeWidth="1.2" fill="rgba(255,255,255,0.15)"/>
-                            <circle cx="8" cy="7.5" r="1.8" fill="white"/>
+                            <path d="M8 1.5L13 4.5V10.5L8 13.5L3 10.5V4.5L8 1.5Z" stroke="rgba(255,255,255,0.7)" strokeWidth="1.2" fill="rgba(255,255,255,0.08)"/>
+                            <circle cx="8" cy="7.5" r="1.8" fill="rgba(255,255,255,0.7)"/>
                         </svg>
                     </div>
                     <div>
-                        <div className="text-xs font-medium leading-tight" style={{ color: 'rgba(255,255,255,0.92)', letterSpacing: '0.02em' }}>
+                        <div className="text-xs font-medium leading-tight" style={{ color: 'rgba(255,255,255,0.9)', letterSpacing: '0.04em' }}>
                             BGR Client Portal
                         </div>
-                        <div className="text-xs mt-0.5" style={{ color: 'rgba(201,168,76,0.7)' }}>Ballycastle</div>
+                        <div className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>Ballycastle</div>
                     </div>
                 </div>
-                <div className="text-xs uppercase tracking-widest mt-2 pl-11" style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10 }}>
+                <div className="text-xs uppercase tracking-widest mt-2 pl-11" style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>
                     {role === 'admin' ? 'Admin Panel' : role === 'worker' ? 'Worker Portal' : 'Client Portal'}
                 </div>
             </div>
@@ -147,21 +147,21 @@ function SidebarContent({ user, role, nav, onNavigate }) {
                             title={item.soon ? 'Coming soon' : undefined}
                             className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-sm transition-all duration-150 relative select-none"
                             style={isActive
-                                ? { background: 'rgba(201,168,76,0.12)', color: '#c9a84c', fontWeight: 500 }
-                                : { color: item.soon ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.5)' }
+                                ? { background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.92)', fontWeight: 500 }
+                                : { color: item.soon ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.45)' }
                             }
                             onMouseEnter={e => !isActive && !item.soon && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
                             onMouseLeave={e => !isActive && (e.currentTarget.style.background = 'transparent')}
                         >
                             {isActive && (
                                 <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r"
-                                    style={{ background: '#c9a84c' }} />
+                                    style={{ background: 'rgba(255,255,255,0.4)' }} />
                             )}
                             <Icon name={item.icon} />
                             <span className="flex-1 truncate">{item.label}</span>
                             {item.badge && (
                                 <span className="text-xs font-medium px-1.5 py-0.5 rounded-full flex-shrink-0"
-                                    style={{ background: '#c9a84c', color: '#0e2019', fontSize: 9 }}>
+                                    style={{ background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.85)', fontSize: 9 }}>
                                     {item.badge}
                                 </span>
                             )}
@@ -174,19 +174,19 @@ function SidebarContent({ user, role, nav, onNavigate }) {
             </nav>
 
             {/* Footer */}
-            <div style={{ padding: '12px', borderTop: '0.5px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ padding: '12px', borderTop: '0.5px solid rgba(255,255,255,0.07)' }}>
                 <Link href={route('profile.edit')} onClick={onNavigate}
                     className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg transition-all duration-150 mb-0.5"
                     style={{ color: 'rgba(255,255,255,0.7)' }}
                     onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
                     onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                     <div className="flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 text-xs font-semibold"
-                        style={{ background: 'rgba(201,168,76,0.2)', border: '1px solid rgba(201,168,76,0.4)', color: '#c9a84c' }}>
+                        style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.8)' }}>
                         {initials(user?.name)}
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="text-xs font-medium truncate" style={{ color: 'rgba(255,255,255,0.85)' }}>{user?.name}</div>
-                        <div className="text-xs capitalize" style={{ color: 'rgba(255,255,255,0.35)' }}>{role}</div>
+                        <div className="text-xs capitalize" style={{ color: 'rgba(255,255,255,0.3)' }}>{role}</div>
                     </div>
                 </Link>
                 <button onClick={logout}
@@ -258,10 +258,10 @@ export default function AuthenticatedLayout({ title, breadcrumb, children }) {
         return () => window.removeEventListener('keydown', handler);
     }, []);
 
-    const sidebarStyle = { width: 240, background: '#0e2019', borderRight: '0.5px solid rgba(201,168,76,0.12)' };
+    const sidebarStyle = { width: 240, background: '#121417', borderRight: '0.5px solid rgba(255,255,255,0.06)' };
 
     return (
-        <div className="flex h-screen overflow-hidden" style={{ background: '#f5f0e8' }}>
+        <div className="flex h-screen overflow-hidden" style={{ background: '#F9F8F6' }}>
 
             {/* ── Desktop sidebar (always visible ≥ lg) ── */}
             <aside className="hidden lg:flex flex-col flex-shrink-0" style={sidebarStyle}>
@@ -301,13 +301,13 @@ export default function AuthenticatedLayout({ title, breadcrumb, children }) {
                 {/* Topbar */}
                 <header
                     className="flex items-center gap-3 px-4 sm:px-6 flex-shrink-0"
-                    style={{ height: 60, background: 'rgba(245,240,232,0.97)', borderBottom: '0.5px solid #e4ddd2' }}
+                    style={{ height: 60, background: 'rgba(249,248,246,0.92)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid #D1CDC7' }}
                 >
                     {/* Hamburger — mobile only */}
                     <button
                         onClick={() => setDrawerOpen(true)}
                         className="flex lg:hidden items-center justify-center w-9 h-9 rounded-lg flex-shrink-0 transition-colors"
-                        style={{ background: '#ede8df', border: '0.5px solid #e4ddd2', color: '#6b5e4a' }}
+                        style={{ background: '#F0EDEA', border: '0.5px solid #D1CDC7', color: '#4A4A4A' }}
                         aria-label="Open menu"
                     >
                         <Icon name="menu" size={15} />
@@ -326,23 +326,23 @@ export default function AuthenticatedLayout({ title, breadcrumb, children }) {
                         <button
                             onClick={() => setNotifOpen(o => !o)}
                             className="relative flex items-center justify-center w-9 h-9 rounded-lg transition-colors"
-                            style={{ background: '#ede8df', border: '0.5px solid #e4ddd2', color: '#6b5e4a' }}
+                            style={{ background: '#F0EDEA', border: '0.5px solid #D1CDC7', color: '#4A4A4A' }}
                             aria-label="Notifications"
                         >
                             <Icon name="bell" size={16} />
                             <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
-                                style={{ background: '#c9a84c', border: '1.5px solid #ede8df' }} />
+                                style={{ background: '#121417', border: '1.5px solid #F0EDEA' }} />
                         </button>
 
                         {notifOpen && (
                             <div className="absolute right-0 top-11 w-72 bg-white rounded-xl shadow-xl z-50"
-                                style={{ border: '0.5px solid #e4ddd2' }}>
-                                <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '0.5px solid #ede8df' }}>
+                                style={{ border: '0.5px solid #D1CDC7' }}>
+                                <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '0.5px solid #D1CDC7' }}>
                                     <span className="text-sm font-medium text-forest">Notifications</span>
-                                    <button className="text-xs" style={{ color: '#b8943c' }}>Mark all read</button>
+                                    <button className="text-xs" style={{ color: '#888480' }}>Mark all read</button>
                                 </div>
                                 <div className="flex gap-2.5 px-4 py-3">
-                                    <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: '#c9a84c' }} />
+                                    <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: '#121417' }} />
                                     <div>
                                         <div className="text-xs text-forest leading-snug">Welcome to the BGR Client Portal</div>
                                         <div className="text-xs mt-1" style={{ color: '#8a7e6e' }}>Just now</div>

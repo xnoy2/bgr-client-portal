@@ -18,18 +18,18 @@ export default {
             },
             colors: {
                 forest: {
-                    DEFAULT: '#1a3c2e',
-                    dark:    '#142e23',
-                    darker:  '#0e2019',
+                    DEFAULT: '#121417',
+                    dark:    '#0e1012',
+                    darker:  '#080a0c',
                 },
                 gold: {
-                    DEFAULT: '#c9a84c',
-                    dark:    '#b8943c',
+                    DEFAULT: '#888480',
+                    dark:    '#6b6b6b',
                 },
                 cream: {
-                    DEFAULT: '#f5f0e8',
-                    2:       '#ede8df',
-                    3:       '#e4ddd2',
+                    DEFAULT: '#F9F8F6',
+                    2:       '#F0EDEA',
+                    3:       '#D1CDC7',
                 },
             },
         },

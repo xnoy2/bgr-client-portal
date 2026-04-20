@@ -41,7 +41,7 @@ function CopyButton({ value }) {
     return (
         <button onClick={copy}
             className="ml-2 text-xs underline transition-colors"
-            style={{ color: copied ? '#15803d' : '#b8943c' }}>
+            style={{ color: copied ? '#15803d' : '#121417' }}>
             {copied ? 'Copied!' : 'Copy'}
         </button>
     );
@@ -55,7 +55,7 @@ function initials(name = '') {
 function Field({ label, children, error }) {
     return (
         <div>
-            <label className="block text-xs font-medium mb-1.5" style={{ color: '#6b5e4a', letterSpacing: '0.03em' }}>
+            <label className="block text-xs font-medium mb-1.5" style={{ color: '#4A4A4A', letterSpacing: '0.03em' }}>
                 {label}
             </label>
             {children}
@@ -68,9 +68,9 @@ function Input({ ...props }) {
     return (
         <input
             className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-colors"
-            style={{ border: '0.5px solid #e4ddd2', background: '#fff', color: '#1a3c2e' }}
-            onFocus={e => e.target.style.borderColor = '#c9a84c'}
-            onBlur={e => e.target.style.borderColor = '#e4ddd2'}
+            style={{ border: '0.5px solid #D1CDC7', background: '#fff', color: '#121417' }}
+            onFocus={e => e.target.style.borderColor = '#121417'}
+            onBlur={e => e.target.style.borderColor = '#D1CDC7'}
             {...props}
         />
     );
@@ -80,9 +80,9 @@ function Select({ children, ...props }) {
     return (
         <select
             className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-colors"
-            style={{ border: '0.5px solid #e4ddd2', background: '#fff', color: '#1a3c2e' }}
-            onFocus={e => e.target.style.borderColor = '#c9a84c'}
-            onBlur={e => e.target.style.borderColor = '#e4ddd2'}
+            style={{ border: '0.5px solid #D1CDC7', background: '#fff', color: '#121417' }}
+            onFocus={e => e.target.style.borderColor = '#121417'}
+            onBlur={e => e.target.style.borderColor = '#D1CDC7'}
             {...props}
         >
             {children}
@@ -92,9 +92,9 @@ function Select({ children, ...props }) {
 
 function Btn({ variant = 'default', className = '', ...props }) {
     const styles = {
-        default: { background: '#fff', color: '#1a3c2e', border: '0.5px solid #e4ddd2' },
-        primary: { background: '#1a3c2e', color: '#fff',     border: '0.5px solid #142e23' },
-        gold:    { background: '#c9a84c', color: '#0e2019',  border: '0.5px solid #b8943c' },
+        default: { background: '#fff', color: '#121417', border: '0.5px solid #D1CDC7' },
+        primary: { background: '#121417', color: '#fff',     border: '0.5px solid #0e1012' },
+        gold:    { background: '#121417', color: '#fff',  border: '0.5px solid #121417' },
         danger:  { background: '#fef2f2', color: '#b91c1c',  border: '0.5px solid rgba(239,68,68,0.3)' },
     };
     return (
@@ -161,7 +161,7 @@ export default function UsersIndex({ users, roles }) {
     };
 
     const statCards = [
-        { label: 'Total Users', value: counts.total,  left: '#e4ddd2' },
+        { label: 'Total Users', value: counts.total,  left: '#D1CDC7' },
         { label: 'Admins',      value: counts.admin,  left: '#8b5cf6' },
         { label: 'Workers',     value: counts.worker, left: '#3b82f6' },
         { label: 'Clients',     value: counts.client, left: '#22c55e' },
@@ -175,19 +175,19 @@ export default function UsersIndex({ users, roles }) {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
                 {statCards.map(s => (
                     <div key={s.label} className="bg-white rounded-xl p-4"
-                        style={{ border: '0.5px solid #e4ddd2', borderLeft: `4px solid ${s.left}` }}>
+                        style={{ border: '0.5px solid #D1CDC7', borderLeft: `4px solid ${s.left}` }}>
                         <p className="text-2xl font-semibold text-forest">{s.value}</p>
-                        <p className="text-xs mt-0.5" style={{ color: '#8a7e6e' }}>{s.label}</p>
+                        <p className="text-xs mt-0.5" style={{ color: '#888480' }}>{s.label}</p>
                     </div>
                 ))}
             </div>
 
             {/* Table card */}
-            <div className="bg-white rounded-xl overflow-hidden" style={{ border: '0.5px solid #e4ddd2' }}>
+            <div className="bg-white rounded-xl overflow-hidden" style={{ border: '0.5px solid #D1CDC7' }}>
 
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 sm:px-6 py-4"
-                    style={{ borderBottom: '0.5px solid #e4ddd2' }}>
+                    style={{ borderBottom: '0.5px solid #D1CDC7' }}>
                     <h3 className="text-sm font-medium text-forest">All Users</h3>
                     <Btn variant="primary" onClick={() => setShowCreate(true)}>
                         <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -201,10 +201,10 @@ export default function UsersIndex({ users, roles }) {
                 <div className="hidden md:block overflow-x-auto">
                     <table className="w-full">
                         <thead>
-                            <tr style={{ borderBottom: '0.5px solid #e4ddd2', background: '#f5f0e8' }}>
+                            <tr style={{ borderBottom: '0.5px solid #D1CDC7', background: '#F9F8F6' }}>
                                 {['Name', 'Username', 'Email', 'Role', 'Status', 'Actions'].map(h => (
                                     <th key={h} className="text-left px-5 py-3 text-xs font-medium uppercase tracking-wider"
-                                        style={{ color: '#8a7e6e' }}>
+                                        style={{ color: '#888480' }}>
                                         {h}
                                     </th>
                                 ))}
@@ -214,7 +214,7 @@ export default function UsersIndex({ users, roles }) {
                             {users.map((user, i) => (
                                 <tr key={user.id}
                                     style={{
-                                        borderBottom: i < users.length - 1 ? '0.5px solid #f5f0e8' : 'none',
+                                        borderBottom: i < users.length - 1 ? '0.5px solid #F9F8F6' : 'none',
                                         opacity: user.is_active ? 1 : 0.45,
                                     }}
                                     onMouseEnter={e => e.currentTarget.style.background = '#fdfcfa'}
@@ -222,7 +222,7 @@ export default function UsersIndex({ users, roles }) {
                                     <td className="px-5 py-3.5">
                                         <div className="flex items-center gap-2.5">
                                             <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
-                                                style={{ background: 'rgba(201,168,76,0.12)', color: '#b8943c' }}>
+                                                style={{ background: 'rgba(18,20,23,0.06)', color: '#121417' }}>
                                                 {initials(user.name)}
                                             </div>
                                             <div>
@@ -233,10 +233,10 @@ export default function UsersIndex({ users, roles }) {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-5 py-3.5 font-mono text-xs" style={{ color: '#6b5e4a' }}>
+                                    <td className="px-5 py-3.5 font-mono text-xs" style={{ color: '#4A4A4A' }}>
                                         {user.username ?? '—'}
                                     </td>
-                                    <td className="px-5 py-3.5 text-sm" style={{ color: '#6b5e4a' }}>
+                                    <td className="px-5 py-3.5 text-sm" style={{ color: '#4A4A4A' }}>
                                         {user.email}
                                     </td>
                                     <td className="px-5 py-3.5"><RoleBadge role={user.role} /></td>
@@ -256,7 +256,7 @@ export default function UsersIndex({ users, roles }) {
                             ))}
                             {users.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="px-5 py-12 text-center text-sm" style={{ color: '#b0a090' }}>
+                                    <td colSpan={6} className="px-5 py-12 text-center text-sm" style={{ color: '#888480' }}>
                                         No users yet. Create one above.
                                     </td>
                                 </tr>
@@ -266,19 +266,19 @@ export default function UsersIndex({ users, roles }) {
                 </div>
 
                 {/* ── Mobile cards (< md) ── */}
-                <div className="md:hidden divide-y" style={{ borderColor: '#f5f0e8' }}>
+                <div className="md:hidden divide-y" style={{ borderColor: '#F9F8F6' }}>
                     {users.length === 0 && (
-                        <div className="px-4 py-10 text-center text-sm" style={{ color: '#b0a090' }}>
+                        <div className="px-4 py-10 text-center text-sm" style={{ color: '#888480' }}>
                             No users yet. Tap New User above.
                         </div>
                     )}
                     {users.map(user => (
                         <div key={user.id} className="p-4"
-                            style={{ borderBottom: '0.5px solid #f5f0e8', opacity: user.is_active ? 1 : 0.45 }}>
+                            style={{ borderBottom: '0.5px solid #F9F8F6', opacity: user.is_active ? 1 : 0.45 }}>
                             <div className="flex items-start gap-3">
                                 {/* Avatar */}
                                 <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0"
-                                    style={{ background: 'rgba(201,168,76,0.12)', color: '#b8943c' }}>
+                                    style={{ background: 'rgba(18,20,23,0.06)', color: '#121417' }}>
                                     {initials(user.name)}
                                 </div>
                                 {/* Info */}
@@ -288,9 +288,9 @@ export default function UsersIndex({ users, roles }) {
                                         <RoleBadge role={user.role} />
                                         <StatusBadge active={user.is_active} />
                                     </div>
-                                    <div className="text-xs mt-1 truncate" style={{ color: '#8a7e6e' }}>{user.email}</div>
+                                    <div className="text-xs mt-1 truncate" style={{ color: '#888480' }}>{user.email}</div>
                                     <div className="flex items-center gap-1 mt-0.5">
-                                        <span className="font-mono text-xs" style={{ color: '#b0a090' }}>{user.username ?? '—'}</span>
+                                        <span className="font-mono text-xs" style={{ color: '#888480' }}>{user.username ?? '—'}</span>
                                         {user.must_change_password && (
                                             <span className="text-xs ml-1" style={{ color: '#d97706' }}>· Temp password</span>
                                         )}
@@ -333,7 +333,7 @@ export default function UsersIndex({ users, roles }) {
                                 ))}
                             </Select>
                         </Field>
-                        <p className="text-xs" style={{ color: '#8a7e6e' }}>
+                        <p className="text-xs" style={{ color: '#888480' }}>
                             Username and temporary password are auto-generated. The user must change their password on first login.
                         </p>
                     </div>
@@ -358,17 +358,17 @@ export default function UsersIndex({ users, roles }) {
                         </div>
                         <div>
                             <h2 className="text-base font-semibold text-forest">User Created</h2>
-                            <p className="text-xs" style={{ color: '#8a7e6e' }}>Share these credentials with {credentials?.name}</p>
+                            <p className="text-xs" style={{ color: '#888480' }}>Share these credentials with {credentials?.name}</p>
                         </div>
                     </div>
 
-                    <div className="rounded-xl p-4 space-y-3" style={{ background: '#f5f0e8', border: '0.5px solid #e4ddd2' }}>
+                    <div className="rounded-xl p-4 space-y-3" style={{ background: '#F9F8F6', border: '0.5px solid #D1CDC7' }}>
                         {[
                             { label: 'Username',          value: credentials?.username },
                             { label: 'Temporary Password', value: credentials?.password },
                         ].map(({ label, value }) => (
                             <div key={label}>
-                                <p className="text-xs font-medium uppercase tracking-wider mb-1" style={{ color: '#8a7e6e', fontSize: 9 }}>{label}</p>
+                                <p className="text-xs font-medium uppercase tracking-wider mb-1" style={{ color: '#888480', fontSize: 9 }}>{label}</p>
                                 <div className="flex items-center gap-2">
                                     <code className="font-mono text-sm text-forest flex-1 break-all">{value}</code>
                                     <CopyButton value={value ?? ''} />
@@ -408,8 +408,8 @@ export default function UsersIndex({ users, roles }) {
                         <label className="flex items-center gap-2.5 cursor-pointer select-none">
                             <input type="checkbox" checked={editForm.data.is_active}
                                 onChange={e => editForm.setData('is_active', e.target.checked)}
-                                className="rounded" style={{ accentColor: '#1a3c2e' }} />
-                            <span className="text-xs font-medium" style={{ color: '#6b5e4a' }}>Account Active</span>
+                                className="rounded" style={{ accentColor: '#121417' }} />
+                            <span className="text-xs font-medium" style={{ color: '#4A4A4A' }}>Account Active</span>
                         </label>
                     </div>
                     <div className="mt-5 flex justify-end gap-2">
@@ -425,7 +425,7 @@ export default function UsersIndex({ users, roles }) {
             <Modal show={!!confirmDeact} onClose={() => setConfirmDeact(null)} maxWidth="sm">
                 <div className="p-5 sm:p-6">
                     <h2 className="text-base font-semibold text-forest mb-2">Deactivate User</h2>
-                    <p className="text-sm" style={{ color: '#6b5e4a' }}>
+                    <p className="text-sm" style={{ color: '#4A4A4A' }}>
                         Are you sure you want to deactivate <strong>{confirmDeact?.name}</strong>?
                         They will no longer be able to log in.
                     </p>
