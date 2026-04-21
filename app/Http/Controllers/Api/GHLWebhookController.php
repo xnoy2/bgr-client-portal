@@ -33,10 +33,10 @@ class GHLWebhookController extends Controller
             return response('Missing email', 422);
         }
 
-        $user = User::where('email', $email)->role('client')->first();
+        $user = User::where('email', $email)->first();
         if (! $user) {
-            Log::warning('GHL VariationForm: no client found', ['email' => $email]);
-            return response('Client not found', 404);
+            Log::warning('GHL VariationForm: no user found', ['email' => $email]);
+            return response('User not found', 404);
         }
 
         // Deduplicate by submission ID if GHL provides one
@@ -45,15 +45,21 @@ class GHLWebhookController extends Controller
             return response('Duplicate', 200);
         }
 
-        // Resolve project
+        // Resolve project — check client ownership first, then worker assignment
         $projectName = $this->extractField($payload, ['project', 'project_name', 'property_address', 'address']);
-        $project = $projectName
-            ? Project::where('client_id', $user->id)
+
+        $project = null;
+        if ($projectName) {
+            $project = Project::where(fn ($q) => $q->where('client_id', $user->id)
+                                                    ->orWhereHas('workers', fn ($q) => $q->where('users.id', $user->id)))
                 ->where(fn ($q) => $q->where('name', 'like', "%{$projectName}%")
                                      ->orWhere('address', 'like', "%{$projectName}%"))
-                ->first()
-            : null;
+                ->first();
+        }
+
+        // Fall back to the user's most recent project (as client or worker)
         $project ??= Project::where('client_id', $user->id)->orderByDesc('created_at')->first();
+        $project ??= $user->projects()->orderByDesc('created_at')->first();
 
         if (! $project) {
             Log::warning('GHL VariationForm: no project found', ['userId' => $user->id]);
