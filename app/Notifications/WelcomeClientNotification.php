@@ -30,21 +30,14 @@ class WelcomeClientNotification extends Notification
             ->line('Your BGR Client Portal account has been created.')
             ->line("**Email:** {$this->email}")
             ->line("**Temporary Password:** {$this->tempPassword}")
-            ->action('Log In Now', $loginUrl)
+            ->action('Log In to Your Portal', $loginUrl)
             ->line('You will be asked to change your password after your first login.')
             ->line('If you have any questions, please contact our team.');
     }
 
-    /**
-     * Build the branded HTML email body.
-     * Logo is base64-encoded inline so it renders in all email clients
-     * regardless of server URL or local development environment.
-     */
     public static function buildHtml(string $name, string $email, string $tempPassword): string
     {
-        $appName  = 'BGR Client Portal';
         $loginUrl = url('/login');
-        $logoUrl  = 'https://res.cloudinary.com/dlh4kthyq/image/upload/v1776755742/bgr/brand/bgr-logo.png';
 
         return <<<HTML
         <!DOCTYPE html>
@@ -52,58 +45,74 @@ class WelcomeClientNotification extends Notification
         <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>Welcome to {$appName}</title>
+            <title>Welcome to BGR Client Portal</title>
         </head>
-        <body style="margin:0;padding:0;background:#f2f0eb;font-family:'Inter',Arial,sans-serif;">
-            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f2f0eb;padding:40px 16px;">
+        <body style="margin:0;padding:0;background:#F1F1EF;font-family:'Inter',Arial,sans-serif;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#F1F1EF;padding:40px 16px;">
                 <tr>
                     <td align="center">
                         <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
 
                             <!-- Header -->
                             <tr>
-                                <td style="background:linear-gradient(135deg,#1a2e1a,#0f1f0f);border-radius:16px 16px 0 0;padding:32px 36px 24px;text-align:center;">
-                                    <img src="{$logoUrl}" alt="BGR Client Portal" style="max-width:180px;height:auto;display:block;margin:0 auto 16px;">
-                                    <p style="margin:0;font-size:22px;font-weight:600;color:#ffffff;">Welcome to BGR Client Portal</p>
+                                <td style="background:#25282D;border-radius:12px 12px 0 0;padding:36px 36px 28px;text-align:center;">
+                                    <p style="margin:0 0 6px;font-size:18px;font-weight:600;color:#ffffff;letter-spacing:0.12em;text-transform:uppercase;">Bespoke Garden Rooms</p>
+                                    <p style="margin:0 0 12px;font-size:11px;font-weight:300;color:rgba(255,255,255,0.38);letter-spacing:0.18em;text-transform:uppercase;">Ballycastle</p>
+                                    <p style="margin:0;font-size:11px;font-weight:500;color:#B2945B;letter-spacing:0.22em;text-transform:uppercase;">Client Portal</p>
                                 </td>
+                            </tr>
+
+                            <!-- Divider accent -->
+                            <tr>
+                                <td style="background:#B2945B;height:2px;font-size:0;line-height:0;">&nbsp;</td>
                             </tr>
 
                             <!-- Body -->
                             <tr>
-                                <td style="background:#ffffff;padding:36px;border-radius:0 0 16px 16px;">
-                                    <p style="margin:0 0 16px;font-size:15px;color:#3a3a32;">Hi {$name},</p>
-                                    <p style="margin:0 0 24px;font-size:14px;color:#6a6a62;line-height:1.7;">
-                                        Your BGR Client Portal account has been created. Use the credentials below to log in and track your project.
+                                <td style="background:#ffffff;padding:36px;border-radius:0 0 12px 12px;">
+                                    <p style="margin:0 0 6px;font-size:18px;font-weight:600;color:#25282D;">Welcome to the Portal</p>
+                                    <p style="margin:0 0 24px;font-size:13px;color:#888480;">Your account has been created successfully.</p>
+
+                                    <p style="margin:0 0 20px;font-size:14px;color:#4A4A4A;line-height:1.7;">
+                                        Hi {$name}, your BGR Client Portal account is ready. Use the credentials below to log in and track your project.
                                     </p>
 
                                     <!-- Credentials box -->
-                                    <div style="background:#f7f6f3;border-radius:8px;padding:20px 24px;margin-bottom:28px;">
-                                        <p style="margin:0 0 10px;font-size:11px;font-weight:700;letter-spacing:0.1em;color:#9a9a92;text-transform:uppercase;">Your Login Credentials</p>
-                                        <table width="100%" cellpadding="0" cellspacing="0">
-                                            <tr>
-                                                <td style="padding:6px 0;font-size:13px;color:#6a6a62;width:40%;">Email</td>
-                                                <td style="padding:6px 0;font-size:14px;font-weight:600;color:#3a3a32;">{$email}</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="padding:6px 0;font-size:13px;color:#6a6a62;">Temporary Password</td>
-                                                <td style="padding:6px 0;font-size:14px;font-weight:600;color:#3a3a32;letter-spacing:0.05em;">{$tempPassword}</td>
-                                            </tr>
-                                        </table>
-                                    </div>
+                                    <table width="100%" cellpadding="0" cellspacing="0" style="background:#F1F1EF;border-radius:8px;border:0.5px solid #D1CDC7;margin-bottom:28px;">
+                                        <tr>
+                                            <td style="padding:14px 20px 4px;">
+                                                <p style="margin:0;font-size:10px;font-weight:600;letter-spacing:0.12em;color:#888480;text-transform:uppercase;">Your Login Credentials</p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding:8px 20px;">
+                                                <table width="100%" cellpadding="0" cellspacing="0" style="border-top:0.5px solid #D1CDC7;">
+                                                    <tr>
+                                                        <td style="padding:10px 0 6px;font-size:12px;color:#888480;width:42%;">Email</td>
+                                                        <td style="padding:10px 0 6px;font-size:13px;font-weight:600;color:#25282D;">{$email}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding:6px 0 10px;font-size:12px;color:#888480;border-top:0.5px solid #D1CDC7;">Temporary Password</td>
+                                                        <td style="padding:6px 0 10px;font-size:13px;font-weight:600;color:#25282D;letter-spacing:0.04em;border-top:0.5px solid #D1CDC7;">{$tempPassword}</td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
 
                                     <!-- CTA button -->
                                     <table width="100%" cellpadding="0" cellspacing="0">
                                         <tr>
                                             <td align="center" style="padding:0 0 28px;">
                                                 <a href="{$loginUrl}"
-                                                   style="display:inline-block;padding:14px 36px;background:#3d5c10;color:#ffffff;text-decoration:none;border-radius:8px;font-size:14px;font-weight:600;letter-spacing:0.02em;">
+                                                   style="display:inline-block;padding:13px 36px;background:#25282D;color:#ffffff;text-decoration:none;border-radius:8px;font-size:13px;font-weight:600;letter-spacing:0.04em;">
                                                     Log In to Your Portal
                                                 </a>
                                             </td>
                                         </tr>
                                     </table>
 
-                                    <p style="margin:0;font-size:13px;color:#9a9a92;line-height:1.6;">
+                                    <p style="margin:0;font-size:12px;color:#888480;line-height:1.6;">
                                         You will be prompted to set a new password on your first login.
                                         Keep your credentials safe and do not share them with anyone.
                                     </p>
@@ -113,8 +122,8 @@ class WelcomeClientNotification extends Notification
                             <!-- Footer -->
                             <tr>
                                 <td style="padding:20px 0;text-align:center;">
-                                    <p style="margin:0;font-size:11px;color:#b0afaa;">
-                                        © {$appName} · Ballycastle, Northern Ireland
+                                    <p style="margin:0;font-size:11px;color:#B0AFAA;">
+                                        © BGR Client Portal · Ballycastle, Northern Ireland
                                     </p>
                                 </td>
                             </tr>
@@ -127,5 +136,4 @@ class WelcomeClientNotification extends Notification
         </html>
         HTML;
     }
-
 }
