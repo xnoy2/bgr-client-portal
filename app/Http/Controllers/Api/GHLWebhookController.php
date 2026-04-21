@@ -23,14 +23,17 @@ class GHLWebhookController extends Controller
         Log::info('GHL VariationForm webhook received', ['payload' => $payload]);
 
         // GHL workflow webhooks send contact data at the top level (no 'type' field)
-        $email = $payload['email'] ?? $payload['contact_email'] ?? null;
+        $email = $payload['email']
+            ?? $payload['contact_email']
+            ?? ($payload['contact']['email'] ?? null)
+            ?? null;
 
         if (! $email) {
             Log::warning('GHL VariationForm: missing email', ['payload' => $payload]);
             return response('Missing email', 422);
         }
 
-        $user = User::where('email', $email)->where('role', 'client')->first();
+        $user = User::where('email', $email)->role('client')->first();
         if (! $user) {
             Log::warning('GHL VariationForm: no client found', ['email' => $email]);
             return response('Client not found', 404);
@@ -204,7 +207,7 @@ class GHLWebhookController extends Controller
         }
 
         // Find the portal client user by email
-        $user = User::where('email', $email)->where('role', 'client')->first();
+        $user = User::where('email', $email)->role('client')->first();
         if (! $user) {
             Log::warning('GHLWebhook: FormSubmitted no client found', ['email' => $email]);
             return;
