@@ -77,8 +77,9 @@ Route::middleware(['auth', 'password.changed', 'role:admin'])
         Route::get('/updates', [UpdateController::class, 'index'])->name('updates.index');
 
         // Variation requests
-        Route::get('/variations',                              [AdminVariationController::class, 'index'])->name('variations.index');
-        Route::put('/variations/{variation}/review',           [AdminVariationController::class, 'review'])->name('variations.review');
+        Route::get('/variations',                                      [AdminVariationController::class, 'index'])->name('variations.index');
+        Route::put('/variations/{variation}/review',                   [AdminVariationController::class, 'review'])->name('variations.review');
+        Route::put('/variations/{variation}/attach-agreement',         [AdminVariationController::class, 'attachAgreement'])->name('variations.attach-agreement');
 
         // Proposals
         Route::get('/proposals',                    [AdminProposalController::class, 'index'])->name('proposals.index');

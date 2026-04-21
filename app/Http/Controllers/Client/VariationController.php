@@ -25,9 +25,12 @@ class VariationController extends Controller
                 'estimated_cost' => $v->estimated_cost,
                 'status'         => $v->status,
                 'admin_notes'    => $v->admin_notes,
-                'submitted_at'   => $v->created_at->format('j M Y'),
-                'project_name'   => $v->project?->name,
-                'project_id'     => $v->project?->ghl_opportunity_id,
+                'submitted_at'        => $v->created_at->format('j M Y'),
+                'project_name'        => $v->project?->name,
+                'project_id'          => $v->project?->ghl_opportunity_id,
+                'agreement_link'      => $v->agreement_link,
+                'agreement_status'    => $v->agreement_status,
+                'agreement_signed_at' => $v->agreement_signed_at?->format('j M Y'),
             ]);
 
         $projects = Project::where('client_id', $user->id)

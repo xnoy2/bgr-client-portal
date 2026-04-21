@@ -1,6 +1,23 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+const AGREEMENT_STATUS = {
+    pending_signature: { label: 'Awaiting Signature', bg: 'rgba(201,168,76,0.10)', border: '#c9a84c', text: '#a07a20' },
+    signed:            { label: 'Signed',             bg: 'rgba(26,96,46,0.08)',   border: '#4a9a6a', text: '#1a6030' },
+    declined:          { label: 'Sig. Declined',      bg: 'rgba(200,40,40,0.07)',  border: '#e07070', text: '#b03030' },
+};
+
+function AgreementBadge({ status }) {
+    const s = AGREEMENT_STATUS[status];
+    if (!s) return null;
+    return (
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
+            style={{ background: s.bg, border: `1px solid ${s.border}`, color: s.text }}>
+            {s.label}
+        </span>
+    );
+}
 
 // ── Status config ─────────────────────────────────────────────────────────────
 
@@ -13,20 +30,27 @@ const STATUS = {
 // ── Review modal ──────────────────────────────────────────────────────────────
 
 function ReviewModal({ variation, onClose }) {
-    const [status, setStatus]   = useState(variation.status === 'pending' ? '' : variation.status);
-    const [notes,  setNotes]    = useState(variation.admin_notes ?? '');
-    const [busy,   setBusy]     = useState(false);
+    const [status,        setStatus]        = useState(variation.status === 'pending' ? '' : variation.status);
+    const [notes,         setNotes]         = useState(variation.admin_notes ?? '');
+    const [agreementLink, setAgreementLink] = useState(variation.agreement_link ?? '');
+    const [busy,          setBusy]          = useState(false);
 
-    const isPending = variation.status === 'pending';
+    const isPending  = variation.status === 'pending';
+    const isApproved = variation.status === 'approved' || status === 'approved';
+
+    useEffect(() => {
+        window.document.body.style.overflow = 'hidden';
+        return () => { window.document.body.style.overflow = ''; };
+    }, []);
 
     function submit(e) {
         e.preventDefault();
         if (!status) return;
         setBusy(true);
-        router.put(route('admin.variations.review', variation.id), { status, admin_notes: notes }, {
-            onSuccess: () => onClose(),
-            onFinish:  () => setBusy(false),
-        });
+        router.put(route('admin.variations.review', variation.id),
+            { status, admin_notes: notes, agreement_link: agreementLink || null },
+            { onSuccess: () => onClose(), onFinish: () => setBusy(false) }
+        );
     }
 
     return (
@@ -121,6 +145,21 @@ function ReviewModal({ variation, onClose }) {
                                 onBlur={e => e.target.style.borderColor = '#D1CDC7'}
                             />
                         </div>
+
+                        {isApproved && (
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#4A4A4A' }}>
+                                    Agreement Link <span style={{ color: '#888480', fontWeight: 400, textTransform: 'none' }}>(optional — attach GHL variation agreement)</span>
+                                </label>
+                                <input type="url" value={agreementLink} onChange={e => setAgreementLink(e.target.value)}
+                                    placeholder="https://…"
+                                    className="w-full px-4 py-3 rounded-xl text-sm text-forest outline-none"
+                                    style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }}
+                                    onFocus={e => e.target.style.borderColor = '#25282D'}
+                                    onBlur={e => e.target.style.borderColor = '#D1CDC7'}
+                                />
+                            </div>
+                        )}
 
                         <div className="flex gap-2.5 pt-1 pb-1">
                             <button type="button" onClick={onClose}
@@ -222,6 +261,7 @@ export default function VariationsIndex({ variations }) {
 
                                             {/* Status + action */}
                                             <div className="flex items-center gap-2.5 flex-shrink-0">
+                                                <AgreementBadge status={v.agreement_status} />
                                                 <StatusBadge status={v.status} />
                                                 <button
                                                     onClick={() => setReviewing(v)}

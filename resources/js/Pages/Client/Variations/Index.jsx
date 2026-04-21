@@ -116,6 +116,32 @@ function DetailModal({ variation, onClose }) {
                             </p>
                         </div>
                     )}
+
+                    {/* Agreement CTA */}
+                    {variation.agreement_link && (
+                        <div className="px-4 py-3 rounded-xl space-y-2.5"
+                            style={{ background: 'rgba(201,168,76,0.07)', border: '1px solid #c9a84c' }}>
+                            <div>
+                                <p className="text-xs font-semibold" style={{ color: '#a07a20' }}>
+                                    {variation.agreement_status === 'signed'
+                                        ? '✓ Variation Agreement Signed'
+                                        : variation.agreement_status === 'declined'
+                                            ? 'Agreement Declined'
+                                            : 'Variation Agreement Ready to Sign'}
+                                </p>
+                                {variation.agreement_signed_at && (
+                                    <p className="text-xs mt-0.5" style={{ color: '#888480' }}>Signed {variation.agreement_signed_at}</p>
+                                )}
+                            </div>
+                            {variation.agreement_status !== 'signed' && (
+                                <a href={variation.agreement_link} target="_blank" rel="noopener noreferrer"
+                                    className="block w-full py-2.5 rounded-xl text-sm font-semibold text-center"
+                                    style={{ background: '#25282D', color: '#FFFFFF' }}>
+                                    Review & Sign Agreement ↗
+                                </a>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Footer */}
