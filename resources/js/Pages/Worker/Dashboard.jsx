@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
 const STATUS_COLOR = {
-    active:    { bg: 'rgba(18,20,23,0.06)',   border: 'rgba(18,20,23,0.15)',   text: '#121417'  },
+    active:    { bg: 'rgba(26,26,26,0.06)',   border: 'rgba(26,26,26,0.15)',   text: '#1A1A1A'  },
     completed: { bg: 'rgba(21,128,61,0.08)',  border: 'rgba(21,128,61,0.2)',   text: '#15803d'  },
     on_hold:   { bg: 'rgba(180,80,60,0.08)',  border: 'rgba(180,80,60,0.25)',  text: '#b44c3c'  },
 };
@@ -15,7 +15,7 @@ function ProgressRing({ pct, size = 40, stroke = 3 }) {
         <svg width={size} height={size} className="flex-shrink-0 -rotate-90">
             <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#D1CDC7" strokeWidth={stroke} />
             <circle cx={size / 2} cy={size / 2} r={r} fill="none"
-                stroke="#121417" strokeWidth={stroke}
+                stroke="#B2945B" strokeWidth={stroke}
                 strokeDasharray={circ} strokeDashoffset={offset}
                 strokeLinecap="round" style={{ transition: 'stroke-dashoffset 0.5s ease' }}
             />
@@ -28,8 +28,9 @@ function ProjectCard({ project }) {
 
     return (
         <Link href={route('worker.projects.show', project.ghl_opportunity_id)}
-            className="block bg-white rounded-xl p-5 transition-shadow duration-200 hover:shadow-md"
-            style={{ border: '0.5px solid #D1CDC7' }}>
+            className="block glass-card rounded-xl p-5 transition-shadow duration-200"
+            style={{}}>
+
 
             {/* Header row */}
             <div className="flex items-start justify-between gap-3 mb-4">
@@ -56,9 +57,9 @@ function ProjectCard({ project }) {
                         <span className="text-sm font-bold text-forest">{project.progress_pct}%</span>
                         <span className="text-xs" style={{ color: '#8a7e6e' }}>complete</span>
                     </div>
-                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#F0EDEA' }}>
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: '#E8E6E2' }}>
                         <div className="h-full rounded-full transition-all duration-500"
-                            style={{ width: `${project.progress_pct}%`, background: '#121417' }} />
+                            style={{ width: `${project.progress_pct}%`, background: '#B2945B' }} />
                     </div>
                 </div>
                 <div className="text-right flex-shrink-0">
@@ -72,7 +73,7 @@ function ProjectCard({ project }) {
             {/* Current stage */}
             {project.current_stage && (
                 <div className="mt-3 pt-3 flex items-center gap-2" style={{ borderTop: '0.5px solid #ede8df' }}>
-                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#121417' }} />
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#B2945B' }} />
                     <span className="text-xs" style={{ color: '#6b5e4a' }}>
                         Currently: <span className="font-medium text-forest">{project.current_stage}</span>
                     </span>
@@ -89,7 +90,7 @@ export default function WorkerDashboard({ projects }) {
 
             {/* Header */}
             <div className="rounded-2xl p-6 mb-5 flex items-start justify-between"
-                style={{ background: '#121417', border: '0.5px solid rgba(255,255,255,0.08)' }}>
+                style={{ background: '#1A1A1A', border: '0.5px solid rgba(255,255,255,0.08)' }}>
                 <div>
                     <h1 className="text-2xl text-white font-serif font-normal mb-1">My Projects</h1>
                     <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
@@ -97,7 +98,7 @@ export default function WorkerDashboard({ projects }) {
                     </p>
                 </div>
                 <span className="text-sm font-medium px-3 py-1.5 rounded-full mt-1"
-                    style={{ color: 'rgba(255,255,255,0.8)', background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.12)' }}>
+                    style={{ color: '#B2945B', background: 'rgba(178,148,91,0.12)', border: '0.5px solid rgba(178,148,91,0.3)' }}>
                     Worker
                 </span>
             </div>
@@ -108,7 +109,7 @@ export default function WorkerDashboard({ projects }) {
                     {projects.map(p => <ProjectCard key={p.id} project={p} />)}
                 </div>
             ) : (
-                <div className="bg-white rounded-xl p-10 text-center" style={{ border: '0.5px solid #D1CDC7' }}>
+                <div className="glass-card rounded-xl p-10 text-center">
                     <svg width="40" height="40" viewBox="0 0 16 16" fill="none" stroke="#D1CDC7" strokeWidth="1.2"
                         strokeLinecap="round" className="mx-auto mb-3">
                         <rect x="2" y="5" width="12" height="9" rx="1.5"/>

@@ -54,18 +54,18 @@ export default function Dashboard({ stats = {} }) {
 
             {/* Welcome banner */}
             <div className="rounded-2xl p-6 mb-5 flex items-start justify-between"
-                style={{ background: '#121417', border: '0.5px solid rgba(255,255,255,0.08)' }}>
+                style={{ background: '#1A1A1A', border: '0.5px solid rgba(255,255,255,0.08)' }}>
                 <div>
                     <h1 className="text-2xl text-white font-serif font-normal mb-1" style={{ letterSpacing: '-0.01em' }}>
                         Admin Dashboard
                     </h1>
                     <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                        BGR Client Portal &nbsp;·&nbsp; <span style={{ color: 'rgba(255,255,255,0.55)' }}>Administration</span>
+                        BGR Client Portal &nbsp;·&nbsp; <span style={{ color: '#B2945B' }}>Administration</span>
                     </p>
                 </div>
                 <div className="text-right">
                     <p className="text-xs uppercase tracking-widest mb-1.5" style={{ color: 'rgba(255,255,255,0.4)', fontSize: 9 }}>Portal</p>
-                    <span className="text-sm font-medium px-3 py-1.5 rounded-full" style={{ color: 'rgba(255,255,255,0.8)', background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.12)' }}>
+                    <span className="text-sm font-medium px-3 py-1.5 rounded-full" style={{ color: '#B2945B', background: 'rgba(178,148,91,0.12)', border: '0.5px solid rgba(178,148,91,0.3)' }}>
                         Active
                     </span>
                 </div>
@@ -74,8 +74,8 @@ export default function Dashboard({ stats = {} }) {
             {/* Stats */}
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-5">
                 {statCards.map(s => (
-                    <div key={s.label} className="bg-white rounded-xl p-5 shadow-sm flex items-center justify-between"
-                        style={{ border: `0.5px solid #D1CDC7`, borderLeft: `4px solid ${s.border}` }}>
+                    <div key={s.label} className="glass-card rounded-xl p-5 flex items-center justify-between"
+                        style={{ borderLeft: `3px solid ${s.border}` }}>
                         <div>
                             <p className="text-3xl font-semibold text-forest">{s.value}</p>
                             <p className="text-xs mt-1" style={{ color: '#8a7e6e' }}>{s.label}</p>
@@ -91,10 +91,9 @@ export default function Dashboard({ stats = {} }) {
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {quickLinks.map(link => (
                         <Link key={link.label} href={link.href}
-                            className="group bg-white rounded-xl p-5 shadow-sm transition-all hover:shadow-md flex items-start gap-4"
-                            style={{ border: '0.5px solid #D1CDC7' }}>
+                            className="group glass-card rounded-xl p-5 transition-all flex items-start gap-4">
                             <div className="flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0"
-                                style={{ background: 'rgba(18,20,23,0.05)', border: '0.5px solid #D1CDC7', color: '#121417' }}>
+                                style={{ background: 'rgba(26,26,26,0.05)', border: '0.5px solid #D1CDC7', color: '#1A1A1A' }}>
                                 {link.icon}
                             </div>
                             <div>

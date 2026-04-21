@@ -15,17 +15,17 @@ export default function ForgotPassword({ status }) {
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@300;400;500;600&display=swap');
                 * { box-sizing: border-box; margin: 0; padding: 0; }
-                html, body, #app { height: 100%; background: #F9F8F6; }
-                .bgr-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 16px; background: #F9F8F6; font-family: 'Inter', sans-serif; }
+                html, body, #app { height: 100%; background: #F1F1EF; }
+                .bgr-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 16px; background: radial-gradient(ellipse at 30% 20%, #E8DFD0 0%, #F1F1EF 55%, #E8E6E2 100%); font-family: 'Inter', sans-serif; }
                 .bgr-card { width: 100%; max-width: 440px; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,0.12), 0 4px 20px rgba(0,0,0,0.06); animation: fadeIn 0.4s ease; }
-                .bgr-card-top { background: #121417; padding: 28px 36px 24px; text-align: center; position: relative; }
-                .bgr-card-top::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 1px; background: rgba(255,255,255,0.08); }
+                .bgr-card-top { background: #0A0A0A; padding: 28px 36px 24px; text-align: center; position: relative; }
+                .bgr-card-top::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, #B2945B, transparent); }
                 .bgr-card-body { padding: 32px 36px 36px; }
-                .bgr-input { width: 100%; padding: 12px 16px; border: 1.5px solid #D1CDC7; border-radius: 8px; font-size: 14px; font-family: 'Inter', sans-serif; color: #121417; background: #fafaf9; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
-                .bgr-input:focus { border-color: #121417; background: #fff; box-shadow: 0 0 0 3px rgba(18,20,23,0.08); }
+                .bgr-input { width: 100%; padding: 12px 16px; border: 1.5px solid #D1CDC7; border-radius: 8px; font-size: 14px; font-family: 'Inter', sans-serif; color: #1A1A1A; background: #fafaf9; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+                .bgr-input:focus { border-color: #B2945B; background: #fff; box-shadow: 0 0 0 3px rgba(178,148,91,0.15); }
                 .bgr-input.has-error { border-color: #dc2626; }
-                .bgr-btn { width: 100%; padding: 13px 24px; background: #121417; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.2s, box-shadow 0.2s; letter-spacing: 0.08em; text-transform: uppercase; }
-                .bgr-btn:hover:not(:disabled) { background: #2a2e33; box-shadow: 0 4px 16px rgba(18,20,23,0.2); }
+                .bgr-btn { width: 100%; padding: 13px 24px; background: #1A1A1A; color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.2s, box-shadow 0.2s; letter-spacing: 0.08em; text-transform: uppercase; }
+                .bgr-btn:hover:not(:disabled) { background: #2a2e33; box-shadow: 0 4px 16px rgba(26,26,26,0.2); }
                 .bgr-btn:disabled { opacity: 0.5; cursor: not-allowed; }
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
                 @keyframes spin { to { transform: rotate(360deg); } }
@@ -37,7 +37,7 @@ export default function ForgotPassword({ status }) {
                     <div className="bgr-card-top">
                         <img src="/bgr-logo-dark-bg-min.png" alt="BGR Garden Rooms"
                             style={{ height: 80, width: 'auto', maxWidth: '100%', objectFit: 'contain', display: 'block', margin: '0 auto 14px' }} />
-                        <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.22em', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>
+                        <p style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.22em', color: '#B2945B', textTransform: 'uppercase' }}>
                             Client Portal
                         </p>
                     </div>
@@ -53,7 +53,7 @@ export default function ForgotPassword({ status }) {
                         </div>
 
                         {status && (
-                            <div style={{ marginBottom: 20, padding: '11px 14px', borderRadius: 8, background: 'rgba(18,20,23,0.05)', border: '1px solid rgba(18,20,23,0.12)', color: '#121417', fontSize: 13, fontWeight: 500 }}>
+                            <div style={{ marginBottom: 20, padding: '11px 14px', borderRadius: 8, background: 'rgba(26,26,26,0.05)', border: '1px solid rgba(26,26,26,0.12)', color: '#1A1A1A', fontSize: 13, fontWeight: 500 }}>
                                 {status}
                             </div>
                         )}
@@ -96,7 +96,7 @@ export default function ForgotPassword({ status }) {
                         <p style={{ textAlign: 'center', fontSize: 13, color: '#b0afaa', marginTop: 24 }}>
                             Remember your password?{' '}
                             <Link href={route('login')}
-                                style={{ color: '#121417', fontWeight: 500, textDecoration: 'none' }}
+                                style={{ color: '#1A1A1A', fontWeight: 500, textDecoration: 'none' }}
                                 onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
                                 onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>
                                 Back to sign in

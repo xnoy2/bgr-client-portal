@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 // ── Status config ─────────────────────────────────────────────────────────────
 
 const STATUS = {
-    pending:  { label: 'Under review', dot: '#121417', bg: 'rgba(201,168,76,0.10)', color: '#9a7520' },
+    pending:  { label: 'Under review', dot: '#1A1A1A', bg: 'rgba(201,168,76,0.10)', color: '#9a7520' },
     approved: { label: 'Approved',     dot: '#22c55e', bg: 'rgba(34,197,94,0.09)',  color: '#15803d' },
     rejected: { label: 'Declined',     dot: '#ef4444', bg: 'rgba(239,68,68,0.09)',  color: '#b91c1c' },
 };
@@ -59,7 +59,7 @@ function DetailModal({ variation, onClose }) {
                             Submitted {variation.submitted_at}
                             {variation.project_name && (
                                 <span className="ml-2 px-1.5 py-0.5 rounded-full font-medium"
-                                    style={{ background: 'rgba(26,60,46,0.07)', color: '#121417' }}>
+                                    style={{ background: 'rgba(26,60,46,0.07)', color: '#1A1A1A' }}>
                                     {variation.project_name}
                                 </span>
                             )}
@@ -67,7 +67,7 @@ function DetailModal({ variation, onClose }) {
                     </div>
                     <button onClick={onClose}
                         className="w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0"
-                        style={{ background: '#F9F8F6', color: '#888480' }}>
+                        style={{ background: '#F1F1EF', color: '#888480' }}>
                         <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                             <line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/>
                         </svg>
@@ -99,7 +99,7 @@ function DetailModal({ variation, onClose }) {
                     {/* Estimated cost */}
                     {variation.estimated_cost && (
                         <div className="flex items-center justify-between px-4 py-3 rounded-xl"
-                            style={{ background: '#F9F8F6', border: '0.5px solid #D1CDC7' }}>
+                            style={{ background: '#F1F1EF', border: '0.5px solid #D1CDC7' }}>
                             <span className="text-xs font-semibold" style={{ color: '#888480' }}>Estimated cost</span>
                             <span className="text-sm font-bold text-forest">
                                 ${Number(variation.estimated_cost).toLocaleString()}
@@ -109,7 +109,7 @@ function DetailModal({ variation, onClose }) {
 
                     {/* Admin notes */}
                     {variation.admin_notes && (
-                        <div className="px-4 py-3 rounded-xl" style={{ background: '#F9F8F6', border: '0.5px solid #D1CDC7' }}>
+                        <div className="px-4 py-3 rounded-xl" style={{ background: '#F1F1EF', border: '0.5px solid #D1CDC7' }}>
                             <p className="text-xs font-semibold mb-1.5" style={{ color: '#888480' }}>Notes from BGR</p>
                             <p className="text-sm leading-relaxed" style={{ color: '#4a3f30' }}>
                                 {variation.admin_notes}
@@ -122,7 +122,7 @@ function DetailModal({ variation, onClose }) {
                 <div className="px-5 py-4 flex-shrink-0" style={{ borderTop: '0.5px solid #f0ebe3' }}>
                     <button onClick={onClose}
                         className="w-full py-2.5 rounded-xl text-sm font-semibold"
-                        style={{ background: '#F9F8F6', color: '#4A4A4A' }}>
+                        style={{ background: '#F1F1EF', color: '#4A4A4A' }}>
                         Close
                     </button>
                 </div>
@@ -189,7 +189,7 @@ function SubmitModal({ projects, onClose }) {
                     </div>
                     <button onClick={onClose}
                         className="w-7 h-7 flex items-center justify-center rounded-full flex-shrink-0"
-                        style={{ background: '#F9F8F6', color: '#888480' }}>
+                        style={{ background: '#F1F1EF', color: '#888480' }}>
                         <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                             <line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/>
                         </svg>
@@ -204,8 +204,8 @@ function SubmitModal({ projects, onClose }) {
                             <label className="block text-xs font-semibold mb-1.5" style={{ color: '#5a4f42' }}>Project</label>
                             <select value={projectId} onChange={e => setProjectId(e.target.value)}
                                 className="w-full px-3.5 py-2.5 rounded-xl text-sm text-forest outline-none"
-                                style={{ background: '#F9F8F6', border: '1.5px solid #e8e0d5' }}
-                                onFocus={e => e.target.style.borderColor = '#121417'}
+                                style={{ background: '#F1F1EF', border: '1.5px solid #e8e0d5' }}
+                                onFocus={e => e.target.style.borderColor = '#1A1A1A'}
                                 onBlur={e  => e.target.style.borderColor = '#e8e0d5'}>
                                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                             </select>
@@ -214,26 +214,26 @@ function SubmitModal({ projects, onClose }) {
 
                     <div>
                         <label className="block text-xs font-semibold mb-1.5" style={{ color: '#5a4f42' }}>
-                            Title <span style={{ color: '#121417' }}>*</span>
+                            Title <span style={{ color: '#1A1A1A' }}>*</span>
                         </label>
                         <input type="text" value={title} onChange={e => setTitle(e.target.value)}
                             placeholder="e.g. Upgrade to triple-glazed windows"
                             className="w-full px-3.5 py-2.5 rounded-xl text-sm text-forest outline-none"
-                            style={{ background: '#F9F8F6', border: '1.5px solid #e8e0d5' }}
-                            onFocus={e => e.target.style.borderColor = '#121417'}
+                            style={{ background: '#F1F1EF', border: '1.5px solid #e8e0d5' }}
+                            onFocus={e => e.target.style.borderColor = '#1A1A1A'}
                             onBlur={e  => e.target.style.borderColor = '#e8e0d5'}
                         />
                     </div>
 
                     <div>
                         <label className="block text-xs font-semibold mb-1.5" style={{ color: '#5a4f42' }}>
-                            Description <span style={{ color: '#121417' }}>*</span>
+                            Description <span style={{ color: '#1A1A1A' }}>*</span>
                         </label>
                         <textarea rows={4} value={desc} onChange={e => setDesc(e.target.value)}
                             placeholder="Describe the change you'd like to make and why…"
                             className="w-full px-3.5 py-2.5 rounded-xl text-sm text-forest outline-none resize-none"
-                            style={{ background: '#F9F8F6', border: '1.5px solid #e8e0d5' }}
-                            onFocus={e => e.target.style.borderColor = '#121417'}
+                            style={{ background: '#F1F1EF', border: '1.5px solid #e8e0d5' }}
+                            onFocus={e => e.target.style.borderColor = '#1A1A1A'}
                             onBlur={e  => e.target.style.borderColor = '#e8e0d5'}
                         />
                     </div>
@@ -249,8 +249,8 @@ function SubmitModal({ projects, onClose }) {
                             <input type="number" min="0" step="0.01" value={cost} onChange={e => setCost(e.target.value)}
                                 placeholder="0.00"
                                 className="w-full pl-8 pr-3.5 py-2.5 rounded-xl text-sm text-forest outline-none"
-                                style={{ background: '#F9F8F6', border: '1.5px solid #e8e0d5' }}
-                                onFocus={e => e.target.style.borderColor = '#121417'}
+                                style={{ background: '#F1F1EF', border: '1.5px solid #e8e0d5' }}
+                                onFocus={e => e.target.style.borderColor = '#1A1A1A'}
                                 onBlur={e  => e.target.style.borderColor = '#e8e0d5'}
                             />
                         </div>
@@ -260,7 +260,7 @@ function SubmitModal({ projects, onClose }) {
                     <div className="flex gap-2.5 pt-1 pb-2">
                         <button type="button" onClick={onClose}
                             className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
-                            style={{ background: '#F9F8F6', color: '#4A4A4A' }}>
+                            style={{ background: '#F1F1EF', color: '#4A4A4A' }}>
                             Cancel
                         </button>
                         <button type="submit" disabled={!canSubmit}
@@ -268,8 +268,8 @@ function SubmitModal({ projects, onClose }) {
                             style={{
                                 flex: 2,
                                 padding: '10px',
-                                background: canSubmit ? '#121417' : '#D1CDC7',
-                                color:      canSubmit ? '#121417' : '#888480',
+                                background: canSubmit ? '#1A1A1A' : '#D1CDC7',
+                                color:      canSubmit ? '#1A1A1A' : '#888480',
                                 cursor:     canSubmit ? 'pointer' : 'not-allowed',
                             }}>
                             {busy
@@ -294,7 +294,7 @@ function SubmitModal({ projects, onClose }) {
 function VariationRow({ variation, onView, isLast }) {
     return (
         <div className="flex items-center gap-4 px-5 py-4 cursor-pointer transition-colors"
-            style={{ borderBottom: isLast ? 'none' : '0.5px solid #F9F8F6' }}
+            style={{ borderBottom: isLast ? 'none' : '0.5px solid #F1F1EF' }}
             onClick={() => onView(variation)}
             onMouseEnter={e => e.currentTarget.style.background = '#fdfcfa'}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
@@ -303,7 +303,7 @@ function VariationRow({ variation, onView, isLast }) {
             <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                 style={{ background: STATUS[variation.status]?.bg ?? 'rgba(201,168,76,0.10)' }}>
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none"
-                    stroke={STATUS[variation.status]?.dot ?? '#121417'}
+                    stroke={STATUS[variation.status]?.dot ?? '#1A1A1A'}
                     strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M11 2l3 3-8 8H3v-3l8-8z"/>
                 </svg>
@@ -348,19 +348,19 @@ export default function VariationsIndex({ variations, projects }) {
             {pending > 0 && (
                 <div className="mb-5 flex items-center gap-3 px-4 py-3.5 rounded-2xl"
                     style={{
-                        background: 'linear-gradient(135deg, rgba(18,20,23,0.04), rgba(201,168,76,0.04))',
+                        background: 'linear-gradient(135deg, rgba(26,26,26,0.04), rgba(201,168,76,0.04))',
                         border: '0.5px solid rgba(201,168,76,0.35)',
                     }}>
                     <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                        style={{ background: 'rgba(18,20,23,0.05)' }}>
-                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#121417" strokeWidth="2" strokeLinecap="round">
+                        style={{ background: 'rgba(26,26,26,0.05)' }}>
+                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#1A1A1A" strokeWidth="2" strokeLinecap="round">
                             <circle cx="8" cy="8" r="6.5"/>
                             <line x1="8" y1="5" x2="8" y2="8"/>
-                            <circle cx="8" cy="11" r="0.5" fill="#121417"/>
+                            <circle cx="8" cy="11" r="0.5" fill="#1A1A1A"/>
                         </svg>
                     </div>
                     <p className="text-sm" style={{ color: '#4A4A4A' }}>
-                        <span className="font-semibold" style={{ color: '#121417' }}>
+                        <span className="font-semibold" style={{ color: '#1A1A1A' }}>
                             {pending} request{pending !== 1 ? 's' : ''} under review.
                         </span>
                         {' '}BGR will respond shortly.
@@ -369,7 +369,7 @@ export default function VariationsIndex({ variations, projects }) {
             )}
 
             {/* Card */}
-            <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '0.5px solid #D1CDC7' }}>
+            <div className="glass-card rounded-2xl overflow-hidden">
 
                 {/* Card header */}
                 <div className="flex items-center justify-between px-5 py-4"
@@ -387,7 +387,7 @@ export default function VariationsIndex({ variations, projects }) {
                     {projects.length > 0 && (
                         <button onClick={() => setShowForm(true)}
                             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all"
-                            style={{ background: '#121417', color: '#fff' }}
+                            style={{ background: '#1A1A1A', color: '#fff' }}
                             onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
                             onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
                             <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -402,8 +402,8 @@ export default function VariationsIndex({ variations, projects }) {
                 {variations.length === 0 ? (
                     <div className="px-6 py-14 text-center">
                         <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                            style={{ background: '#F9F8F6' }}>
-                            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#121417" strokeWidth="1.5" strokeLinecap="round">
+                            style={{ background: '#F1F1EF' }}>
+                            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#1A1A1A" strokeWidth="1.5" strokeLinecap="round">
                                 <path d="M11 2l3 3-8 8H3v-3l8-8z"/>
                             </svg>
                         </div>
@@ -414,7 +414,7 @@ export default function VariationsIndex({ variations, projects }) {
                         {projects.length > 0 && (
                             <button onClick={() => setShowForm(true)}
                                 className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold"
-                                style={{ background: '#121417', color: '#fff' }}>
+                                style={{ background: '#1A1A1A', color: '#fff' }}>
                                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                                     <line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/>
                                 </svg>

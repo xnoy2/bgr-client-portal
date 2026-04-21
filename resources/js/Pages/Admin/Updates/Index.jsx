@@ -71,7 +71,7 @@ function Lightbox({ photos, startIndex, onClose }) {
                             style={{
                                 width: 48, height: 48,
                                 opacity: i === idx ? 1 : 0.4,
-                                border: i === idx ? '2px solid #121417' : '2px solid transparent',
+                                border: i === idx ? '2px solid #1A1A1A' : '2px solid transparent',
                             }}>
                             <img src={src} alt="" className="w-full h-full object-cover" />
                         </button>
@@ -139,7 +139,7 @@ function UpdateDetailModal({ update, onClose }) {
                         style={{ borderBottom: '0.5px solid #f0ebe3' }}>
                         <div className="flex items-center gap-2.5 min-w-0">
                             <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                                style={{ background: 'linear-gradient(135deg, #121417, #2d5a42)', color: '#121417' }}>
+                                style={{ background: 'linear-gradient(135deg, #1A1A1A, #2d5a42)', color: '#1A1A1A' }}>
                                 {(update.author_name ?? 'T')[0]?.toUpperCase()}
                             </div>
                             <div className="min-w-0">
@@ -149,7 +149,7 @@ function UpdateDetailModal({ update, onClose }) {
                         </div>
                         <button onClick={onClose}
                             className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
-                            style={{ background: '#F9F8F6', color: '#4A4A4A' }}>
+                            style={{ background: '#F1F1EF', color: '#4A4A4A' }}>
                             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                                 <line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/>
                             </svg>
@@ -163,13 +163,13 @@ function UpdateDetailModal({ update, onClose }) {
                             <div className="flex flex-wrap items-center gap-1.5">
                                 {update.project_name && (
                                     <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                                        style={{ background: 'rgba(18,20,23,0.05)', color: '#121417' }}>
+                                        style={{ background: 'rgba(26,26,26,0.05)', color: '#1A1A1A' }}>
                                         {update.project_name}
                                     </span>
                                 )}
                                 {update.stage_name && (
                                     <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                                        style={{ background: 'rgba(18,20,23,0.06)', color: '#121417' }}>
+                                        style={{ background: 'rgba(26,26,26,0.06)', color: '#1A1A1A' }}>
                                         {update.stage_name}
                                     </span>
                                 )}
@@ -202,7 +202,7 @@ function UpdateDetailModal({ update, onClose }) {
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl"
-                                    style={{ aspectRatio: '2/1', background: '#F9F8F6', border: '1.5px dashed #D1CDC7' }}>
+                                    style={{ aspectRatio: '2/1', background: '#F1F1EF', border: '1.5px dashed #D1CDC7' }}>
                                     <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="#c9c0b3" strokeWidth="1.4" strokeLinecap="round">
                                         <rect x="1" y="3" width="14" height="10" rx="1.5"/>
                                         <circle cx="8" cy="8" r="2.2"/>
@@ -241,10 +241,10 @@ export default function UpdatesIndex({ updates }) {
                 </div>
 
                 {updates.length === 0 ? (
-                    <div className="bg-white rounded-2xl p-12 text-center" style={{ border: '0.5px solid #D1CDC7' }}>
+                    <div className="glass-card rounded-2xl p-12 text-center">
                         <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
-                            style={{ background: '#F9F8F6' }}>
-                            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#121417" strokeWidth="1.5" strokeLinecap="round">
+                            style={{ background: '#F1F1EF' }}>
+                            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#1A1A1A" strokeWidth="1.5" strokeLinecap="round">
                                 <path d="M14 10c0 .6-.4 1-1 1H4l-2 3V3c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v7z"/>
                             </svg>
                         </div>
@@ -257,17 +257,17 @@ export default function UpdatesIndex({ updates }) {
                             const photos = u.photos ?? [];
                             return (
                                 <div key={u.id}
-                                    className="bg-white rounded-2xl overflow-hidden cursor-pointer flex flex-col"
-                                    style={{ border: '1px solid #f0ebe3' }}
+                                    className="glass-card rounded-2xl overflow-hidden cursor-pointer flex flex-col"
+                                    style={{}}
                                     onClick={() => setDetailUpdate(u)}
-                                    onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(18,20,23,0.05)'}
+                                    onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(26,26,26,0.05)'}
                                     onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
 
                                     {/* Card header */}
                                     <div className="flex items-start justify-between gap-3 px-4 pt-4 pb-3">
                                         <div className="flex items-center gap-2.5 min-w-0">
                                             <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                                                style={{ background: 'linear-gradient(135deg, #121417, #2d5a42)', color: '#121417' }}>
+                                                style={{ background: 'linear-gradient(135deg, #1A1A1A, #2d5a42)', color: '#1A1A1A' }}>
                                                 {(u.author_name ?? 'T')[0]?.toUpperCase()}
                                             </div>
                                             <div className="min-w-0">
@@ -280,7 +280,7 @@ export default function UpdatesIndex({ updates }) {
                                                         <>
                                                             <span style={{ color: '#D1CDC7', fontSize: 10 }}>·</span>
                                                             <span className="text-xs px-1.5 py-0.5 rounded-full font-medium"
-                                                                style={{ background: 'rgba(18,20,23,0.06)', color: '#121417' }}>
+                                                                style={{ background: 'rgba(26,26,26,0.06)', color: '#1A1A1A' }}>
                                                                 {u.stage_name}
                                                             </span>
                                                         </>
@@ -294,7 +294,7 @@ export default function UpdatesIndex({ updates }) {
                                     {u.project_name && (
                                         <div className="px-4 pb-2">
                                             <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                                                style={{ background: 'rgba(26,60,46,0.07)', color: '#121417' }}>
+                                                style={{ background: 'rgba(26,60,46,0.07)', color: '#1A1A1A' }}>
                                                 {u.project_name}
                                             </span>
                                         </div>
@@ -323,7 +323,7 @@ export default function UpdatesIndex({ updates }) {
                                         />
                                     ) : (
                                         <div className="mx-4 mb-3 flex flex-col items-center justify-center gap-1.5 rounded-xl"
-                                            style={{ aspectRatio: '2/1', background: '#F9F8F6', border: '1.5px dashed #D1CDC7' }}>
+                                            style={{ aspectRatio: '2/1', background: '#F1F1EF', border: '1.5px dashed #D1CDC7' }}>
                                             <svg width="22" height="22" viewBox="0 0 16 16" fill="none" stroke="#c9c0b3" strokeWidth="1.4" strokeLinecap="round">
                                                 <rect x="1" y="3" width="14" height="10" rx="1.5"/>
                                                 <circle cx="8" cy="8" r="2.2"/>
@@ -335,7 +335,7 @@ export default function UpdatesIndex({ updates }) {
 
                                     {/* Footer */}
                                     <div className="px-4 py-3 flex items-center gap-1.5"
-                                        style={{ borderTop: '0.5px solid #F9F8F6' }}>
+                                        style={{ borderTop: '0.5px solid #F1F1EF' }}>
                                         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#888480" strokeWidth="1.5" strokeLinecap="round">
                                             <path d="M14 10c0 .6-.4 1-1 1H4l-2 3V3c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v7z"/>
                                         </svg>

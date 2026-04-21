@@ -42,7 +42,7 @@ function FileIcon({ mimeType, size = 44 }) {
 // ── Status badge ──────────────────────────────────────────────────────────────
 
 const SIGN_STATUS = {
-    draft:   { label: 'Draft',   bg: '#F9F8F6', color: '#888480',  border: '#D1CDC7' },
+    draft:   { label: 'Draft',   bg: '#F1F1EF', color: '#888480',  border: '#D1CDC7' },
     pending: { label: 'Pending', bg: '#fffbeb', color: '#b45309',  border: '#fde68a' },
     signed:  { label: 'Signed',  bg: '#f0fdf4', color: '#15803d',  border: '#bbf7d0' },
 };
@@ -117,7 +117,7 @@ function SignModal({ doc, onClose }) {
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                             style={{ background: 'rgba(26,60,46,0.07)' }}>
                             <svg width="14" height="14" viewBox="0 0 16 16" fill="none"
-                                stroke="#121417" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                stroke="#1A1A1A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M11 2l3 3-8 8H3v-3l8-8z"/>
                             </svg>
                         </div>
@@ -172,11 +172,11 @@ function SignModal({ doc, onClose }) {
                             style={{
                                 border: `1.5px solid ${errors.signer_name ? '#fca5a5' : '#D1CDC7'}`,
                                 background: '#fdfcfa',
-                                color: '#121417',
+                                color: '#1A1A1A',
                                 fontFamily: 'Georgia, serif',
                                 letterSpacing: '0.03em',
                             }}
-                            onFocus={e => e.target.style.borderColor = '#121417'}
+                            onFocus={e => e.target.style.borderColor = '#1A1A1A'}
                             onBlur={e  => e.target.style.borderColor = errors.signer_name ? '#fca5a5' : '#D1CDC7'}
                         />
                         {errors.signer_name
@@ -194,12 +194,12 @@ function SignModal({ doc, onClose }) {
                             <div className="flex items-center justify-center transition-all"
                                 style={{
                                     width: 18, height: 18,
-                                    background: agreed ? '#121417' : '#fff',
-                                    border: `1.5px solid ${agreed ? '#121417' : '#d0c8bc'}`,
+                                    background: agreed ? '#1A1A1A' : '#fff',
+                                    border: `1.5px solid ${agreed ? '#1A1A1A' : '#d0c8bc'}`,
                                     borderRadius: 5,
                                 }}>
                                 {agreed && (
-                                    <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="#121417" strokeWidth="2.8" strokeLinecap="round">
+                                    <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="#1A1A1A" strokeWidth="2.8" strokeLinecap="round">
                                         <polyline points="2,8 6,12 14,4"/>
                                     </svg>
                                 )}
@@ -215,14 +215,14 @@ function SignModal({ doc, onClose }) {
                     <div className="flex gap-2.5">
                         <button type="button" onClick={onClose}
                             className="flex-1 py-2.5 rounded-xl text-sm font-medium"
-                            style={{ background: '#F9F8F6', color: '#4A4A4A', border: '0.5px solid #D1CDC7' }}>
+                            style={{ background: '#F1F1EF', color: '#4A4A4A', border: '0.5px solid #D1CDC7' }}>
                             Cancel
                         </button>
                         <button type="submit" disabled={!canSign}
                             className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
                             style={{
-                                background: canSign ? '#121417' : '#D1CDC7',
-                                color:      canSign ? '#121417' : '#c4b8a8',
+                                background: canSign ? '#1A1A1A' : '#D1CDC7',
+                                color:      canSign ? '#1A1A1A' : '#c4b8a8',
                                 cursor:     canSign ? 'pointer' : 'not-allowed',
                                 border: 'none',
                             }}>
@@ -266,7 +266,7 @@ function DocumentRow({ doc, onSign }) {
 
     return (
         <div className="flex items-center gap-4 px-5 py-4"
-            style={{ borderBottom: '0.5px solid #F9F8F6' }}>
+            style={{ borderBottom: '0.5px solid #F1F1EF' }}>
 
             {/* Icon */}
             <a href={route('client.documents.download', doc.id)} target="_blank" rel="noopener noreferrer"
@@ -293,12 +293,12 @@ function DocumentRow({ doc, onSign }) {
                     <button onClick={() => onSign(doc)}
                         className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all"
                         style={{
-                            background: '#121417',
-                            color: '#121417',
-                            border: '0.5px solid rgba(18,20,23,0.12)',
+                            background: '#1A1A1A',
+                            color: '#1A1A1A',
+                            border: '0.5px solid rgba(26,26,26,0.12)',
                         }}
-                        onMouseEnter={e => e.currentTarget.style.background = '#0e1012'}
-                        onMouseLeave={e => e.currentTarget.style.background = '#121417'}>
+                        onMouseEnter={e => e.currentTarget.style.background = '#0A0A0A'}
+                        onMouseLeave={e => e.currentTarget.style.background = '#1A1A1A'}>
                         Sign now
                     </button>
                 )}
@@ -337,17 +337,17 @@ export default function ClientDocumentsIndex({ documents }) {
             {pendingCount > 0 && (
                 <div className="mb-5 flex items-center gap-3 px-4 py-3.5 rounded-2xl"
                     style={{
-                        background: 'linear-gradient(135deg, rgba(18,20,23,0.04), rgba(201,168,76,0.04))',
+                        background: 'linear-gradient(135deg, rgba(26,26,26,0.04), rgba(201,168,76,0.04))',
                         border: '0.5px solid rgba(201,168,76,0.35)',
                     }}>
                     <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                        style={{ background: 'rgba(18,20,23,0.05)' }}>
-                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#121417" strokeWidth="2" strokeLinecap="round">
-                            <circle cx="8" cy="8" r="6.5"/><line x1="8" y1="5" x2="8" y2="8"/><circle cx="8" cy="11" r="0.5" fill="#121417"/>
+                        style={{ background: 'rgba(26,26,26,0.05)' }}>
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#1A1A1A" strokeWidth="2" strokeLinecap="round">
+                            <circle cx="8" cy="8" r="6.5"/><line x1="8" y1="5" x2="8" y2="8"/><circle cx="8" cy="11" r="0.5" fill="#1A1A1A"/>
                         </svg>
                     </div>
                     <p className="text-sm" style={{ color: '#4A4A4A' }}>
-                        <span className="font-semibold" style={{ color: '#121417' }}>
+                        <span className="font-semibold" style={{ color: '#1A1A1A' }}>
                             {pendingCount} document{pendingCount !== 1 ? 's' : ''} awaiting your signature.
                         </span>
                         {' '}Please review and sign below.
@@ -357,10 +357,10 @@ export default function ClientDocumentsIndex({ documents }) {
 
             {documents.length === 0 ? (
                 /* Empty state */
-                <div className="bg-white rounded-2xl p-12 text-center" style={{ border: '0.5px solid #D1CDC7' }}>
+                <div className="glass-card rounded-2xl p-12 text-center">
                     <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                        style={{ background: '#F9F8F6' }}>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#121417" strokeWidth="1.5" strokeLinecap="round">
+                        style={{ background: '#F1F1EF' }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" strokeWidth="1.5" strokeLinecap="round">
                             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                             <polyline points="14 2 14 8 20 8"/>
                         </svg>
@@ -371,7 +371,7 @@ export default function ClientDocumentsIndex({ documents }) {
                     </p>
                 </div>
             ) : (
-                <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '0.5px solid #D1CDC7' }}>
+                <div className="glass-card rounded-2xl overflow-hidden">
                     {/* Section header */}
                     <div className="px-5 py-4 flex items-center justify-between"
                         style={{ borderBottom: '0.5px solid #D1CDC7', background: '#fdfcfa' }}>
