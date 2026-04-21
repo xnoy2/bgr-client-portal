@@ -22,8 +22,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// ── GHL Inbound Webhook (unauthenticated) ─────────────────────────────────────
+// ── GHL Inbound Webhooks (unauthenticated) ────────────────────────────────────
 Route::post('/webhooks/ghl', [GHLWebhookController::class, 'handle'])
+    ->middleware('throttle:60,1');
+
+// Dedicated endpoint for GHL Workflow → Webhook action (variation form)
+Route::post('/webhooks/ghl-variation', [GHLWebhookController::class, 'handleVariationForm'])
     ->middleware('throttle:60,1');
 
 // ── Auth ──────────────────────────────────────────────────────────────────────

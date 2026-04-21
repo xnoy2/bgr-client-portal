@@ -15,6 +15,79 @@ class GHLWebhookController extends Controller
 {
     public function __construct(private ClientProvisioningService $clientProvisioning) {}
 
+    // Called by GHL Workflow → Webhook action after "Form Submitted" trigger
+    public function handleVariationForm(Request $request): Response
+    {
+        $payload = $request->json()->all();
+
+        Log::info('GHL VariationForm webhook received', ['payload' => $payload]);
+
+        // GHL workflow webhooks send contact data at the top level (no 'type' field)
+        $email = $payload['email'] ?? $payload['contact_email'] ?? null;
+
+        if (! $email) {
+            Log::warning('GHL VariationForm: missing email', ['payload' => $payload]);
+            return response('Missing email', 422);
+        }
+
+        $user = User::where('email', $email)->where('role', 'client')->first();
+        if (! $user) {
+            Log::warning('GHL VariationForm: no client found', ['email' => $email]);
+            return response('Client not found', 404);
+        }
+
+        // Deduplicate by submission ID if GHL provides one
+        $submissionId = $payload['submission_id'] ?? $payload['submissionId'] ?? null;
+        if ($submissionId && VariationRequest::where('ghl_submission_id', $submissionId)->exists()) {
+            return response('Duplicate', 200);
+        }
+
+        // Resolve project
+        $projectName = $this->extractField($payload, ['project', 'project_name', 'property_address', 'address']);
+        $project = $projectName
+            ? Project::where('client_id', $user->id)
+                ->where(fn ($q) => $q->where('name', 'like', "%{$projectName}%")
+                                     ->orWhere('address', 'like', "%{$projectName}%"))
+                ->first()
+            : null;
+        $project ??= Project::where('client_id', $user->id)->orderByDesc('created_at')->first();
+
+        if (! $project) {
+            Log::warning('GHL VariationForm: no project found', ['userId' => $user->id]);
+            return response('No project', 404);
+        }
+
+        $title = $this->extractField($payload, [
+            'title', 'change_title', 'request_title', 'summary', 'subject', 'variation_title',
+        ]) ?? 'Variation Request';
+
+        $description = $this->extractField($payload, [
+            'description', 'change_description', 'request_details', 'details',
+            'message', 'notes', 'variation_details',
+        ]) ?? '(Submitted via GHL form — see logs for raw payload)';
+
+        $cost = $this->extractField($payload, ['estimated_cost', 'cost', 'price', 'amount', 'estimate']);
+
+        VariationRequest::create([
+            'ghl_submission_id' => $submissionId,
+            'source'            => 'ghl_form',
+            'project_id'        => $project->id,
+            'submitted_by'      => $user->id,
+            'title'             => $title,
+            'description'       => $description,
+            'estimated_cost'    => is_numeric($cost) ? $cost : null,
+            'status'            => 'pending',
+        ]);
+
+        Log::info('GHL VariationForm: VariationRequest created', [
+            'userId'    => $user->id,
+            'projectId' => $project->id,
+            'title'     => $title,
+        ]);
+
+        return response('OK', 200);
+    }
+
     public function handle(Request $request): Response
     {
         // Validate HMAC signature
