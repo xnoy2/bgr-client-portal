@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Project;
+use App\Models\User;
+use App\Models\VariationRequest;
 use App\Services\ClientProvisioningService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -43,6 +46,7 @@ class GHLWebhookController extends Controller
             'appointment.updated'       => $this->handleAppointment($payload),
             'DocumentSigned'            => $this->handleDocumentSigned($payload),
             'DocumentDeclined'          => $this->handleDocumentDeclined($payload),
+            'FormSubmitted'             => $this->handleFormSubmitted($payload),
             default                     => Log::debug("GHLWebhook: unhandled event {$eventType}"),
         };
 
@@ -93,5 +97,110 @@ class GHLWebhookController extends Controller
     {
         // TODO Phase 8: update document status, notify admin
         Log::info('GHLWebhook: DocumentDeclined stub');
+    }
+
+    private function handleFormSubmitted(array $payload): void
+    {
+        $formId = $payload['formId'] ?? $payload['form_id'] ?? null;
+
+        // Only handle our variation request form
+        if ($formId !== 'Y9cP2PtdUriHgHPCP4VV') {
+            Log::debug('GHLWebhook: FormSubmitted ignored (different form)', ['formId' => $formId]);
+            return;
+        }
+
+        Log::info('GHLWebhook: FormSubmitted (variation)', ['payload' => $payload]);
+
+        // Deduplicate by submission ID
+        $submissionId = $payload['submissionId'] ?? $payload['submission_id'] ?? null;
+        if ($submissionId && VariationRequest::where('ghl_submission_id', $submissionId)->exists()) {
+            Log::info('GHLWebhook: duplicate FormSubmitted skipped', ['submissionId' => $submissionId]);
+            return;
+        }
+
+        // Resolve contact email — GHL may nest it differently
+        $formData = $payload['formData'] ?? $payload['form_data'] ?? [];
+        $email    = $payload['email']
+            ?? $payload['contact']['email']
+            ?? $formData['email']
+            ?? null;
+
+        if (! $email) {
+            Log::warning('GHLWebhook: FormSubmitted missing email', ['payload' => $payload]);
+            return;
+        }
+
+        // Find the portal client user by email
+        $user = User::where('email', $email)->where('role', 'client')->first();
+        if (! $user) {
+            Log::warning('GHLWebhook: FormSubmitted no client found', ['email' => $email]);
+            return;
+        }
+
+        // Resolve project — try matching by name from form, otherwise use client's first project
+        $projectName = $this->extractField($formData, ['project', 'project_name', 'property_address', 'address']);
+        $project = $projectName
+            ? Project::where('client_id', $user->id)
+                ->where(fn ($q) => $q->where('name', 'like', "%{$projectName}%")
+                                     ->orWhere('address', 'like', "%{$projectName}%"))
+                ->first()
+            : null;
+
+        $project ??= Project::where('client_id', $user->id)->orderByDesc('created_at')->first();
+
+        if (! $project) {
+            Log::warning('GHLWebhook: FormSubmitted no project found for client', ['userId' => $user->id]);
+            return;
+        }
+
+        // Extract title & description from form fields (field names vary by form builder)
+        $title = $this->extractField($formData, [
+            'title', 'change_title', 'request_title', 'summary', 'subject',
+            'variation_title', 'name',
+        ]) ?? 'Variation Request';
+
+        $description = $this->extractField($formData, [
+            'description', 'change_description', 'request_details', 'details',
+            'message', 'notes', 'variation_details', 'what_change',
+        ]) ?? '';
+
+        $cost = $this->extractField($formData, [
+            'estimated_cost', 'cost', 'price', 'amount', 'estimate',
+        ]);
+
+        VariationRequest::create([
+            'ghl_submission_id' => $submissionId,
+            'source'            => 'ghl_form',
+            'project_id'        => $project->id,
+            'submitted_by'      => $user->id,
+            'title'             => $title,
+            'description'       => $description ?: '(Submitted via GHL form — see form data in logs)',
+            'estimated_cost'    => is_numeric($cost) ? $cost : null,
+            'status'            => 'pending',
+        ]);
+
+        Log::info('GHLWebhook: VariationRequest created', [
+            'userId'    => $user->id,
+            'projectId' => $project->id,
+            'title'     => $title,
+        ]);
+    }
+
+    // Helper: find first non-empty value from a list of candidate keys
+    private function extractField(array $data, array $keys): ?string
+    {
+        foreach ($keys as $key) {
+            // Exact match
+            if (isset($data[$key]) && $data[$key] !== '') {
+                return (string) $data[$key];
+            }
+            // Case-insensitive partial match on key
+            foreach ($data as $k => $v) {
+                if (str_contains(strtolower($k), strtolower($key)) && $v !== '') {
+                    return (string) $v;
+                }
+            }
+        }
+        return null;
     }
 }

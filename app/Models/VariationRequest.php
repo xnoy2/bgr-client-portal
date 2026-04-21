@@ -9,6 +9,7 @@ class VariationRequest extends Model
     protected $table = 'variation_requests';
 
     protected $fillable = [
+        'ghl_submission_id', 'source',
         'project_id', 'submitted_by', 'title', 'description',
         'estimated_cost', 'status', 'admin_notes', 'reviewed_at', 'reviewed_by',
     ];
