@@ -202,7 +202,7 @@ export default function UsersIndex({ users, roles }) {
                     <table className="w-full">
                         <thead>
                             <tr style={{ borderBottom: '0.5px solid #D1CDC7', background: '#F1F1EF' }}>
-                                {['Name', 'Username', 'Email', 'Role', 'Status', 'Actions'].map(h => (
+                                {['Name', 'Email', 'Role', 'Status', 'Actions'].map(h => (
                                     <th key={h} className="text-left px-5 py-3 text-xs font-medium uppercase tracking-wider"
                                         style={{ color: '#888480' }}>
                                         {h}
@@ -233,9 +233,6 @@ export default function UsersIndex({ users, roles }) {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-5 py-3.5 font-mono text-xs" style={{ color: '#4A4A4A' }}>
-                                        {user.username ?? '—'}
-                                    </td>
                                     <td className="px-5 py-3.5 text-sm" style={{ color: '#4A4A4A' }}>
                                         {user.email}
                                     </td>
@@ -256,13 +253,14 @@ export default function UsersIndex({ users, roles }) {
                             ))}
                             {users.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="px-5 py-12 text-center text-sm" style={{ color: '#888480' }}>
+                                    <td colSpan={5} className="px-5 py-12 text-center text-sm" style={{ color: '#888480' }}>
                                         No users yet. Create one above.
                                     </td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
+
                 </div>
 
                 {/* ── Mobile cards (< md) ── */}
@@ -289,12 +287,9 @@ export default function UsersIndex({ users, roles }) {
                                         <StatusBadge active={user.is_active} />
                                     </div>
                                     <div className="text-xs mt-1 truncate" style={{ color: '#888480' }}>{user.email}</div>
-                                    <div className="flex items-center gap-1 mt-0.5">
-                                        <span className="font-mono text-xs" style={{ color: '#888480' }}>{user.username ?? '—'}</span>
-                                        {user.must_change_password && (
-                                            <span className="text-xs ml-1" style={{ color: '#d97706' }}>· Temp password</span>
-                                        )}
-                                    </div>
+                                    {user.must_change_password && (
+                                        <span className="text-xs mt-0.5 block" style={{ color: '#d97706' }}>Temp password</span>
+                                    )}
                                 </div>
                             </div>
                             {/* Actions */}
@@ -334,7 +329,7 @@ export default function UsersIndex({ users, roles }) {
                             </Select>
                         </Field>
                         <p className="text-xs" style={{ color: '#888480' }}>
-                            Username and temporary password are auto-generated. The user must change their password on first login.
+                            A temporary password is auto-generated. The user must change their password on first login.
                         </p>
                     </div>
                     <div className="mt-5 flex justify-end gap-2">
@@ -364,7 +359,7 @@ export default function UsersIndex({ users, roles }) {
 
                     <div className="rounded-xl p-4 space-y-3" style={{ background: '#F1F1EF', border: '0.5px solid #D1CDC7' }}>
                         {[
-                            { label: 'Username',          value: credentials?.username },
+                            { label: 'Email',              value: credentials?.email },
                             { label: 'Temporary Password', value: credentials?.password },
                         ].map(({ label, value }) => (
                             <div key={label}>

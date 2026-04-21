@@ -57,7 +57,7 @@ class UserController extends Controller
 
         return back()->with('created', [
             'name'     => $user->name,
-            'username' => $username,
+            'email'    => $user->email,
             'password' => $tempPassword,
         ]);
     }
@@ -104,7 +104,7 @@ class UserController extends Controller
 
         return back()->with('created', [
             'name'     => $user->name,
-            'username' => $user->username,
+            'email'    => $user->email,
             'password' => $tempPassword,
         ]);
     }

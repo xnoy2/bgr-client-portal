@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\ClientProvisioningService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 
 class GHLWebhookController extends Controller
 {
+    public function __construct(private ClientProvisioningService $clientProvisioning) {}
+
     public function handle(Request $request): Response
     {
         // Validate HMAC signature
@@ -20,7 +23,10 @@ class GHLWebhookController extends Controller
             hash_hmac('sha256', $rawBody, $secret),
             $signature
         )) {
-            Log::warning('GHLWebhook: invalid signature');
+            Log::warning('GHLWebhook: invalid signature', [
+                'received'  => $signature,
+                'headers'   => $request->headers->all(),
+            ]);
             return response('Unauthorized', 401);
         }
 
@@ -30,6 +36,7 @@ class GHLWebhookController extends Controller
         Log::info("GHLWebhook received: {$eventType}", ['payload' => $payload]);
 
         match ($eventType) {
+            'opportunity.created'       => $this->handleOpportunityCreated($payload),
             'contact.created'           => $this->handleContactCreated($payload),
             'opportunity.stageChanged'  => $this->handleStageChanged($payload),
             'appointment.created',
@@ -42,10 +49,21 @@ class GHLWebhookController extends Controller
         return response('OK', 200);
     }
 
-    // -------------------------------------------------------------------------
-    // Phase 12 will fully implement each handler below.
-    // For Phase 1, these are stubs that log and return.
-    // -------------------------------------------------------------------------
+    private function handleOpportunityCreated(array $payload): void
+    {
+        // Build a contact array from all known payload paths GHL might use
+        $nested = $payload['contact'] ?? [];
+
+        $contact = [
+            'id'    => $nested['id']    ?? $payload['contactId']    ?? $payload['contact_id'] ?? null,
+            'email' => $nested['email'] ?? $payload['email']        ?? $payload['contactEmail'] ?? null,
+            'name'  => $nested['name']  ?? $payload['contactName']  ?? $payload['fullName']    ?? null,
+        ];
+
+        $opportunityId = $payload['id'] ?? null;
+
+        $this->clientProvisioning->findOrCreateFromContact($contact, $opportunityId);
+    }
 
     private function handleContactCreated(array $payload): void
     {

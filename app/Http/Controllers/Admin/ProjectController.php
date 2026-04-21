@@ -7,6 +7,7 @@ use App\Models\Document;
 use App\Models\Project;
 use App\Models\User;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use App\Services\ClientProvisioningService;
 use App\Services\GHLService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -15,7 +16,10 @@ use Inertia\Inertia;
 
 class ProjectController extends Controller
 {
-    public function __construct(private GHLService $ghl) {}
+    public function __construct(
+        private GHLService $ghl,
+        private ClientProvisioningService $clientProvisioning
+    ) {}
 
     // ── Index ─────────────────────────────────────────────────────────────────
 
@@ -33,6 +37,41 @@ class ProjectController extends Controller
             ->whereNotNull('ghl_opportunity_id')
             ->get()
             ->keyBy('ghl_opportunity_id');
+
+        // For every GHL opportunity that has a contact email but no linked client,
+        // ensure a local project record exists and provision the client account.
+        // This runs automatically when admin views the Projects page — no webhook needed.
+        $provisioned = false;
+        foreach ($ghlOpps as $opp) {
+            $contact = $opp['contact'] ?? [];
+            if (empty($contact['email'])) continue;
+
+            $local = $localByGhlId->get($opp['id']);
+            if ($local && $local->client_id) continue; // already done
+
+            $project = Project::firstOrCreate(
+                ['ghl_opportunity_id' => $opp['id']],
+                ['name' => $opp['name'], 'status' => 'pending']
+            );
+
+            if ($project->wasRecentlyCreated) {
+                foreach (Project::defaultStageNames() as $i => $stageName) {
+                    $project->stages()->create(['name' => $stageName, 'order' => $i + 1, 'status' => 'pending']);
+                }
+            }
+
+            $this->clientProvisioning->findOrCreateFromContact($contact, $opp['id']);
+            $provisioned = true;
+        }
+
+        // Refresh local data if anything was provisioned
+        if ($provisioned) {
+            $this->ghl->forgetPipelineCache();
+            $localByGhlId = Project::with(['client', 'workers'])
+                ->whereNotNull('ghl_opportunity_id')
+                ->get()
+                ->keyBy('ghl_opportunity_id');
+        }
 
         // Enrich each GHL opp with any local data we already have
         $opportunities = $ghlOpps->map(function ($opp) use ($localByGhlId) {
@@ -82,8 +121,8 @@ class ProjectController extends Controller
             ]
         );
 
-        // 3. Auto-create the 5 stages if this is the first open
-        if ($project->wasRecentlyCreated) {
+        // 3. Auto-create the 5 stages if none exist yet
+        if ($project->stages()->doesntExist()) {
             foreach (Project::defaultStageNames() as $i => $name) {
                 $project->stages()->create(['name' => $name, 'order' => $i + 1, 'status' => 'pending']);
             }
@@ -91,6 +130,12 @@ class ProjectController extends Controller
         }
 
         $project->load(['client', 'workers', 'stages', 'documents.uploader']);
+
+        // Auto-provision client account if not yet linked and GHL has contact email
+        if (! $project->client_id && ! empty($ghl['contact']['email'])) {
+            $this->clientProvisioning->findOrCreateFromContact($ghl['contact'], $ghlId);
+            $project->refresh()->load(['client', 'workers', 'stages', 'documents.uploader']);
+        }
 
         // Sync local stage statuses from GHL — skip if all stages are already completed
         // so GHL cannot revert a completed project back to in_progress.

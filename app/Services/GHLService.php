@@ -286,6 +286,24 @@ class GHLService
     // ── Email sending ─────────────────────────────────────────────────────────
 
     /**
+     * Fetch a single GHL contact by ID.
+     * Used when the opportunity payload doesn't include the contact email.
+     */
+    public function getContact(string $contactId): ?array
+    {
+        try {
+            $response = $this->http()->get("/contacts/{$contactId}");
+            if ($response->successful()) {
+                return $response->json('contact') ?? $response->json();
+            }
+            Log::warning('GHL getContact failed', ['contactId' => $contactId, 'status' => $response->status()]);
+        } catch (\Exception $e) {
+            Log::error('GHL getContact exception', ['contactId' => $contactId, 'error' => $e->getMessage()]);
+        }
+        return null;
+    }
+
+    /**
      * Find a GHL contact by email address.
      * Returns the contact ID or null if not found.
      */
