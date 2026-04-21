@@ -3,8 +3,10 @@
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\ProposalController as AdminProposalController;
 use App\Http\Controllers\Admin\VariationController as AdminVariationController;
 use App\Http\Controllers\Client\DocumentController as ClientDocumentController;
+use App\Http\Controllers\Client\ProposalController as ClientProposalController;
 use App\Http\Controllers\Client\ProjectController as ClientProjectController;
 use App\Http\Controllers\Client\VariationController as ClientVariationController;
 use App\Http\Controllers\Worker\ProjectController as WorkerProjectController;
@@ -78,6 +80,12 @@ Route::middleware(['auth', 'password.changed', 'role:admin'])
         Route::get('/variations',                              [AdminVariationController::class, 'index'])->name('variations.index');
         Route::put('/variations/{variation}/review',           [AdminVariationController::class, 'review'])->name('variations.review');
 
+        // Proposals
+        Route::get('/proposals',                    [AdminProposalController::class, 'index'])->name('proposals.index');
+        Route::post('/proposals',                   [AdminProposalController::class, 'store'])->name('proposals.store');
+        Route::put('/proposals/{proposal}',         [AdminProposalController::class, 'update'])->name('proposals.update');
+        Route::delete('/proposals/{proposal}',      [AdminProposalController::class, 'destroy'])->name('proposals.destroy');
+
         // Project management — {ghlId} is the GHL opportunity ID (string)
         Route::get('/projects',                            [ProjectController::class, 'index'])->name('projects.index');
         Route::post('/projects/refresh-pipeline',          [ProjectController::class, 'refreshPipeline'])->name('projects.refresh-pipeline');
@@ -111,6 +119,7 @@ Route::middleware(['auth', 'password.changed', 'role:client'])
         Route::get('/projects/{ghlId}',                   [ClientProjectController::class, 'show'])->name('projects.show');
         Route::get('/variations',                         [ClientVariationController::class, 'index'])->name('variations.index');
         Route::post('/variations',                        [ClientVariationController::class, 'store'])->name('variations.store');
+        Route::get('/proposals',                          [ClientProposalController::class, 'index'])->name('proposals.index');
         Route::get('/documents',                         [ClientDocumentController::class, 'index'])->name('documents.index');
         Route::get('/documents/{document}/download',     [ClientDocumentController::class, 'download'])->name('documents.download');
         Route::post('/documents/{document}/sign',        [ClientDocumentController::class, 'sign'])->name('documents.sign');

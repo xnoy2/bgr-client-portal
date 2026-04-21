@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Project;
+use App\Models\Proposal;
 use App\Models\User;
 use App\Models\VariationRequest;
 use App\Services\ClientProvisioningService;
@@ -93,6 +94,52 @@ class GHLWebhookController extends Controller
             'projectId' => $project->id,
             'title'     => $title,
         ]);
+
+        return response('OK', 200);
+    }
+
+    // Called by GHL Workflow when a proposal/estimate status changes
+    public function handleProposalStatus(Request $request): Response
+    {
+        $payload = $request->json()->all();
+
+        Log::info('GHL ProposalStatus webhook received', ['payload' => $payload]);
+
+        $ghlProposalId = $payload['proposal_id'] ?? $payload['estimateId'] ?? $payload['id'] ?? null;
+        $status        = strtolower($payload['status'] ?? $payload['event'] ?? '');
+
+        // Map GHL status words to our enum
+        $statusMap = [
+            'accepted' => 'accepted',
+            'approve'  => 'accepted',
+            'approved' => 'accepted',
+            'declined' => 'declined',
+            'decline'  => 'declined',
+            'rejected' => 'declined',
+            'viewed'   => 'viewed',
+            'paid'     => 'paid',
+            'sent'     => 'sent',
+        ];
+
+        $mapped = $statusMap[$status] ?? null;
+
+        if (! $ghlProposalId || ! $mapped) {
+            Log::warning('GHL ProposalStatus: missing id or unrecognised status', ['payload' => $payload]);
+            return response('Bad payload', 422);
+        }
+
+        $proposal = Proposal::where('ghl_proposal_id', $ghlProposalId)->first();
+        if (! $proposal) {
+            Log::warning('GHL ProposalStatus: no matching proposal', ['ghlProposalId' => $ghlProposalId]);
+            return response('Not found', 404);
+        }
+
+        $proposal->update([
+            'status'       => $mapped,
+            'responded_at' => in_array($mapped, ['accepted', 'declined', 'paid']) ? now() : $proposal->responded_at,
+        ]);
+
+        Log::info('GHL ProposalStatus: updated', ['proposalId' => $proposal->id, 'status' => $mapped]);
 
         return response('OK', 200);
     }
