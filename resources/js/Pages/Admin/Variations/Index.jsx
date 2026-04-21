@@ -133,7 +133,7 @@ function ReviewModal({ variation, onClose }) {
                                 style={{
                                     flex: 2,
                                     background: !status || busy ? '#a0b8a8' : '#25282D',
-                                    color: '#25282D',
+                                    color: '#FFFFFF',
                                     cursor: !status || busy ? 'not-allowed' : 'pointer',
                                 }}>
                                 {busy ? 'Saving…' : 'Save Decision'}
