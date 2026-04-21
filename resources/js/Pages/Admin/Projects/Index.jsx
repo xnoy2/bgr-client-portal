@@ -8,9 +8,9 @@ function Btn({ variant = 'default', size = 'sm', className = '', ...props }) {
     const base = 'inline-flex items-center gap-1.5 rounded-lg font-medium transition-opacity disabled:opacity-50 whitespace-nowrap';
     const sizes = { sm: 'px-3 py-1.5 text-xs', md: 'px-4 py-2 text-sm' };
     const styles = {
-        default: { background: '#fff',        color: '#1A1A1A', border: '0.5px solid #D1CDC7' },
-        primary: { background: '#1A1A1A',     color: '#fff',    border: '0.5px solid #0A0A0A' },
-        gold:    { background: '#1A1A1A',     color: '#1A1A1A', border: '0.5px solid #1A1A1A' },
+        default: { background: '#fff',        color: '#25282D', border: '0.5px solid #D1CDC7' },
+        primary: { background: '#25282D',     color: '#fff',    border: '0.5px solid #25282D' },
+        gold:    { background: '#25282D',     color: '#25282D', border: '0.5px solid #25282D' },
         ghost:   { background: 'transparent', color: '#4A4A4A', border: '0.5px solid #D1CDC7' },
     };
     return <button className={`${base} ${sizes[size]} ${className}`} style={styles[variant]} {...props} />;
@@ -39,7 +39,7 @@ function StageBadge({ name }) {
     if (!name) return null;
     return (
         <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-            style={{ background: 'rgba(26,26,26,0.06)', color: '#1A1A1A', border: '0.5px solid rgba(26,26,26,0.12)' }}>
+            style={{ background: 'rgba(26,26,26,0.06)', color: '#25282D', border: '0.5px solid rgba(26,26,26,0.12)' }}>
             {name}
         </span>
     );
@@ -70,7 +70,7 @@ function OpportunityCard({ opp }) {
             onClick={open}
             className="glass-card rounded-xl p-5 flex flex-col gap-3 cursor-pointer"
             style={{ border: '0.5px solid #D1CDC7', transition: 'border-color 0.15s, box-shadow 0.15s' }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = '#1A1A1A'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(26,26,26,0.06)'; }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = '#25282D'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(26,26,26,0.06)'; }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = '#D1CDC7'; e.currentTarget.style.boxShadow = 'none'; }}>
 
             {/* Header row */}
@@ -99,10 +99,10 @@ function OpportunityCard({ opp }) {
             {hasLocal ? (
                 <div className="flex items-center gap-2 text-xs rounded-lg px-3 py-2"
                     style={{ background: 'rgba(26,60,46,0.05)', border: '0.5px solid rgba(26,60,46,0.12)' }}>
-                    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#1A1A1A" strokeWidth="2.5" strokeLinecap="round">
+                    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="#25282D" strokeWidth="2.5" strokeLinecap="round">
                         <polyline points="2,8 6,12 14,4"/>
                     </svg>
-                    <span style={{ color: '#1A1A1A' }}>
+                    <span style={{ color: '#25282D' }}>
                         Project open
                         {opp.local.client && <span style={{ color: '#4A4A4A' }}> · {opp.local.client.name}</span>}
                         {opp.local.workers_count > 0 && (
@@ -117,7 +117,7 @@ function OpportunityCard({ opp }) {
             {/* Footer */}
             <div className="flex items-center justify-between pt-1 border-t" style={{ borderColor: '#F1F1EF' }}>
                 {created && <span className="text-xs" style={{ color: '#888480' }}>{created}</span>}
-                <span className="text-xs font-medium ml-auto" style={{ color: '#1A1A1A' }}>
+                <span className="text-xs font-medium ml-auto" style={{ color: '#25282D' }}>
                     Open →
                 </span>
             </div>
@@ -172,7 +172,7 @@ export default function ProjectsIndex({ opportunities, ghl_meta }) {
                     { label: 'Total',          value: stats.total,  accent: '#D1CDC7' },
                     { label: 'Open',           value: stats.open,   accent: '#3b82f6' },
                     { label: 'Won',            value: stats.won,    accent: '#22c55e' },
-                    { label: 'Projects Opened', value: stats.opened, accent: '#1A1A1A' },
+                    { label: 'Projects Opened', value: stats.opened, accent: '#25282D' },
                 ].map(s => (
                     <div key={s.label} className="glass-card rounded-xl p-4"
                         style={{ border: '0.5px solid #D1CDC7', borderLeft: `4px solid ${s.accent}` }}>
@@ -190,7 +190,7 @@ export default function ProjectsIndex({ opportunities, ghl_meta }) {
                         <button key={s} onClick={() => setStatusFilter(s)}
                             className="px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-colors"
                             style={statusFilter === s
-                                ? { background: '#1A1A1A', color: '#fff',    border: '0.5px solid #0A0A0A' }
+                                ? { background: '#25282D', color: '#fff',    border: '0.5px solid #25282D' }
                                 : { background: '#fff',    color: '#4A4A4A', border: '0.5px solid #D1CDC7' }}>
                             {s === 'all' ? 'All' : s}
                         </button>
@@ -207,8 +207,8 @@ export default function ProjectsIndex({ opportunities, ghl_meta }) {
                         <input value={search} onChange={e => setSearch(e.target.value)}
                             placeholder="Search opportunities…"
                             className="w-full pl-8 pr-3 py-1.5 rounded-lg text-xs outline-none"
-                            style={{ border: '0.5px solid #D1CDC7', background: '#fff', color: '#1A1A1A' }}
-                            onFocus={e => e.target.style.borderColor = '#1A1A1A'}
+                            style={{ border: '0.5px solid #D1CDC7', background: '#fff', color: '#25282D' }}
+                            onFocus={e => e.target.style.borderColor = '#25282D'}
                             onBlur={e  => e.target.style.borderColor = '#D1CDC7'} />
                     </div>
                     <Btn variant="ghost" size="sm" onClick={refresh} disabled={refreshing}>

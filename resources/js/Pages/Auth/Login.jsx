@@ -48,7 +48,7 @@ export default function Login({ status, canResetPassword }) {
                     outline: none;
                 }
                 .bgr-card-top {
-                    background: #1A1A1A;
+                    background: #25282D;
                     padding: 32px 36px 28px;
                     text-align: center;
                     position: relative;
@@ -72,13 +72,13 @@ export default function Login({ status, canResetPassword }) {
                     border-radius: 8px;
                     font-size: 14px;
                     font-family: 'Inter', sans-serif;
-                    color: #1A1A1A;
+                    color: #25282D;
                     background: #fafaf9;
                     outline: none;
                     transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
                 }
                 .bgr-input:focus {
-                    border-color: #1A1A1A;
+                    border-color: #25282D;
                     background: #fff;
                     box-shadow: 0 0 0 3px rgba(178,148,91,0.15);
                 }
@@ -86,7 +86,7 @@ export default function Login({ status, canResetPassword }) {
                 .bgr-btn {
                     width: 100%;
                     padding: 13px 24px;
-                    background: #1A1A1A;
+                    background: #25282D;
                     color: #fff;
                     border: none;
                     border-radius: 8px;
@@ -135,7 +135,7 @@ export default function Login({ status, canResetPassword }) {
 
                         {/* Status */}
                         {status && (
-                            <div style={{ marginBottom: 20, padding: '11px 14px', borderRadius: 8, background: 'rgba(26,26,26,0.05)', border: '1px solid rgba(26,26,26,0.12)', color: '#1A1A1A', fontSize: 13, fontWeight: 500 }}>
+                            <div style={{ marginBottom: 20, padding: '11px 14px', borderRadius: 8, background: 'rgba(26,26,26,0.05)', border: '1px solid rgba(26,26,26,0.12)', color: '#25282D', fontSize: 13, fontWeight: 500 }}>
                                 {status}
                             </div>
                         )}
@@ -173,7 +173,7 @@ export default function Login({ status, canResetPassword }) {
                                     </label>
                                     {canResetPassword && (
                                         <Link href={route('password.request')}
-                                            style={{ fontSize: 12, color: '#1A1A1A', fontWeight: 500, textDecoration: 'none' }}
+                                            style={{ fontSize: 12, color: '#25282D', fontWeight: 500, textDecoration: 'none' }}
                                             onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
                                             onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>
                                             Forgot password?
@@ -226,8 +226,8 @@ export default function Login({ status, canResetPassword }) {
                                     />
                                     <div style={{
                                         width: 18, height: 18, borderRadius: 4,
-                                        border: `1.5px solid ${data.remember ? '#1A1A1A' : '#D1CDC7'}`,
-                                        background: data.remember ? '#1A1A1A' : '#fff',
+                                        border: `1.5px solid ${data.remember ? '#25282D' : '#D1CDC7'}`,
+                                        background: data.remember ? '#25282D' : '#fff',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         transition: 'all 0.15s',
                                     }}>
@@ -275,7 +275,7 @@ export default function Login({ status, canResetPassword }) {
                         <p style={{ textAlign: 'center', fontSize: 12, color: '#b0afaa', marginTop: 20 }}>
                             Not a client yet?{' '}
                             <a href="https://bespokegardenroomsballycastle.co.uk/" target="_blank" rel="noreferrer"
-                                style={{ color: '#1A1A1A', fontWeight: 500, textDecoration: 'none' }}
+                                style={{ color: '#25282D', fontWeight: 500, textDecoration: 'none' }}
                                 onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
                                 onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>
                                 Visit our website

@@ -71,7 +71,7 @@ function Lightbox({ photos, startIndex, onClose }) {
                             style={{
                                 width: 48, height: 48,
                                 opacity: i === idx ? 1 : 0.4,
-                                border: i === idx ? '2px solid #1A1A1A' : '2px solid transparent',
+                                border: i === idx ? '2px solid #25282D' : '2px solid transparent',
                             }}>
                             <img src={src} alt="" className="w-full h-full object-cover" />
                         </button>
@@ -139,7 +139,7 @@ function UpdateDetailModal({ update, onClose }) {
                         style={{ borderBottom: '0.5px solid #f0ebe3' }}>
                         <div className="flex items-center gap-2.5 min-w-0">
                             <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                                style={{ background: 'linear-gradient(135deg, #1A1A1A, #2d5a42)', color: '#1A1A1A' }}>
+                                style={{ background: 'linear-gradient(135deg, #25282D, #2d5a42)', color: '#25282D' }}>
                                 {(update.author_name ?? 'T')[0]?.toUpperCase()}
                             </div>
                             <div className="min-w-0">
@@ -163,13 +163,13 @@ function UpdateDetailModal({ update, onClose }) {
                             <div className="flex flex-wrap items-center gap-1.5">
                                 {update.project_name && (
                                     <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                                        style={{ background: 'rgba(26,26,26,0.05)', color: '#1A1A1A' }}>
+                                        style={{ background: 'rgba(26,26,26,0.05)', color: '#25282D' }}>
                                         {update.project_name}
                                     </span>
                                 )}
                                 {update.stage_name && (
                                     <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                                        style={{ background: 'rgba(26,26,26,0.06)', color: '#1A1A1A' }}>
+                                        style={{ background: 'rgba(26,26,26,0.06)', color: '#25282D' }}>
                                         {update.stage_name}
                                     </span>
                                 )}
@@ -244,7 +244,7 @@ export default function UpdatesIndex({ updates }) {
                     <div className="glass-card rounded-2xl p-12 text-center">
                         <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
                             style={{ background: '#F1F1EF' }}>
-                            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#1A1A1A" strokeWidth="1.5" strokeLinecap="round">
+                            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#25282D" strokeWidth="1.5" strokeLinecap="round">
                                 <path d="M14 10c0 .6-.4 1-1 1H4l-2 3V3c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v7z"/>
                             </svg>
                         </div>
@@ -267,7 +267,7 @@ export default function UpdatesIndex({ updates }) {
                                     <div className="flex items-start justify-between gap-3 px-4 pt-4 pb-3">
                                         <div className="flex items-center gap-2.5 min-w-0">
                                             <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                                                style={{ background: 'linear-gradient(135deg, #1A1A1A, #2d5a42)', color: '#1A1A1A' }}>
+                                                style={{ background: 'linear-gradient(135deg, #25282D, #2d5a42)', color: '#25282D' }}>
                                                 {(u.author_name ?? 'T')[0]?.toUpperCase()}
                                             </div>
                                             <div className="min-w-0">
@@ -280,7 +280,7 @@ export default function UpdatesIndex({ updates }) {
                                                         <>
                                                             <span style={{ color: '#D1CDC7', fontSize: 10 }}>·</span>
                                                             <span className="text-xs px-1.5 py-0.5 rounded-full font-medium"
-                                                                style={{ background: 'rgba(26,26,26,0.06)', color: '#1A1A1A' }}>
+                                                                style={{ background: 'rgba(26,26,26,0.06)', color: '#25282D' }}>
                                                                 {u.stage_name}
                                                             </span>
                                                         </>
@@ -294,7 +294,7 @@ export default function UpdatesIndex({ updates }) {
                                     {u.project_name && (
                                         <div className="px-4 pb-2">
                                             <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                                                style={{ background: 'rgba(26,60,46,0.07)', color: '#1A1A1A' }}>
+                                                style={{ background: 'rgba(26,60,46,0.07)', color: '#25282D' }}>
                                                 {u.project_name}
                                             </span>
                                         </div>

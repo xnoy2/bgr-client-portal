@@ -2,7 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
 const STATUS_COLOR = {
-    active:    { bg: 'rgba(26,26,26,0.06)',   border: 'rgba(26,26,26,0.15)',   text: '#1A1A1A'  },
+    active:    { bg: 'rgba(26,26,26,0.06)',   border: 'rgba(26,26,26,0.15)',   text: '#25282D'  },
     completed: { bg: 'rgba(21,128,61,0.08)',  border: 'rgba(21,128,61,0.2)',   text: '#15803d'  },
     on_hold:   { bg: 'rgba(180,80,60,0.08)',  border: 'rgba(180,80,60,0.25)',  text: '#b44c3c'  },
 };
@@ -90,7 +90,7 @@ export default function WorkerDashboard({ projects }) {
 
             {/* Header */}
             <div className="rounded-2xl p-6 mb-5 flex items-start justify-between"
-                style={{ background: '#1A1A1A', border: '0.5px solid rgba(255,255,255,0.08)' }}>
+                style={{ background: '#25282D', border: '0.5px solid rgba(255,255,255,0.08)' }}>
                 <div>
                     <h1 className="text-2xl text-white font-serif font-normal mb-1">My Projects</h1>
                     <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>

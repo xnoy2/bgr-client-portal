@@ -263,7 +263,7 @@ export default function AuthenticatedLayout({ title, breadcrumb, children }) {
         return () => window.removeEventListener('keydown', handler);
     }, []);
 
-    const sidebarStyle = { width: 240, background: '#0A0A0A', borderRight: '0.5px solid rgba(255,255,255,0.06)' };
+    const sidebarStyle = { width: 240, background: '#25282D', borderRight: '0.5px solid rgba(255,255,255,0.06)' };
 
     return (
         <div className="flex h-screen overflow-hidden" style={{ background: 'linear-gradient(135deg, #F1F1EF 0%, #E8E6E2 100%)' }}>

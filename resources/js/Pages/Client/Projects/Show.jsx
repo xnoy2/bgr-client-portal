@@ -32,12 +32,12 @@ function TabBar({ active, onChange, updatesCount }) {
                     onClick={() => onChange(tab.id)}
                     className="flex-1 py-2 px-2 rounded-lg text-xs font-medium transition-all relative"
                     style={active === tab.id
-                        ? { background: '#fff', color: '#1A1A1A', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', border: '0.5px solid #D1CDC7' }
+                        ? { background: '#fff', color: '#25282D', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', border: '0.5px solid #D1CDC7' }
                         : { background: 'transparent', color: '#888480', border: '0.5px solid transparent' }}>
                     {tab.label}
                     {tab.id === 'updates' && updatesCount > 0 && (
                         <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-white text-xs font-bold"
-                            style={{ background: '#1A1A1A', fontSize: 9 }}>
+                            style={{ background: '#25282D', fontSize: 9 }}>
                             {updatesCount > 9 ? '9+' : updatesCount}
                         </span>
                     )}
@@ -51,8 +51,8 @@ function TabBar({ active, onChange, updatesCount }) {
 
 const STAGE_STYLE = {
     pending:     { fill: '#F1F1EF', stroke: '#D1CDC7', text: '#888480', labelColor: '#888480' },
-    in_progress: { fill: '#1A1A1A', stroke: '#1A1A1A', text: '#fff',    labelColor: '#1A1A1A' },
-    completed:   { fill: '#1A1A1A', stroke: '#0A0A0A', text: '#fff',    labelColor: '#1A1A1A' },
+    in_progress: { fill: '#25282D', stroke: '#25282D', text: '#fff',    labelColor: '#25282D' },
+    completed:   { fill: '#25282D', stroke: '#25282D', text: '#fff',    labelColor: '#25282D' },
 };
 
 const STATUS_LABEL = { pending: 'Upcoming', in_progress: 'In Progress', completed: 'Complete' };
@@ -88,13 +88,13 @@ function StageTimeline({ stages }) {
                                 </div>
                                 {!isLast && (
                                     <div className="flex-1 w-0.5 my-1"
-                                        style={{ background: stage.status === 'completed' ? '#1A1A1A' : '#D1CDC7', minHeight: 16 }} />
+                                        style={{ background: stage.status === 'completed' ? '#25282D' : '#D1CDC7', minHeight: 16 }} />
                                 )}
                             </div>
                             <div className={`flex-1 min-w-0 ${isLast ? '' : 'pb-3'}`} style={{ paddingTop: 6 }}>
                                 <p className="text-sm font-medium leading-tight" style={{ color: s.labelColor }}>{stage.name}</p>
                                 <p className="text-xs mt-0.5"
-                                    style={{ color: stage.status === 'in_progress' ? '#1A1A1A' : '#888480' }}>
+                                    style={{ color: stage.status === 'in_progress' ? '#25282D' : '#888480' }}>
                                     {STATUS_LABEL[stage.status]}
                                 </p>
                             </div>
@@ -118,13 +118,13 @@ function StageTimeline({ stages }) {
                                 <p className="text-xs text-center font-medium mt-2 leading-tight w-full px-0.5"
                                     style={{ color: s.labelColor }}>{stage.name}</p>
                                 <p className="text-xs text-center mt-0.5"
-                                    style={{ color: stage.status === 'in_progress' ? '#1A1A1A' : '#888480' }}>
+                                    style={{ color: stage.status === 'in_progress' ? '#25282D' : '#888480' }}>
                                     {STATUS_LABEL[stage.status]}
                                 </p>
                             </div>
                             {!isLast && (
                                 <div className="flex-shrink-0 h-0.5 mt-4"
-                                    style={{ width: 20, background: stage.status === 'completed' ? '#1A1A1A' : '#D1CDC7' }} />
+                                    style={{ width: 20, background: stage.status === 'completed' ? '#25282D' : '#D1CDC7' }} />
                             )}
                         </div>
                     );
@@ -207,7 +207,7 @@ function Lightbox({ photos, startIndex, onClose }) {
                     {photos.map((p, i) => (
                         <button key={i} onClick={() => setIdx(i)}
                             className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden transition-all"
-                            style={{ border: i === idx ? '2px solid #1A1A1A' : '2px solid transparent', opacity: i === idx ? 1 : 0.45 }}>
+                            style={{ border: i === idx ? '2px solid #25282D' : '2px solid transparent', opacity: i === idx ? 1 : 0.45 }}>
                             <img src={p} alt="" className="w-full h-full object-cover" />
                         </button>
                     ))}
@@ -259,7 +259,7 @@ function DetailsTab({ project, ghl }) {
                 <div className="glass-card rounded-2xl p-5">
                     <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: '#888480' }}>Site Address</h3>
                     <div className="flex items-start gap-2.5">
-                        <svg className="flex-shrink-0 mt-0.5" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#1A1A1A" strokeWidth="2" strokeLinecap="round">
+                        <svg className="flex-shrink-0 mt-0.5" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#25282D" strokeWidth="2" strokeLinecap="round">
                             <path d="M8 1C5.2 1 3 3.2 3 6c0 4 5 9 5 9s5-5 5-9c0-2.8-2.2-5-5-5z"/><circle cx="8" cy="6" r="1.5"/>
                         </svg>
                         <p className="text-sm font-medium text-forest">{project.address}</p>
@@ -272,7 +272,7 @@ function DetailsTab({ project, ghl }) {
                     <h3 className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: '#888480' }}>Your Details On File</h3>
                     <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0"
-                            style={{ background: 'rgba(26,60,46,0.06)', color: '#1A1A1A', border: '0.5px solid #D1CDC7' }}>
+                            style={{ background: 'rgba(26,60,46,0.06)', color: '#25282D', border: '0.5px solid #D1CDC7' }}>
                             {initials(ghl.contact.name ?? '')}
                         </div>
                         <div>
@@ -299,7 +299,7 @@ function DetailsTab({ project, ghl }) {
                             if (!val) return null;
                             return (
                                 <div key={i} className="flex items-center gap-2.5 py-2 px-3 rounded-xl" style={{ background: '#F1F1EF' }}>
-                                    <svg className="flex-shrink-0" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#1A1A1A" strokeWidth="2.5" strokeLinecap="round">
+                                    <svg className="flex-shrink-0" width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#25282D" strokeWidth="2.5" strokeLinecap="round">
                                         <polyline points="2,8 6,12 14,4"/>
                                     </svg>
                                     <span className="text-sm font-medium text-forest">{val}</span>
@@ -328,7 +328,7 @@ function ProgressTab({ project }) {
                         {project.workers.map(w => (
                             <div key={w.id} className="flex items-center gap-3">
                                 <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
-                                    style={{ background: 'rgba(26,26,26,0.06)', color: '#1A1A1A' }}>
+                                    style={{ background: 'rgba(26,26,26,0.06)', color: '#25282D' }}>
                                     {initials(w.name)}
                                 </div>
                                 <div>
@@ -405,7 +405,7 @@ function UpdateDetailModal({ update, onClose }) {
                         style={{ borderBottom: '0.5px solid #f0ebe3' }}>
                         <div className="flex items-center gap-2.5 min-w-0">
                             <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                                style={{ background: '#1A1A1A', color: '#fff' }}>
+                                style={{ background: '#25282D', color: '#fff' }}>
                                 {(update.author ?? 'T')[0]?.toUpperCase()}
                             </div>
                             <div className="min-w-0">
@@ -428,7 +428,7 @@ function UpdateDetailModal({ update, onClose }) {
                             <p className="text-base font-bold text-forest mb-1.5">{update.title}</p>
                             {update.stage_name && (
                                 <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                                    style={{ background: 'rgba(26,26,26,0.06)', color: '#1A1A1A' }}>
+                                    style={{ background: 'rgba(26,26,26,0.06)', color: '#25282D' }}>
                                     {update.stage_name}
                                 </span>
                             )}
@@ -515,7 +515,7 @@ function UpdatesTab({ updates }) {
                             {/* Card header */}
                             <div className="flex items-start gap-3 px-4 pt-4 pb-3">
                                 <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                                    style={{ background: '#1A1A1A', color: '#fff' }}>
+                                    style={{ background: '#25282D', color: '#fff' }}>
                                     {(u.author ?? 'T')[0]?.toUpperCase()}
                                 </div>
                                 <div className="min-w-0">
@@ -528,7 +528,7 @@ function UpdatesTab({ updates }) {
                                             <>
                                                 <span style={{ color: '#D1CDC7', fontSize: 10 }}>·</span>
                                                 <span className="text-xs px-1.5 py-0.5 rounded-full font-medium"
-                                                    style={{ background: 'rgba(26,26,26,0.06)', color: '#1A1A1A' }}>
+                                                    style={{ background: 'rgba(26,26,26,0.06)', color: '#25282D' }}>
                                                     {u.stage_name}
                                                 </span>
                                             </>
@@ -598,7 +598,7 @@ function WhatsNextTab({ project, ghl }) {
                     style={{ background: 'linear-gradient(135deg, rgba(26,26,26,0.04), rgba(26,26,26,0.02))', border: '0.5px solid rgba(26,26,26,0.12)' }}>
                     <div className="flex items-center gap-2 mb-2">
                         <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#B2945B' }} />
-                        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#1A1A1A', fontSize: 9 }}>Currently In Progress</p>
+                        <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#25282D', fontSize: 9 }}>Currently In Progress</p>
                     </div>
                     <p className="text-base font-semibold text-forest">{currentStage.name}</p>
                     <p className="text-sm mt-1.5" style={{ color: '#4A4A4A' }}>
@@ -676,7 +676,7 @@ export default function ClientProjectShow({ project, ghl, updates, flash }) {
                         My Projects
                     </Link>
                     <span style={{ color: '#d0c8bc' }}> / </span>
-                    <span style={{ color: '#1A1A1A' }}>{project.name}</span>
+                    <span style={{ color: '#25282D' }}>{project.name}</span>
                 </span>
             }>
             <Head title={project.name} />
@@ -685,7 +685,7 @@ export default function ClientProjectShow({ project, ghl, updates, flash }) {
 
             {/* Hero banner */}
             <div className="rounded-2xl p-5 mb-5"
-                style={{ background: 'linear-gradient(135deg, #1A1A1A 0%, #0A0A0A 100%)', border: '0.5px solid rgba(26,26,26,0.05)' }}>
+                style={{ background: 'linear-gradient(135deg, #25282D 0%, #25282D 100%)', border: '0.5px solid rgba(26,26,26,0.05)' }}>
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
                         <p className="text-xs uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.5)', fontSize: 9 }}>
@@ -708,7 +708,7 @@ export default function ClientProjectShow({ project, ghl, updates, flash }) {
                             <svg width="56" height="56" viewBox="0 0 56 56" className="-rotate-90">
                                 <circle cx="28" cy="28" r="22" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="5"/>
                                 <circle cx="28" cy="28" r="22" fill="none"
-                                    stroke="#1A1A1A" strokeWidth="5"
+                                    stroke="#25282D" strokeWidth="5"
                                     strokeDasharray={`${2 * Math.PI * 22}`}
                                     strokeDashoffset={`${2 * Math.PI * 22 * (1 - project.progress_pct / 100)}`}
                                     strokeLinecap="round"
@@ -726,7 +726,7 @@ export default function ClientProjectShow({ project, ghl, updates, flash }) {
 
                 <div className="mt-4 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
                     <div className="h-full rounded-full"
-                        style={{ width: `${project.progress_pct}%`, background: '#1A1A1A', transition: 'width 1s ease' }} />
+                        style={{ width: `${project.progress_pct}%`, background: '#25282D', transition: 'width 1s ease' }} />
                 </div>
             </div>
 
@@ -743,7 +743,7 @@ export default function ClientProjectShow({ project, ghl, updates, flash }) {
             <button onClick={() => router.visit(route('client.dashboard'))}
                 className="mt-5 w-full text-center py-2.5 rounded-xl text-xs font-medium"
                 style={{ border: '0.5px solid #D1CDC7', color: '#888480', background: '#fff' }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = '#1A1A1A'}
+                onMouseEnter={e => e.currentTarget.style.borderColor = '#25282D'}
                 onMouseLeave={e => e.currentTarget.style.borderColor = '#D1CDC7'}>
                 ← Back to My Projects
             </button>

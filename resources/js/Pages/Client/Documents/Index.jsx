@@ -117,7 +117,7 @@ function SignModal({ doc, onClose }) {
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                             style={{ background: 'rgba(26,60,46,0.07)' }}>
                             <svg width="14" height="14" viewBox="0 0 16 16" fill="none"
-                                stroke="#1A1A1A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                stroke="#25282D" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M11 2l3 3-8 8H3v-3l8-8z"/>
                             </svg>
                         </div>
@@ -172,11 +172,11 @@ function SignModal({ doc, onClose }) {
                             style={{
                                 border: `1.5px solid ${errors.signer_name ? '#fca5a5' : '#D1CDC7'}`,
                                 background: '#fdfcfa',
-                                color: '#1A1A1A',
+                                color: '#25282D',
                                 fontFamily: 'Georgia, serif',
                                 letterSpacing: '0.03em',
                             }}
-                            onFocus={e => e.target.style.borderColor = '#1A1A1A'}
+                            onFocus={e => e.target.style.borderColor = '#25282D'}
                             onBlur={e  => e.target.style.borderColor = errors.signer_name ? '#fca5a5' : '#D1CDC7'}
                         />
                         {errors.signer_name
@@ -194,12 +194,12 @@ function SignModal({ doc, onClose }) {
                             <div className="flex items-center justify-center transition-all"
                                 style={{
                                     width: 18, height: 18,
-                                    background: agreed ? '#1A1A1A' : '#fff',
-                                    border: `1.5px solid ${agreed ? '#1A1A1A' : '#d0c8bc'}`,
+                                    background: agreed ? '#25282D' : '#fff',
+                                    border: `1.5px solid ${agreed ? '#25282D' : '#d0c8bc'}`,
                                     borderRadius: 5,
                                 }}>
                                 {agreed && (
-                                    <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="#1A1A1A" strokeWidth="2.8" strokeLinecap="round">
+                                    <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="#25282D" strokeWidth="2.8" strokeLinecap="round">
                                         <polyline points="2,8 6,12 14,4"/>
                                     </svg>
                                 )}
@@ -221,8 +221,8 @@ function SignModal({ doc, onClose }) {
                         <button type="submit" disabled={!canSign}
                             className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
                             style={{
-                                background: canSign ? '#1A1A1A' : '#D1CDC7',
-                                color:      canSign ? '#1A1A1A' : '#c4b8a8',
+                                background: canSign ? '#25282D' : '#D1CDC7',
+                                color:      canSign ? '#25282D' : '#c4b8a8',
                                 cursor:     canSign ? 'pointer' : 'not-allowed',
                                 border: 'none',
                             }}>
@@ -293,12 +293,12 @@ function DocumentRow({ doc, onSign }) {
                     <button onClick={() => onSign(doc)}
                         className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all"
                         style={{
-                            background: '#1A1A1A',
-                            color: '#1A1A1A',
+                            background: '#25282D',
+                            color: '#25282D',
                             border: '0.5px solid rgba(26,26,26,0.12)',
                         }}
-                        onMouseEnter={e => e.currentTarget.style.background = '#0A0A0A'}
-                        onMouseLeave={e => e.currentTarget.style.background = '#1A1A1A'}>
+                        onMouseEnter={e => e.currentTarget.style.background = '#25282D'}
+                        onMouseLeave={e => e.currentTarget.style.background = '#25282D'}>
                         Sign now
                     </button>
                 )}
@@ -342,12 +342,12 @@ export default function ClientDocumentsIndex({ documents }) {
                     }}>
                     <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
                         style={{ background: 'rgba(26,26,26,0.05)' }}>
-                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#1A1A1A" strokeWidth="2" strokeLinecap="round">
-                            <circle cx="8" cy="8" r="6.5"/><line x1="8" y1="5" x2="8" y2="8"/><circle cx="8" cy="11" r="0.5" fill="#1A1A1A"/>
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#25282D" strokeWidth="2" strokeLinecap="round">
+                            <circle cx="8" cy="8" r="6.5"/><line x1="8" y1="5" x2="8" y2="8"/><circle cx="8" cy="11" r="0.5" fill="#25282D"/>
                         </svg>
                     </div>
                     <p className="text-sm" style={{ color: '#4A4A4A' }}>
-                        <span className="font-semibold" style={{ color: '#1A1A1A' }}>
+                        <span className="font-semibold" style={{ color: '#25282D' }}>
                             {pendingCount} document{pendingCount !== 1 ? 's' : ''} awaiting your signature.
                         </span>
                         {' '}Please review and sign below.
@@ -360,7 +360,7 @@ export default function ClientDocumentsIndex({ documents }) {
                 <div className="glass-card rounded-2xl p-12 text-center">
                     <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
                         style={{ background: '#F1F1EF' }}>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" strokeWidth="1.5" strokeLinecap="round">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#25282D" strokeWidth="1.5" strokeLinecap="round">
                             <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
                             <polyline points="14 2 14 8 20 8"/>
                         </svg>

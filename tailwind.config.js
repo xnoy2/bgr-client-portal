@@ -18,8 +18,8 @@ export default {
             },
             colors: {
                 forest: {
-                    DEFAULT: '#1A1A1A',
-                    dark:    '#0A0A0A',
+                    DEFAULT: '#25282D',
+                    dark:    '#25282D',
                     darker:  '#000000',
                 },
                 gold: {

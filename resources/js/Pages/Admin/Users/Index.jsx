@@ -41,7 +41,7 @@ function CopyButton({ value }) {
     return (
         <button onClick={copy}
             className="ml-2 text-xs underline transition-colors"
-            style={{ color: copied ? '#15803d' : '#1A1A1A' }}>
+            style={{ color: copied ? '#15803d' : '#25282D' }}>
             {copied ? 'Copied!' : 'Copy'}
         </button>
     );
@@ -68,8 +68,8 @@ function Input({ ...props }) {
     return (
         <input
             className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-colors"
-            style={{ border: '0.5px solid #D1CDC7', background: '#fff', color: '#1A1A1A' }}
-            onFocus={e => e.target.style.borderColor = '#1A1A1A'}
+            style={{ border: '0.5px solid #D1CDC7', background: '#fff', color: '#25282D' }}
+            onFocus={e => e.target.style.borderColor = '#25282D'}
             onBlur={e => e.target.style.borderColor = '#D1CDC7'}
             {...props}
         />
@@ -80,8 +80,8 @@ function Select({ children, ...props }) {
     return (
         <select
             className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-colors"
-            style={{ border: '0.5px solid #D1CDC7', background: '#fff', color: '#1A1A1A' }}
-            onFocus={e => e.target.style.borderColor = '#1A1A1A'}
+            style={{ border: '0.5px solid #D1CDC7', background: '#fff', color: '#25282D' }}
+            onFocus={e => e.target.style.borderColor = '#25282D'}
             onBlur={e => e.target.style.borderColor = '#D1CDC7'}
             {...props}
         >
@@ -92,9 +92,9 @@ function Select({ children, ...props }) {
 
 function Btn({ variant = 'default', className = '', ...props }) {
     const styles = {
-        default: { background: '#fff', color: '#1A1A1A', border: '0.5px solid #D1CDC7' },
-        primary: { background: '#1A1A1A', color: '#fff',     border: '0.5px solid #0A0A0A' },
-        gold:    { background: '#1A1A1A', color: '#fff',  border: '0.5px solid #1A1A1A' },
+        default: { background: '#fff', color: '#25282D', border: '0.5px solid #D1CDC7' },
+        primary: { background: '#25282D', color: '#fff',     border: '0.5px solid #25282D' },
+        gold:    { background: '#25282D', color: '#fff',  border: '0.5px solid #25282D' },
         danger:  { background: '#fef2f2', color: '#b91c1c',  border: '0.5px solid rgba(239,68,68,0.3)' },
     };
     return (
@@ -222,7 +222,7 @@ export default function UsersIndex({ users, roles }) {
                                     <td className="px-5 py-3.5">
                                         <div className="flex items-center gap-2.5">
                                             <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
-                                                style={{ background: 'rgba(26,26,26,0.06)', color: '#1A1A1A' }}>
+                                                style={{ background: 'rgba(26,26,26,0.06)', color: '#25282D' }}>
                                                 {initials(user.name)}
                                             </div>
                                             <div>
@@ -278,7 +278,7 @@ export default function UsersIndex({ users, roles }) {
                             <div className="flex items-start gap-3">
                                 {/* Avatar */}
                                 <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0"
-                                    style={{ background: 'rgba(26,26,26,0.06)', color: '#1A1A1A' }}>
+                                    style={{ background: 'rgba(26,26,26,0.06)', color: '#25282D' }}>
                                     {initials(user.name)}
                                 </div>
                                 {/* Info */}
@@ -408,7 +408,7 @@ export default function UsersIndex({ users, roles }) {
                         <label className="flex items-center gap-2.5 cursor-pointer select-none">
                             <input type="checkbox" checked={editForm.data.is_active}
                                 onChange={e => editForm.setData('is_active', e.target.checked)}
-                                className="rounded" style={{ accentColor: '#1A1A1A' }} />
+                                className="rounded" style={{ accentColor: '#25282D' }} />
                             <span className="text-xs font-medium" style={{ color: '#4A4A4A' }}>Account Active</span>
                         </label>
                     </div>

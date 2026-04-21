@@ -5,7 +5,7 @@ import { useState } from 'react';
 // ── Status config ─────────────────────────────────────────────────────────────
 
 const STATUS = {
-    pending:  { label: 'Under review', bg: 'rgba(201,168,76,0.10)', border: '#1A1A1A',  text: '#a07a20' },
+    pending:  { label: 'Under review', bg: 'rgba(201,168,76,0.10)', border: '#25282D',  text: '#a07a20' },
     approved: { label: 'Approved',     bg: 'rgba(26,96,46,0.08)',   border: '#4a9a6a',  text: '#1a6030' },
     rejected: { label: 'Declined',     bg: 'rgba(200,40,40,0.07)',  border: '#e07070',  text: '#b03030' },
 };
@@ -98,7 +98,7 @@ function ReviewModal({ variation, onClose }) {
                                                 ? { background: '#f0ece6', color: '#c4b8a8', border: '1.5px solid #D1CDC7', cursor: 'not-allowed', opacity: 0.55 }
                                                 : isSelected
                                                     ? val === 'approved'
-                                                        ? { background: '#1A1A1A', color: '#fff', border: '1.5px solid #1A1A1A' }
+                                                        ? { background: '#25282D', color: '#fff', border: '1.5px solid #25282D' }
                                                         : { background: '#7f1d1d', color: '#fca5a5', border: '1.5px solid #7f1d1d' }
                                                     : { background: '#F1F1EF', color: '#4A4A4A', border: '1.5px solid #D1CDC7' }
                                             }>
@@ -117,7 +117,7 @@ function ReviewModal({ variation, onClose }) {
                                 placeholder="Reason for decision, next steps…"
                                 className="w-full px-4 py-3 rounded-xl text-sm text-forest outline-none resize-none"
                                 style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }}
-                                onFocus={e => e.target.style.borderColor = '#1A1A1A'}
+                                onFocus={e => e.target.style.borderColor = '#25282D'}
                                 onBlur={e => e.target.style.borderColor = '#D1CDC7'}
                             />
                         </div>
@@ -132,8 +132,8 @@ function ReviewModal({ variation, onClose }) {
                                 className="py-3.5 rounded-xl text-sm font-semibold transition-opacity"
                                 style={{
                                     flex: 2,
-                                    background: !status || busy ? '#a0b8a8' : '#1A1A1A',
-                                    color: '#1A1A1A',
+                                    background: !status || busy ? '#a0b8a8' : '#25282D',
+                                    color: '#25282D',
                                     cursor: !status || busy ? 'not-allowed' : 'pointer',
                                 }}>
                                 {busy ? 'Saving…' : 'Save Decision'}
@@ -189,7 +189,7 @@ export default function VariationsIndex({ variations }) {
                         <div className="px-6 py-12 text-center">
                             <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
                                 style={{ background: '#F1F1EF' }}>
-                                <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#1A1A1A" strokeWidth="1.5" strokeLinecap="round">
+                                <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#25282D" strokeWidth="1.5" strokeLinecap="round">
                                     <path d="M11 2l3 3-8 8H3v-3l8-8z"/>
                                 </svg>
                             </div>
@@ -227,8 +227,8 @@ export default function VariationsIndex({ variations }) {
                                                     onClick={() => setReviewing(v)}
                                                     className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-opacity"
                                                     style={{
-                                                        background: v.status === 'pending' ? '#1A1A1A' : '#F1F1EF',
-                                                        color:      v.status === 'pending' ? '#1A1A1A'  : '#4A4A4A',
+                                                        background: v.status === 'pending' ? '#25282D' : '#F1F1EF',
+                                                        color:      v.status === 'pending' ? '#25282D'  : '#4A4A4A',
                                                     }}
                                                     onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
                                                     onMouseLeave={e => e.currentTarget.style.opacity = '1'}>

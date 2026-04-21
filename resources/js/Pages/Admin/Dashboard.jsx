@@ -54,7 +54,7 @@ export default function Dashboard({ stats = {} }) {
 
             {/* Welcome banner */}
             <div className="rounded-2xl p-6 mb-5 flex items-start justify-between"
-                style={{ background: '#1A1A1A', border: '0.5px solid rgba(255,255,255,0.08)' }}>
+                style={{ background: '#25282D', border: '0.5px solid rgba(255,255,255,0.08)' }}>
                 <div>
                     <h1 className="text-2xl text-white font-serif font-normal mb-1" style={{ letterSpacing: '-0.01em' }}>
                         Admin Dashboard
@@ -93,7 +93,7 @@ export default function Dashboard({ stats = {} }) {
                         <Link key={link.label} href={link.href}
                             className="group glass-card rounded-xl p-5 transition-all flex items-start gap-4">
                             <div className="flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0"
-                                style={{ background: 'rgba(26,26,26,0.05)', border: '0.5px solid #D1CDC7', color: '#1A1A1A' }}>
+                                style={{ background: 'rgba(26,26,26,0.05)', border: '0.5px solid #D1CDC7', color: '#25282D' }}>
                                 {link.icon}
                             </div>
                             <div>

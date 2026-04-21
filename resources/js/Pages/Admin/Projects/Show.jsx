@@ -28,8 +28,8 @@ function Btn({ variant = 'default', size = 'sm', className = '', ...props }) {
     const base  = 'inline-flex items-center gap-1.5 rounded-lg font-medium transition-opacity disabled:opacity-50 whitespace-nowrap';
     const sizes = { sm: 'px-3 py-1.5 text-xs', md: 'px-4 py-2 text-sm' };
     const styles = {
-        default: { background: '#fff',    color: '#1A1A1A', border: '0.5px solid #D1CDC7' },
-        primary: { background: '#1A1A1A', color: '#fff',    border: '0.5px solid #0A0A0A' },
+        default: { background: '#fff',    color: '#25282D', border: '0.5px solid #D1CDC7' },
+        primary: { background: '#25282D', color: '#fff',    border: '0.5px solid #25282D' },
         ghost:   { background: 'transparent', color: '#4A4A4A', border: '0.5px solid #D1CDC7' },
         danger:  { background: '#fef2f2', color: '#b91c1c', border: '0.5px solid rgba(239,68,68,0.3)' },
     };
@@ -51,8 +51,8 @@ function Field({ label, children, error }) {
 function Input({ ...props }) {
     return (
         <input className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-            style={{ border: '0.5px solid #D1CDC7', background: '#fff', color: '#1A1A1A' }}
-            onFocus={e => e.target.style.borderColor = '#1A1A1A'}
+            style={{ border: '0.5px solid #D1CDC7', background: '#fff', color: '#25282D' }}
+            onFocus={e => e.target.style.borderColor = '#25282D'}
             onBlur={e  => e.target.style.borderColor = '#D1CDC7'}
             {...props} />
     );
@@ -61,8 +61,8 @@ function Input({ ...props }) {
 function Select({ children, ...props }) {
     return (
         <select className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-            style={{ border: '0.5px solid #D1CDC7', background: '#fff', color: '#1A1A1A' }}
-            onFocus={e => e.target.style.borderColor = '#1A1A1A'}
+            style={{ border: '0.5px solid #D1CDC7', background: '#fff', color: '#25282D' }}
+            onFocus={e => e.target.style.borderColor = '#25282D'}
             onBlur={e  => e.target.style.borderColor = '#D1CDC7'}
             {...props}>{children}</select>
     );
@@ -94,9 +94,9 @@ function WorkerMultiSelect({ workers, selectedIds, onChange }) {
                 onClick={() => setOpen(o => !o)}
                 className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-left"
                 style={{
-                    border: `0.5px solid ${open ? '#1A1A1A' : '#D1CDC7'}`,
+                    border: `0.5px solid ${open ? '#25282D' : '#D1CDC7'}`,
                     background: '#fff',
-                    color: selected.length === 0 ? '#888480' : '#1A1A1A',
+                    color: selected.length === 0 ? '#888480' : '#25282D',
                     outline: 'none',
                     borderBottomLeftRadius: open ? 0 : undefined,
                     borderBottomRightRadius: open ? 0 : undefined,
@@ -114,7 +114,7 @@ function WorkerMultiSelect({ workers, selectedIds, onChange }) {
             {/* Inline option list — renders in flow so the modal scrolls, not clips */}
             {open && (
                 <div className="w-full rounded-b-lg overflow-hidden"
-                    style={{ border: '0.5px solid #1A1A1A', borderTop: 'none', background: '#fff' }}>
+                    style={{ border: '0.5px solid #25282D', borderTop: 'none', background: '#fff' }}>
                     {workers.length === 0 ? (
                         <p className="px-3 py-3 text-xs" style={{ color: '#888480' }}>No workers in system.</p>
                     ) : workers.map(w => {
@@ -126,16 +126,16 @@ function WorkerMultiSelect({ workers, selectedIds, onChange }) {
                                 style={{
                                     borderTop: '0.5px solid #f0ebe3',
                                     background: checked ? 'rgba(26,60,46,0.04)' : '#fff',
-                                    color: '#1A1A1A',
+                                    color: '#25282D',
                                 }}>
                                 <span className="flex-shrink-0 flex items-center justify-center rounded"
                                     style={{
                                         width: 16, height: 16,
-                                        background: checked ? '#1A1A1A' : '#fff',
-                                        border: `1.5px solid ${checked ? '#1A1A1A' : '#d0c8bc'}`,
+                                        background: checked ? '#25282D' : '#fff',
+                                        border: `1.5px solid ${checked ? '#25282D' : '#d0c8bc'}`,
                                     }}>
                                     {checked && (
-                                        <svg width="8" height="8" viewBox="0 0 16 16" fill="none" stroke="#1A1A1A" strokeWidth="2.8" strokeLinecap="round">
+                                        <svg width="8" height="8" viewBox="0 0 16 16" fill="none" stroke="#25282D" strokeWidth="2.8" strokeLinecap="round">
                                             <polyline points="2,8 6,12 14,4"/>
                                         </svg>
                                     )}
@@ -153,7 +153,7 @@ function WorkerMultiSelect({ workers, selectedIds, onChange }) {
                     {selected.map(w => (
                         <span key={w.id}
                             className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
-                            style={{ background: 'rgba(26,26,26,0.05)', color: '#1A1A1A', border: '0.5px solid rgba(26,60,46,0.15)' }}>
+                            style={{ background: 'rgba(26,26,26,0.05)', color: '#25282D', border: '0.5px solid rgba(26,60,46,0.15)' }}>
                             {w.name}
                             <button type="button" onClick={() => toggle(w.id)}
                                 className="flex items-center justify-center"
@@ -206,7 +206,7 @@ function TabBar({ tabs, active, onChange }) {
                 <button key={t} onClick={() => onChange(t)}
                     className="flex-1 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200"
                     style={active === t
-                        ? { background: '#fff', color: '#1A1A1A', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' }
+                        ? { background: '#fff', color: '#25282D', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' }
                         : { color: '#9a8d7e' }
                     }>
                     {t}
@@ -220,8 +220,8 @@ function TabBar({ tabs, active, onChange }) {
 
 const STAGE_STYLE = {
     pending:     { bg: '#F1F1EF',                  color: '#888480', dot: '#D1CDC7'  },
-    in_progress: { bg: 'rgba(26,26,26,0.06)',    color: '#1A1A1A', dot: '#1A1A1A' },
-    completed:   { bg: 'rgba(26,26,26,0.05)',      color: '#1A1A1A', dot: '#1A1A1A' },
+    in_progress: { bg: 'rgba(26,26,26,0.06)',    color: '#25282D', dot: '#25282D' },
+    completed:   { bg: 'rgba(26,26,26,0.05)',      color: '#25282D', dot: '#25282D' },
 };
 
 function StageRow({ stage, onUpdateStatus }) {
@@ -328,7 +328,7 @@ function ProjectDetailsTab({ project }) {
                             <div key={w.id} className="flex items-center gap-2 px-3 py-2 rounded-xl"
                                 style={{ background: '#F1F1EF', border: '0.5px solid #D1CDC7' }}>
                                 <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
-                                    style={{ background: 'rgba(26,26,26,0.05)', color: '#1A1A1A' }}>
+                                    style={{ background: 'rgba(26,26,26,0.05)', color: '#25282D' }}>
                                     {w.name.trim().split(/\s+/).map(p => p[0]).slice(0, 2).join('').toUpperCase()}
                                 </div>
                                 <span className="text-xs font-medium text-forest">{w.name}</span>
@@ -363,12 +363,12 @@ function StagesTab({ project, onUpdateStatus }) {
 
             <div className="h-1.5 rounded-full mb-4 overflow-hidden" style={{ background: '#F1F1EF' }}>
                 <div className="h-full rounded-full transition-all duration-500"
-                    style={{ width: `${progressPct}%`, background: 'linear-gradient(90deg, #1A1A1A, #1A1A1A)' }} />
+                    style={{ width: `${progressPct}%`, background: 'linear-gradient(90deg, #25282D, #25282D)' }} />
             </div>
 
             {currentStage && (
                 <p className="text-xs mb-4" style={{ color: '#888480' }}>
-                    Currently: <span className="font-semibold" style={{ color: '#1A1A1A' }}>{currentStage.name}</span>
+                    Currently: <span className="font-semibold" style={{ color: '#25282D' }}>{currentStage.name}</span>
                 </p>
             )}
 
@@ -420,14 +420,14 @@ function GHLTab({ ghl, onRefresh }) {
             <div className="p-5 space-y-4">
                 <div>
                     <p className="text-base font-semibold text-forest">{ghl.name}</p>
-                    {value && <p className="text-sm font-semibold mt-0.5" style={{ color: '#1A1A1A' }}>{value}</p>}
+                    {value && <p className="text-sm font-semibold mt-0.5" style={{ color: '#25282D' }}>{value}</p>}
                 </div>
 
                 {ghl.stage_name && (
                     <div className="flex items-center gap-2">
                         <span className="text-xs font-medium" style={{ color: '#888480' }}>Pipeline Stage:</span>
                         <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-                            style={{ background: 'rgba(26,26,26,0.06)', color: '#1A1A1A', border: '0.5px solid rgba(26,26,26,0.12)' }}>
+                            style={{ background: 'rgba(26,26,26,0.06)', color: '#25282D', border: '0.5px solid rgba(26,26,26,0.12)' }}>
                             {ghl.stage_name}
                         </span>
                     </div>
@@ -448,7 +448,7 @@ function GHLTab({ ghl, onRefresh }) {
                         {ghl.custom_fields.map((cf, i) => (
                             <div key={i} className="flex justify-between gap-3 text-xs">
                                 <span style={{ color: '#888480' }}>{cf.fieldKey ?? cf.id}</span>
-                                <span className="text-right font-medium" style={{ color: '#1A1A1A', maxWidth: '60%', wordBreak: 'break-word' }}>
+                                <span className="text-right font-medium" style={{ color: '#25282D', maxWidth: '60%', wordBreak: 'break-word' }}>
                                     {Array.isArray(cf.value) ? cf.value.join(', ') : (cf.value ?? '—')}
                                 </span>
                             </div>
@@ -507,7 +507,7 @@ function DocumentsTab({ documents, ghlId }) {
                 className="glass-card rounded-xl p-5 flex flex-col items-center justify-center text-center cursor-pointer transition-all"
                 style={{ border: '1.5px dashed #D1CDC7', minHeight: 120 }}
                 onClick={() => !uploading && fileRef.current?.click()}
-                onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = '#1A1A1A'; }}
+                onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = '#25282D'; }}
                 onDragLeave={e => { e.currentTarget.style.borderColor = '#D1CDC7'; }}
                 onDrop={e => {
                     e.preventDefault();
@@ -523,7 +523,7 @@ function DocumentsTab({ documents, ghlId }) {
                     });
                 }}>
                 {uploading ? (
-                    <div className="flex items-center gap-2" style={{ color: '#1A1A1A' }}>
+                    <div className="flex items-center gap-2" style={{ color: '#25282D' }}>
                         <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                             <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
                         </svg>
@@ -531,7 +531,7 @@ function DocumentsTab({ documents, ghlId }) {
                     </div>
                 ) : (
                     <>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="mb-2">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#25282D" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="mb-2">
                             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
                             <polyline points="17 8 12 3 7 8"/>
                             <line x1="12" y1="3" x2="12" y2="15"/>
@@ -637,7 +637,7 @@ export default function ProjectShow({ project, ghl, workers, clients, documents 
                 <span>
                     <Link href={route('admin.projects.index')} className="hover:underline" style={{ color: '#888480' }}>Projects</Link>
                     <span style={{ color: '#d0c8bc' }}> / </span>
-                    <span style={{ color: '#1A1A1A' }}>{project.name}</span>
+                    <span style={{ color: '#25282D' }}>{project.name}</span>
                 </span>
             }>
             <Head title={project.name} />
@@ -706,8 +706,8 @@ export default function ProjectShow({ project, ghl, workers, clients, documents 
                         <Field label="Description" error={editForm.errors.description}>
                             <textarea value={editForm.data.description} onChange={e => editForm.setData('description', e.target.value)}
                                 rows={3} className="w-full px-3 py-2 rounded-lg text-sm outline-none resize-none"
-                                style={{ border: '0.5px solid #D1CDC7', background: '#fff', color: '#1A1A1A' }}
-                                onFocus={e => e.target.style.borderColor = '#1A1A1A'}
+                                style={{ border: '0.5px solid #D1CDC7', background: '#fff', color: '#25282D' }}
+                                onFocus={e => e.target.style.borderColor = '#25282D'}
                                 onBlur={e  => e.target.style.borderColor = '#D1CDC7'} />
                         </Field>
                         <div className="grid grid-cols-2 gap-4">

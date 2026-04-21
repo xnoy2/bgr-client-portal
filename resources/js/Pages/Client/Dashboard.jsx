@@ -52,7 +52,7 @@ function ProjectCard({ project }) {
                         width: `${project.progress_pct}%`,
                         background: project.progress_pct === 100
                             ? 'linear-gradient(90deg, #15803d, #22c55e)'
-                            : '#1A1A1A',
+                            : '#25282D',
                     }} />
             </div>
 
@@ -83,7 +83,7 @@ function ProjectCard({ project }) {
                     <div className="h-full rounded-full"
                         style={{
                             width: `${project.progress_pct}%`,
-                            background: '#1A1A1A',
+                            background: '#25282D',
                         }} />
                 </div>
 
@@ -122,7 +122,7 @@ function ProjectCard({ project }) {
                 <span className="text-xs" style={{ color: '#8a7e6e' }}>
                     {project.ghl_stage && (
                         <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs"
-                            style={{ background: 'rgba(26,26,26,0.06)', color: '#1A1A1A' }}>
+                            style={{ background: 'rgba(26,26,26,0.06)', color: '#25282D' }}>
                             {project.ghl_stage}
                         </span>
                     )}
@@ -140,7 +140,7 @@ function EmptyState() {
         <div className="glass-card rounded-2xl p-12 text-center">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
                 style={{ background: '#F1F1EF' }}>
-                <svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="#1A1A1A" strokeWidth="1.5" strokeLinecap="round">
+                <svg width="24" height="24" viewBox="0 0 16 16" fill="none" stroke="#25282D" strokeWidth="1.5" strokeLinecap="round">
                     <rect x="2" y="3" width="12" height="10" rx="1.5"/>
                     <line x1="5" y1="7" x2="11" y2="7"/><line x1="5" y1="9.5" x2="8.5" y2="9.5"/>
                 </svg>
@@ -165,7 +165,7 @@ export default function ClientDashboard({ projects }) {
 
             {/* Welcome banner */}
             <div className="rounded-2xl p-6 mb-6 flex items-center justify-between gap-4"
-                style={{ background: '#1A1A1A', border: '0.5px solid rgba(255,255,255,0.08)' }}>
+                style={{ background: '#25282D', border: '0.5px solid rgba(255,255,255,0.08)' }}>
                 <div>
                     <p className="text-xs uppercase tracking-widest mb-1.5" style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>
                         BGR Client Portal

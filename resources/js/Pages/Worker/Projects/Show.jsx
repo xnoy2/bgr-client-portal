@@ -11,7 +11,7 @@ const STAGE_LABELS = {
 };
 
 const STAGE_STYLE = {
-    completed:   { bg: '#1A1A1A', border: '#1A1A1A', text: '#fff', line: '#1A1A1A' },
+    completed:   { bg: '#25282D', border: '#25282D', text: '#fff', line: '#25282D' },
     in_progress: { bg: '#B2945B', border: '#9A7D47', text: '#fff', line: '#D1CDC7' },
     pending:     { bg: '#F1F1EF', border: '#D1CDC7', text: '#888480', line: '#D1CDC7' },
 };
@@ -66,7 +66,7 @@ function TabBar({ tabs, active, onChange }) {
                 <button key={t} onClick={() => onChange(t)}
                     className="flex-1 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200"
                     style={active === t
-                        ? { background: '#fff', color: '#1A1A1A', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' }
+                        ? { background: '#fff', color: '#25282D', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' }
                         : { color: '#9a8d7e' }
                     }>
                     {t}
@@ -179,7 +179,7 @@ function Lightbox({ photos, startIndex, onClose }) {
                             style={{
                                 width: 48, height: 48,
                                 opacity: i === idx ? 1 : 0.4,
-                                border: i === idx ? '2px solid #1A1A1A' : '2px solid transparent',
+                                border: i === idx ? '2px solid #25282D' : '2px solid transparent',
                                 transform: i === idx ? 'scale(1.08)' : 'scale(1)',
                             }}>
                             <img src={src} alt="" className="w-full h-full object-cover" />
@@ -235,7 +235,7 @@ function CameraCapture({ onCapture, onClose }) {
                 <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
                     <p className="text-white text-sm">{error}</p>
                     <button onClick={onClose} className="px-6 py-2 rounded-xl text-sm font-semibold"
-                        style={{ background: '#1A1A1A', color: '#fff' }}>Close</button>
+                        style={{ background: '#25282D', color: '#fff' }}>Close</button>
                 </div>
             ) : (
                 <>
@@ -332,7 +332,7 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose, onComplete })
                         <h2 className="text-base font-bold text-forest">{onComplete ? 'Complete Stage' : 'Post Update'}</h2>
                         {stageId && stages?.find(s => String(s.id) === stageId)?.name && (
                             <p className="text-xs mt-0.5 flex items-center gap-1.5" style={{ color: '#888480' }}>
-                                <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: '#1A1A1A' }}/>
+                                <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: '#25282D' }}/>
                                 {stages.find(s => String(s.id) === stageId).name}
                             </p>
                         )}
@@ -351,13 +351,13 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose, onComplete })
 
                     <div>
                         <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: '#4A4A4A' }}>
-                            Title <span style={{ color: '#1A1A1A' }}>*</span>
+                            Title <span style={{ color: '#25282D' }}>*</span>
                         </label>
                         <input type="text" value={title} onChange={e => setTitle(e.target.value)}
                             placeholder="e.g. Groundworks complete"
                             className="w-full px-4 py-3 rounded-xl text-sm text-forest outline-none"
                             style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }}
-                            onFocus={e => e.target.style.borderColor = '#1A1A1A'}
+                            onFocus={e => e.target.style.borderColor = '#25282D'}
                             onBlur={e => e.target.style.borderColor = '#D1CDC7'}
                         />
                     </div>
@@ -371,16 +371,16 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose, onComplete })
                             <div className="flex flex-wrap gap-2">
                                 {stages.map(s => {
                                     const active = stageId === String(s.id);
-                                    const dot = s.status === 'completed' ? '#1A1A1A' : s.status === 'in_progress' ? '#1A1A1A' : '#D1CDC7';
+                                    const dot = s.status === 'completed' ? '#25282D' : s.status === 'in_progress' ? '#25282D' : '#D1CDC7';
                                     return (
                                         <button key={s.id} type="button"
                                             onClick={() => setStageId(active ? '' : String(s.id))}
                                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
                                             style={active
-                                                ? { background: '#1A1A1A', color: '#fff', border: '1.5px solid #1A1A1A' }
+                                                ? { background: '#25282D', color: '#fff', border: '1.5px solid #25282D' }
                                                 : { background: '#F1F1EF', color: '#4A4A4A', border: '1.5px solid #D1CDC7' }
                                             }>
-                                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: active ? '#1A1A1A' : dot }} />
+                                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: active ? '#25282D' : dot }} />
                                             {s.name}
                                         </button>
                                     );
@@ -391,13 +391,13 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose, onComplete })
 
                     <div>
                         <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: '#4A4A4A' }}>
-                            What was done <span style={{ color: '#1A1A1A' }}>*</span>
+                            What was done <span style={{ color: '#25282D' }}>*</span>
                         </label>
                         <textarea rows={4} value={body} onChange={e => setBody(e.target.value)}
                             placeholder="Describe what was completed, any issues, next steps…"
                             className="w-full px-4 py-3 rounded-xl text-sm text-forest outline-none resize-none"
                             style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }}
-                            onFocus={e => e.target.style.borderColor = '#1A1A1A'}
+                            onFocus={e => e.target.style.borderColor = '#25282D'}
                             onBlur={e => e.target.style.borderColor = '#D1CDC7'}
                         />
                     </div>
@@ -408,7 +408,7 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose, onComplete })
                             <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#4A4A4A' }}>
                                 Photos
                             </label>
-                            <span className="text-xs" style={{ color: photos.length >= 10 ? '#1A1A1A' : '#888480' }}>
+                            <span className="text-xs" style={{ color: photos.length >= 10 ? '#25282D' : '#888480' }}>
                                 {photos.length}/10
                             </span>
                         </div>
@@ -472,7 +472,7 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose, onComplete })
                             className="flex-2 py-3.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-opacity"
                             style={{
                                 flex: 2,
-                                background: busy || !title.trim() || !body.trim() ? '#9EA0A3' : '#1A1A1A',
+                                background: busy || !title.trim() || !body.trim() ? '#9EA0A3' : '#25282D',
                                 color: '#fff',
                                 cursor: busy || !title.trim() || !body.trim() ? 'not-allowed' : 'pointer',
                             }}>
@@ -577,12 +577,12 @@ function EditUpdateModal({ ghlId, update, stages, onClose }) {
                     {/* Title */}
                     <div>
                         <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: '#4A4A4A' }}>
-                            Title <span style={{ color: '#1A1A1A' }}>*</span>
+                            Title <span style={{ color: '#25282D' }}>*</span>
                         </label>
                         <input type="text" value={title} onChange={e => setTitle(e.target.value)}
                             className="w-full px-4 py-3 rounded-xl text-sm text-forest outline-none"
                             style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }}
-                            onFocus={e => e.target.style.borderColor = '#1A1A1A'}
+                            onFocus={e => e.target.style.borderColor = '#25282D'}
                             onBlur={e => e.target.style.borderColor = '#D1CDC7'} />
                     </div>
 
@@ -593,15 +593,15 @@ function EditUpdateModal({ ghlId, update, stages, onClose }) {
                             <div className="flex flex-wrap gap-2">
                                 {stages.map(s => {
                                     const active = stageId === String(s.id);
-                                    const dot = s.status === 'completed' ? '#1A1A1A' : s.status === 'in_progress' ? '#1A1A1A' : '#D1CDC7';
+                                    const dot = s.status === 'completed' ? '#25282D' : s.status === 'in_progress' ? '#25282D' : '#D1CDC7';
                                     return (
                                         <button key={s.id} type="button"
                                             onClick={() => setStageId(active ? '' : String(s.id))}
                                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
                                             style={active
-                                                ? { background: '#1A1A1A', color: '#fff', border: '1.5px solid #1A1A1A' }
+                                                ? { background: '#25282D', color: '#fff', border: '1.5px solid #25282D' }
                                                 : { background: '#F1F1EF', color: '#4A4A4A', border: '1.5px solid #D1CDC7' }}>
-                                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: active ? '#1A1A1A' : dot }} />
+                                            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: active ? '#25282D' : dot }} />
                                             {s.name}
                                         </button>
                                     );
@@ -613,12 +613,12 @@ function EditUpdateModal({ ghlId, update, stages, onClose }) {
                     {/* Body */}
                     <div>
                         <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: '#4A4A4A' }}>
-                            Remarks <span style={{ color: '#1A1A1A' }}>*</span>
+                            Remarks <span style={{ color: '#25282D' }}>*</span>
                         </label>
                         <textarea rows={4} value={body} onChange={e => setBody(e.target.value)}
                             className="w-full px-4 py-3 rounded-xl text-sm text-forest outline-none resize-none"
                             style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }}
-                            onFocus={e => e.target.style.borderColor = '#1A1A1A'}
+                            onFocus={e => e.target.style.borderColor = '#25282D'}
                             onBlur={e => e.target.style.borderColor = '#D1CDC7'} />
                     </div>
 
@@ -626,7 +626,7 @@ function EditUpdateModal({ ghlId, update, stages, onClose }) {
                     <div>
                         <div className="flex items-center justify-between mb-2">
                             <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#4A4A4A' }}>Photos</label>
-                            <span className="text-xs" style={{ color: totalPhotos >= 10 ? '#1A1A1A' : '#888480' }}>{totalPhotos}/10</span>
+                            <span className="text-xs" style={{ color: totalPhotos >= 10 ? '#25282D' : '#888480' }}>{totalPhotos}/10</span>
                         </div>
 
                         {/* Existing photos */}
@@ -708,7 +708,7 @@ function EditUpdateModal({ ghlId, update, stages, onClose }) {
                             className="py-3.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-opacity"
                             style={{
                                 flex: 2,
-                                background: busy || !title.trim() || !body.trim() ? '#9EA0A3' : '#1A1A1A',
+                                background: busy || !title.trim() || !body.trim() ? '#9EA0A3' : '#25282D',
                                 color: '#fff',
                                 cursor: busy || !title.trim() || !body.trim() ? 'not-allowed' : 'pointer',
                             }}>
@@ -755,7 +755,7 @@ function OverviewTab({ project, ghl }) {
                             <div key={w.id} className="flex items-center gap-2 px-3 py-1.5 rounded-full"
                                 style={{ background: 'rgba(26,60,46,0.06)', border: '1px solid rgba(26,60,46,0.12)' }}>
                                 <div className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                                    style={{ background: '#1A1A1A', color: '#fff', fontSize: 9 }}>
+                                    style={{ background: '#25282D', color: '#fff', fontSize: 9 }}>
                                     {w.name[0]?.toUpperCase()}
                                 </div>
                                 <span className="text-xs font-semibold text-forest">{w.name}</span>
@@ -801,10 +801,10 @@ function StagesTab({ project, onShowUpdates, onCompleteStage, advanceStage, savi
                                     )}
                                 </div>
                                 <div className={`flex-1 min-w-0 ${isLast ? 'pb-0' : 'pb-4'}`} style={{ paddingTop: 4 }}>
-                                    <p className="text-sm font-semibold leading-tight" style={{ color: stage.status === 'pending' ? '#888480' : '#1A1A1A' }}>
+                                    <p className="text-sm font-semibold leading-tight" style={{ color: stage.status === 'pending' ? '#888480' : '#25282D' }}>
                                         {stage.name}
                                     </p>
-                                    <p className="text-xs mt-0.5" style={{ color: stage.status === 'in_progress' ? '#1A1A1A' : '#888480' }}>
+                                    <p className="text-xs mt-0.5" style={{ color: stage.status === 'in_progress' ? '#25282D' : '#888480' }}>
                                         {STAGE_LABELS[stage.status]}
                                     </p>
                                 </div>
@@ -828,17 +828,17 @@ function StagesTab({ project, onShowUpdates, onCompleteStage, advanceStage, savi
                                         )}
                                     </div>
                                     <p className="text-xs text-center font-semibold leading-tight"
-                                        style={{ color: stage.status === 'pending' ? '#888480' : '#1A1A1A' }}>
+                                        style={{ color: stage.status === 'pending' ? '#888480' : '#25282D' }}>
                                         {stage.name}
                                     </p>
                                     <p className="text-xs text-center mt-0.5"
-                                        style={{ color: stage.status === 'in_progress' ? '#1A1A1A' : '#888480' }}>
+                                        style={{ color: stage.status === 'in_progress' ? '#25282D' : '#888480' }}>
                                         {STAGE_LABELS[stage.status]}
                                     </p>
                                 </div>
                                 {!isLast && (
                                     <div className="flex-shrink-0 h-0.5 mt-4"
-                                        style={{ width: 20, background: stage.status === 'completed' ? '#1A1A1A' : '#D1CDC7' }} />
+                                        style={{ width: 20, background: stage.status === 'completed' ? '#25282D' : '#D1CDC7' }} />
                                 )}
                             </div>
                         );
@@ -875,33 +875,33 @@ function StagesTab({ project, onShowUpdates, onCompleteStage, advanceStage, savi
                             <div className="flex-1 min-w-0">
                                 {isActive && (
                                     <div className="flex items-center gap-1.5 mb-0.5">
-                                        <span className="w-1.5 h-1.5 rounded-full animate-pulse inline-block" style={{ background: '#1A1A1A' }}/>
-                                        <span className="text-xs font-semibold" style={{ color: '#1A1A1A' }}>In Progress</span>
+                                        <span className="w-1.5 h-1.5 rounded-full animate-pulse inline-block" style={{ background: '#25282D' }}/>
+                                        <span className="text-xs font-semibold" style={{ color: '#25282D' }}>In Progress</span>
                                     </div>
                                 )}
                                 <p className="text-sm font-bold text-forest leading-tight">{stage.name}</p>
                                 <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: '#888480' }}>
                                     Stage {stage.order} of {project.stages.length}
                                     <span style={{ color: '#D1CDC7' }}>·</span>
-                                    <span style={{ color: '#1A1A1A' }}>View updates</span>
+                                    <span style={{ color: '#25282D' }}>View updates</span>
                                 </p>
                             </div>
                             <div className="flex-shrink-0 flex items-center gap-2">
                                 {isActive && (
                                     <button onClick={e => { e.stopPropagation(); onCompleteStage(stage); }} disabled={saving}
                                         className="px-4 py-2 rounded-xl text-xs font-bold transition-opacity"
-                                        style={{ background: '#1A1A1A', color: '#fff', opacity: saving ? 0.5 : 1 }}>
+                                        style={{ background: '#25282D', color: '#fff', opacity: saving ? 0.5 : 1 }}>
                                         {saving ? '…' : 'Complete ✓'}
                                     </button>
                                 )}
                                 {canStart && (
                                     <button onClick={e => { e.stopPropagation(); advanceStage(stage.order); }} disabled={saving}
                                         className="px-4 py-2 rounded-xl text-xs font-bold transition-opacity"
-                                        style={{ background: 'transparent', color: '#1A1A1A', border: '1px solid #D1CDC7', opacity: saving ? 0.5 : 1 }}>
+                                        style={{ background: 'transparent', color: '#25282D', border: '1px solid #D1CDC7', opacity: saving ? 0.5 : 1 }}>
                                         {saving ? '…' : 'Start →'}
                                     </button>
                                 )}
-                                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#1A1A1A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#25282D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <polyline points="6,3 11,8 6,13"/>
                                 </svg>
                             </div>
@@ -929,13 +929,13 @@ function StagesTab({ project, onShowUpdates, onCompleteStage, advanceStage, savi
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold leading-tight"
-                                style={{ color: stage.status === 'pending' ? '#888480' : '#1A1A1A' }}>
+                                style={{ color: stage.status === 'pending' ? '#888480' : '#25282D' }}>
                                 {stage.name}
                             </p>
                         </div>
                         <span className="text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0"
                             style={stage.status === 'completed'
-                                ? { background: 'rgba(26,26,26,0.07)', color: '#1A1A1A' }
+                                ? { background: 'rgba(26,26,26,0.07)', color: '#25282D' }
                                 : { background: '#F1F1EF', color: '#888480' }
                             }>
                             {STAGE_LABELS[stage.status]}
@@ -968,7 +968,7 @@ function ExpandableText({ text }) {
                     {'… '}
                     <button onClick={() => setExpanded(true)}
                         className="font-semibold hover:underline"
-                        style={{ color: '#1A1A1A', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+                        style={{ color: '#25282D', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
                         See more
                     </button>
                 </>
@@ -978,7 +978,7 @@ function ExpandableText({ text }) {
                     {' '}
                     <button onClick={() => setExpanded(false)}
                         className="font-semibold hover:underline"
-                        style={{ color: '#1A1A1A', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+                        style={{ color: '#25282D', background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
                         See less
                     </button>
                 </>
@@ -1078,9 +1078,9 @@ function UpdatesTab({ updates, onPostUpdate, ghlId, stages, stageFilter, onClear
             {/* CTA */}
             <button onClick={() => onPostUpdate(null)}
                 className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl text-sm font-semibold transition-all"
-                style={{ background: '#1A1A1A', color: '#fff' }}
-                onMouseEnter={e => e.currentTarget.style.background = '#0A0A0A'}
-                onMouseLeave={e => e.currentTarget.style.background = '#1A1A1A'}>
+                style={{ background: '#25282D', color: '#fff' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#25282D'}
+                onMouseLeave={e => e.currentTarget.style.background = '#25282D'}>
                 <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                     <line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/>
                 </svg>
@@ -1091,7 +1091,7 @@ function UpdatesTab({ updates, onPostUpdate, ghlId, stages, stageFilter, onClear
             {stageFilter && (
                 <div className="flex items-center gap-2">
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold"
-                        style={{ background: 'rgba(26,26,26,0.06)', color: '#1A1A1A', border: '1px solid #D1CDC7' }}>
+                        style={{ background: 'rgba(26,26,26,0.06)', color: '#25282D', border: '1px solid #D1CDC7' }}>
                         <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                             <path d="M14 10c0 .6-.4 1-1 1H4l-2 3V3c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v7z"/>
                         </svg>
@@ -1121,7 +1121,7 @@ function UpdatesTab({ updates, onPostUpdate, ghlId, stages, stageFilter, onClear
                         <div className="flex items-start justify-between gap-3 px-4 pt-4 pb-3">
                             <div className="flex items-center gap-2.5 min-w-0">
                                 <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                                    style={{ background: '#1A1A1A', color: '#fff' }}>
+                                    style={{ background: '#25282D', color: '#fff' }}>
                                     {(u.author ?? 'T')[0]?.toUpperCase()}
                                 </div>
                                 <div className="min-w-0">
@@ -1134,7 +1134,7 @@ function UpdatesTab({ updates, onPostUpdate, ghlId, stages, stageFilter, onClear
                                             <>
                                                 <span style={{ color: '#D1CDC7', fontSize: 10 }}>·</span>
                                                 <span className="text-xs px-1.5 py-0.5 rounded-full font-medium"
-                                                    style={{ background: 'rgba(26,26,26,0.06)', color: '#1A1A1A' }}>
+                                                    style={{ background: 'rgba(26,26,26,0.06)', color: '#25282D' }}>
                                                     {u.stage_name}
                                                 </span>
                                             </>
@@ -1184,7 +1184,7 @@ function UpdatesTab({ updates, onPostUpdate, ghlId, stages, stageFilter, onClear
                 <div className="glass-card rounded-2xl p-10 text-center">
                     <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
                         style={{ background: '#F1F1EF' }}>
-                        <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#1A1A1A" strokeWidth="1.5" strokeLinecap="round">
+                        <svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="#25282D" strokeWidth="1.5" strokeLinecap="round">
                             <path d="M14 10c0 .6-.4 1-1 1H4l-2 3V3c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v7z"/>
                         </svg>
                     </div>
@@ -1240,7 +1240,7 @@ export default function WorkerProjectShow({ project, ghl, updates }) {
             title={project.name}
             breadcrumb={
                 <span className="flex items-center gap-1.5 text-xs">
-                    <Link href={route('worker.dashboard')} style={{ color: '#1A1A1A' }}>My Projects</Link>
+                    <Link href={route('worker.dashboard')} style={{ color: '#25282D' }}>My Projects</Link>
                     <span style={{ color: '#d0c8bc' }}>/</span>
                     <span className="truncate" style={{ color: '#4A4A4A' }}>{project.name}</span>
                 </span>
@@ -1249,7 +1249,7 @@ export default function WorkerProjectShow({ project, ghl, updates }) {
 
             {/* Hero */}
             <div className="rounded-2xl p-5 mb-5 relative overflow-hidden"
-                style={{ background: 'linear-gradient(135deg, #1A1A1A 0%, #1A1A1A 100%)' }}>
+                style={{ background: 'linear-gradient(135deg, #25282D 0%, #25282D 100%)' }}>
                 {/* Subtle texture */}
                 <div className="absolute inset-0 opacity-10" style={{
                     backgroundImage: 'radial-gradient(circle at 80% 20%, rgba(255,255,255,0.3) 0%, transparent 60%)',
