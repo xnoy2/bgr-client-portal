@@ -228,7 +228,7 @@ export default function VariationsIndex({ variations }) {
                                                     className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-opacity"
                                                     style={{
                                                         background: v.status === 'pending' ? '#25282D' : '#F1F1EF',
-                                                        color:      v.status === 'pending' ? '#25282D'  : '#4A4A4A',
+                                                        color:      v.status === 'pending' ? '#FFFFFF'  : '#4A4A4A',
                                                     }}
                                                     onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
                                                     onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
