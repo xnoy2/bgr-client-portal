@@ -461,11 +461,12 @@ class GHLService
     // ── Documents & Contracts ─────────────────────────────────────────────────
 
     /**
-     * Send a Documents & Contracts template to a recipient.
+     * Send a Documents & Contracts template to a contact.
+     * GHL emails the signing link to the contact automatically.
      * Returns ['documentId' => '...', 'documentLink' => '...'] on success, null on failure.
      *
      * Requires scope: documents_contracts/template/sendLink.write
-     * Endpoint: POST /documents-contracts/template/send-link
+     * Endpoint: POST /proposals/templates/send
      */
     public function sendDocumentTemplate(
         string $templateId,
@@ -473,26 +474,34 @@ class GHLService
         string $recipientEmail,
         string $title
     ): ?array {
+        // Resolve GHL contact ID from email
+        $contactId = $this->findContactByEmail($recipientEmail);
+
+        if (! $contactId) {
+            Log::warning('GHL sendDocumentTemplate: no contact found', ['email' => $recipientEmail]);
+            return null;
+        }
+
+        $userId = config('services.ghl.default_user_id');
+
         try {
-            $response = $this->http()->post('/documents-contracts/template/send-link', [
+            $response = $this->http()->post('/proposals/templates/send', [
                 'locationId' => $this->locationId,
                 'templateId' => $templateId,
-                'title'      => $title,
-                'recipients' => [
-                    [
-                        'name'     => $recipientName,
-                        'email'    => $recipientEmail,
-                        'roleName' => 'Client',
-                    ],
-                ],
+                'contactId'  => $contactId,
+                'userId'     => $userId,
             ]);
 
             if ($response->successful()) {
-                $data = $response->json();
-                Log::info('GHL sendDocumentTemplate success', ['templateId' => $templateId, 'response' => $data]);
+                $data  = $response->json();
+                $link  = $data['links'][0] ?? [];
+                $docId = $link['documentId'] ?? null;
+                Log::info('GHL sendDocumentTemplate success', ['templateId' => $templateId, 'documentId' => $docId]);
                 return [
-                    'documentId'   => $data['documentId']   ?? $data['id']   ?? null,
-                    'documentLink' => $data['documentLink'] ?? $data['link'] ?? $data['signingUrl'] ?? null,
+                    'documentId'   => $docId,
+                    'documentLink' => $docId
+                        ? "https://app.gohighlevel.com/v2/location/{$this->locationId}/proposals/{$docId}"
+                        : null,
                 ];
             }
 

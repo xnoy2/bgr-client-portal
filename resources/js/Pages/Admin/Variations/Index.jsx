@@ -263,6 +263,13 @@ export default function VariationsIndex({ variations }) {
                                             <div className="flex items-center gap-2.5 flex-shrink-0">
                                                 <AgreementBadge status={v.agreement_status} />
                                                 <StatusBadge status={v.status} />
+                                                {v.status === 'approved' && (
+                                                    <a href={route('admin.agreements.index') + `?type=variation_agreement&variation_id=${v.id}`}
+                                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold hidden sm:inline-flex items-center gap-1"
+                                                        style={{ background: 'rgba(201,168,76,0.10)', color: '#a07a20', border: '1px solid #c9a84c' }}>
+                                                        + Agreement
+                                                    </a>
+                                                )}
                                                 <button
                                                     onClick={() => setReviewing(v)}
                                                     className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-opacity"

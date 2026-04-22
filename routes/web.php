@@ -3,8 +3,10 @@
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\AgreementController as AdminAgreementController;
 use App\Http\Controllers\Admin\ProposalController as AdminProposalController;
 use App\Http\Controllers\Admin\VariationController as AdminVariationController;
+use App\Http\Controllers\Client\AgreementController as ClientAgreementController;
 use App\Http\Controllers\Client\DocumentController as ClientDocumentController;
 use App\Http\Controllers\Client\ProposalController as ClientProposalController;
 use App\Http\Controllers\Client\ProjectController as ClientProjectController;
@@ -81,6 +83,14 @@ Route::middleware(['auth', 'password.changed', 'role:admin'])
         Route::put('/variations/{variation}/review',                   [AdminVariationController::class, 'review'])->name('variations.review');
         Route::put('/variations/{variation}/attach-agreement',         [AdminVariationController::class, 'attachAgreement'])->name('variations.attach-agreement');
 
+        // Agreements (in-app document signing)
+        Route::get('/agreements',                          [AdminAgreementController::class, 'index'])->name('agreements.index');
+        Route::post('/agreements',                         [AdminAgreementController::class, 'store'])->name('agreements.store');
+        Route::put('/agreements/{agreement}',              [AdminAgreementController::class, 'update'])->name('agreements.update');
+        Route::post('/agreements/{agreement}/send',        [AdminAgreementController::class, 'send'])->name('agreements.send');
+        Route::get('/agreements/{agreement}/download',     [AdminAgreementController::class, 'download'])->name('agreements.download');
+        Route::delete('/agreements/{agreement}',           [AdminAgreementController::class, 'destroy'])->name('agreements.destroy');
+
         // Proposals
         Route::get('/proposals',                    [AdminProposalController::class, 'index'])->name('proposals.index');
         Route::post('/proposals',                   [AdminProposalController::class, 'store'])->name('proposals.store');
@@ -121,6 +131,10 @@ Route::middleware(['auth', 'password.changed', 'role:client'])
         Route::get('/variations',                         [ClientVariationController::class, 'index'])->name('variations.index');
         Route::post('/variations',                        [ClientVariationController::class, 'store'])->name('variations.store');
         Route::get('/proposals',                          [ClientProposalController::class, 'index'])->name('proposals.index');
+        Route::get('/agreements',                         [ClientAgreementController::class, 'index'])->name('agreements.index');
+        Route::get('/agreements/{agreement}',             [ClientAgreementController::class, 'show'])->name('agreements.show');
+        Route::get('/agreements/{agreement}/download',    [ClientAgreementController::class, 'download'])->name('agreements.download');
+        Route::post('/agreements/{agreement}/sign',       [ClientAgreementController::class, 'sign'])->name('agreements.sign');
         Route::get('/documents',                         [ClientDocumentController::class, 'index'])->name('documents.index');
         Route::get('/documents/{document}/download',     [ClientDocumentController::class, 'download'])->name('documents.download');
         Route::post('/documents/{document}/sign',        [ClientDocumentController::class, 'sign'])->name('documents.sign');

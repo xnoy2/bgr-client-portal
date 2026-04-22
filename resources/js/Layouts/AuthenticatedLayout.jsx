@@ -93,8 +93,8 @@ function getNav(role) {
         { label: 'Projects',      icon: 'briefcase', href: () => route('admin.projects.index'), active: () => route().current('admin.projects.*') },
         { label: 'Users',         icon: 'users',     href: () => route('admin.users.index'),    active: () => route().current('admin.users.*') },
         { label: 'Updates',       icon: 'list',      href: () => route('admin.updates.index'),  active: () => route().current('admin.updates.*') },
-        { label: 'Variations',    icon: 'edit',      href: () => route('admin.variations.index'), active: () => route().current('admin.variations.*') },
-        { label: 'Proposals',     icon: 'file',      href: () => route('admin.proposals.index'),  active: () => route().current('admin.proposals.*') },
+        { label: 'Variations',    icon: 'edit',      href: () => route('admin.variations.index'),  active: () => route().current('admin.variations.*') },
+        { label: 'Agreements',    icon: 'file',      href: () => route('admin.agreements.index'), active: () => route().current('admin.agreements.*') },
     ];
     if (role === 'worker') return [
         { label: 'My Projects',   icon: 'briefcase', href: () => route('worker.dashboard'),   active: () => route().current('worker.dashboard') || route().current('worker.projects.*') },
@@ -102,8 +102,8 @@ function getNav(role) {
     return [
         { label: 'My Projects', icon: 'briefcase', href: () => route('client.dashboard'),        active: () => route().current('client.dashboard') || route().current('client.projects.*') },
         { label: 'Documents',   icon: 'file',      href: () => route('client.documents.index'),  active: () => route().current('client.documents.*') },
-        { label: 'Variations',  icon: 'edit',      href: () => route('client.variations.index'), active: () => route().current('client.variations.*') },
-        { label: 'Proposals',   icon: 'file',      href: () => route('client.proposals.index'),  active: () => route().current('client.proposals.*') },
+        { label: 'Variations',  icon: 'edit',      href: () => route('client.variations.index'),  active: () => route().current('client.variations.*') },
+        { label: 'Agreements',  icon: 'file',      href: () => route('client.agreements.index'), active: () => route().current('client.agreements.*') },
     ];
 }
 
