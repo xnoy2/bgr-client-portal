@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ModalShell from '@/Components/ModalShell';
 import { Head, useForm } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
 
@@ -64,7 +65,7 @@ function StatusBadge({ status }) {
 
 // ── Sign Modal ────────────────────────────────────────────────────────────────
 
-function SignModal({ doc, onClose }) {
+function SignModal({ show, doc, onClose }) {
     const { data, setData, post, processing, errors, reset } = useForm({ signer_name: '' });
     const [agreed, setAgreed] = useState(false);
     const inputRef = useRef(null);
@@ -73,19 +74,6 @@ function SignModal({ doc, onClose }) {
         const timer = setTimeout(() => inputRef.current?.focus(), 80);
         return () => clearTimeout(timer);
     }, []);
-
-    // Lock body scroll while open
-    useEffect(() => {
-        window.document.body.style.overflow = 'hidden';
-        return () => { window.document.body.style.overflow = ''; };
-    }, []);
-
-    // Close on Escape
-    useEffect(() => {
-        const handler = (e) => { if (e.key === 'Escape') onClose(); };
-        window.addEventListener('keydown', handler);
-        return () => window.removeEventListener('keydown', handler);
-    }, [onClose]);
 
     function submit(e) {
         e.preventDefault();
@@ -97,13 +85,9 @@ function SignModal({ doc, onClose }) {
     const canSign = data.signer_name.trim().length >= 2 && agreed && !processing;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
-            style={{ background: 'rgba(14,32,25,0.55)', backdropFilter: 'blur(3px)' }}
-            onClick={onClose}>
-
+        <ModalShell show={show} onClose={onClose} position="bottom">
             <div className="w-full sm:max-w-md bg-white sm:rounded-2xl rounded-t-2xl shadow-2xl"
-                style={{ border: '0.5px solid #D1CDC7' }}
-                onClick={e => e.stopPropagation()}>
+                style={{ border: '0.5px solid #D1CDC7' }}>
 
                 {/* Drag handle (mobile) */}
                 <div className="flex justify-center pt-3 pb-1 sm:hidden">
@@ -239,7 +223,7 @@ function SignModal({ doc, onClose }) {
                     </div>
                 </form>
             </div>
-        </div>
+        </ModalShell>
     );
 }
 
@@ -327,6 +311,7 @@ export default function ClientDocumentsIndex({ documents }) {
             {/* Sign modal */}
             {signingDoc && (
                 <SignModal
+                    show
                     doc={signingDoc}
                     onClose={() => setSigningDoc(null)}
                     onSigned={() => setSigningDoc(null)}
