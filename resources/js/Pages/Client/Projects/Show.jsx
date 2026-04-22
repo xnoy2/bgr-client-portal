@@ -463,7 +463,7 @@ function UpdateDetailModal({ show, update, onClose }) {
                         </div>
                     </div>
                 </div>
-            </div>
+            </ModalShell>
         </>
     );
 }
