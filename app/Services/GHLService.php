@@ -235,21 +235,14 @@ class GHLService
         }
     }
 
-    // ── Notes (progress updates → GHL) ───────────────────────────────────────
+    // ── Notes ────────────────────────────────────────────────────────────────
 
     /**
-     * Post a note on the GHL opportunity.
-     * The GHL "Photos" custom field is a file-upload widget — it cannot be
-     * populated via the PUT API.  Instead we attach photo URLs as clickable
-     * links inside a note, which appears in the Notes tab of the opportunity.
+     * Build a formatted note body with optional photo URLs.
      */
-    public function postOpportunityNote(
-        string $opportunityId,
-        string $title,
-        string $body,
-        array  $photoUrls = []
-    ): bool {
-        $lines   = ["📋 {$title}", '', $body];
+    private function buildNoteBody(string $title, string $body, array $photoUrls = []): string
+    {
+        $lines = ["📋 {$title}", '', $body];
 
         if (! empty($photoUrls)) {
             $lines[] = '';
@@ -259,12 +252,59 @@ class GHLService
             }
         }
 
-        $noteBody = implode("\n", $lines);
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Post a note on a GHL contact (appears in the contact's Notes tab).
+     * GHL API v2021-07-28 attaches notes to contacts, not opportunities directly.
+     * Include the project/opportunity name in $title so the note is identifiable.
+     */
+    public function postContactNote(
+        string $contactId,
+        string $title,
+        string $body,
+        array  $photoUrls = []
+    ): bool {
+        $noteBody = $this->buildNoteBody($title, $body, $photoUrls);
+
+        try {
+            $response = $this->http()->post("/contacts/{$contactId}/notes", [
+                'body' => $noteBody,
+            ]);
+
+            if ($response->successful()) {
+                return true;
+            }
+
+            Log::warning('GHL postContactNote failed', [
+                'contact_id' => $contactId,
+                'status'     => $response->status(),
+                'body'       => $response->body(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('GHL postContactNote exception', ['error' => $e->getMessage()]);
+        }
+
+        return false;
+    }
+
+    /**
+     * Post a note on a GHL opportunity.
+     * NOTE: /opportunities/{id}/notes returns 404 on API v2021-07-28.
+     * Use postContactNote() instead for reliable delivery.
+     */
+    public function postOpportunityNote(
+        string $opportunityId,
+        string $title,
+        string $body,
+        array  $photoUrls = []
+    ): bool {
+        $noteBody = $this->buildNoteBody($title, $body, $photoUrls);
 
         try {
             $response = $this->http()->post("/opportunities/{$opportunityId}/notes", [
-                'body'   => $noteBody,
-                'userId' => null,
+                'body' => $noteBody,
             ]);
 
             if ($response->successful()) {

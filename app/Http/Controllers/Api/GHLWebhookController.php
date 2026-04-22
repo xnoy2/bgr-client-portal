@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Project;
+use App\Models\Proposal;
 use App\Models\User;
 use App\Models\VariationRequest;
 use App\Services\ClientProvisioningService;
@@ -97,6 +98,52 @@ class GHLWebhookController extends Controller
         return response('OK', 200);
     }
 
+    // Called by GHL Workflow when a proposal/estimate status changes
+    public function handleProposalStatus(Request $request): Response
+    {
+        $payload = $request->json()->all();
+
+        Log::info('GHL ProposalStatus webhook received', ['payload' => $payload]);
+
+        $ghlProposalId = $payload['proposal_id'] ?? $payload['estimateId'] ?? $payload['id'] ?? null;
+        $status        = strtolower($payload['status'] ?? $payload['event'] ?? '');
+
+        // Map GHL status words to our enum
+        $statusMap = [
+            'accepted' => 'accepted',
+            'approve'  => 'accepted',
+            'approved' => 'accepted',
+            'declined' => 'declined',
+            'decline'  => 'declined',
+            'rejected' => 'declined',
+            'viewed'   => 'viewed',
+            'paid'     => 'paid',
+            'sent'     => 'sent',
+        ];
+
+        $mapped = $statusMap[$status] ?? null;
+
+        if (! $ghlProposalId || ! $mapped) {
+            Log::warning('GHL ProposalStatus: missing id or unrecognised status', ['payload' => $payload]);
+            return response('Bad payload', 422);
+        }
+
+        $proposal = Proposal::where('ghl_proposal_id', $ghlProposalId)->first();
+        if (! $proposal) {
+            Log::warning('GHL ProposalStatus: no matching proposal', ['ghlProposalId' => $ghlProposalId]);
+            return response('Not found', 404);
+        }
+
+        $proposal->update([
+            'status'       => $mapped,
+            'responded_at' => in_array($mapped, ['accepted', 'declined', 'paid']) ? now() : $proposal->responded_at,
+        ]);
+
+        Log::info('GHL ProposalStatus: updated', ['proposalId' => $proposal->id, 'status' => $mapped]);
+
+        return response('OK', 200);
+    }
+
     public function handle(Request $request): Response
     {
         // Validate HMAC signature
@@ -169,16 +216,24 @@ class GHLWebhookController extends Controller
         Log::info('GHLWebhook: appointment stub');
     }
 
+    // Called by GHL Workflow → Webhook action after "Documents & Contracts" trigger (Status = Completed)
+    public function handleDocumentCompleted(Request $request): Response
+    {
+        $payload = $request->json()->all();
+
+        Log::info('GHL DocumentCompleted webhook received — raw payload', ['payload' => $payload]);
+
+        return response('OK', 200);
+    }
+
     private function handleDocumentSigned(array $payload): void
     {
-        // TODO Phase 8: update document status, create document_signatures row, notify admin
-        Log::info('GHLWebhook: DocumentSigned stub');
+        Log::info('GHLWebhook: DocumentSigned payload received', ['payload' => $payload]);
     }
 
     private function handleDocumentDeclined(array $payload): void
     {
-        // TODO Phase 8: update document status, notify admin
-        Log::info('GHLWebhook: DocumentDeclined stub');
+        Log::info('GHLWebhook: DocumentDeclined payload received', ['payload' => $payload]);
     }
 
     private function handleFormSubmitted(array $payload): void

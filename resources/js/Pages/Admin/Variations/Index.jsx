@@ -2,6 +2,23 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 
+// ── Parse variation fields (handles old concatenated format) ─────────────────
+
+function parseVariation(v) {
+    if (v.staff_member || v.site_location) {
+        return { description: v.description, staffMember: v.staff_member, siteLocation: v.site_location };
+    }
+    const raw = v.description ?? '';
+    const staffMatch = raw.match(/Staff Member:\s*([^\n]+)/);
+    const locMatch   = raw.match(/Site Location:\s*([^\n]+)/);
+    const desc = raw.replace(/\n\n(Staff Member:|Site Location:)[^\n]*/g, '').trim();
+    return {
+        description:  desc || raw,
+        staffMember:  staffMatch?.[1]?.trim() ?? null,
+        siteLocation: locMatch?.[1]?.trim()   ?? null,
+    };
+}
+
 // ── Status config ─────────────────────────────────────────────────────────────
 
 const STATUS = {
@@ -18,6 +35,7 @@ function ReviewModal({ variation, onClose }) {
     const [busy,   setBusy]     = useState(false);
 
     const isPending = variation.status === 'pending';
+    const { description, staffMember, siteLocation } = parseVariation(variation);
 
     function submit(e) {
         e.preventDefault();
@@ -60,7 +78,27 @@ function ReviewModal({ variation, onClose }) {
                     <div>
                         <p className="text-base font-bold text-forest mb-1">{variation.title}</p>
                         <p className="text-xs mb-3" style={{ color: '#888480' }}>Submitted {variation.submitted_at}</p>
-                        <p className="text-sm leading-relaxed" style={{ color: '#4a3f30' }}>{variation.description}</p>
+
+                        <div className="rounded-xl overflow-hidden" style={{ border: '0.5px solid #E8E4DF' }}>
+                            {staffMember && (
+                                <div className="flex gap-3 px-4 py-3" style={{ borderBottom: '0.5px solid #F1F1EF', background: '#fdfcfa' }}>
+                                    <span className="text-xs font-semibold w-32 flex-shrink-0 pt-0.5" style={{ color: '#888480' }}>Staff Member</span>
+                                    <span className="text-sm" style={{ color: '#25282D' }}>{staffMember}</span>
+                                </div>
+                            )}
+                            {siteLocation && (
+                                <div className="flex gap-3 px-4 py-3" style={{ borderBottom: '0.5px solid #F1F1EF', background: '#fdfcfa' }}>
+                                    <span className="text-xs font-semibold w-32 flex-shrink-0 pt-0.5" style={{ color: '#888480' }}>Site Location</span>
+                                    <span className="text-sm" style={{ color: '#25282D' }}>{siteLocation}</span>
+                                </div>
+                            )}
+                            {description && (
+                                <div className="flex gap-3 px-4 py-3" style={{ background: '#fdfcfa' }}>
+                                    <span className="text-xs font-semibold w-32 flex-shrink-0 pt-0.5" style={{ color: '#888480' }}>Description</span>
+                                    <span className="text-sm leading-relaxed" style={{ color: '#4a3f30' }}>{description}</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {variation.estimated_cost && (

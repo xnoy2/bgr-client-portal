@@ -37,7 +37,7 @@ return [
 
     'ghl' => [
         'enabled'        => env('GHL_ENABLED', true),
-        'api_key'        => env('GHL_API_KEY',        'pit-dc4576e0-1d8d-4645-ac9f-a188b4d73244'),
+        'api_key'        => env('GHL_API_KEY',        'pit-de5bac64-3be0-4c03-98bd-8952004e9b2f'),
         'location_id'    => env('GHL_LOCATION_ID',    'xUZ6e10rdKZbaHFi8Sr6'),
         'webhook_secret' => env('GHL_WEBHOOK_SECRET', 'jSu(WitU#vhX{s:Rgxb@lPoKM1C|(3hB'),
         'pipeline_id'    => env('GHL_PIPELINE_ID',    'py2K3XQJdPu2ZUH3uHvy'),

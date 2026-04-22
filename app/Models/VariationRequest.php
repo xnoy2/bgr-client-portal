@@ -10,7 +10,7 @@ class VariationRequest extends Model
 
     protected $fillable = [
         'ghl_submission_id', 'source',
-        'project_id', 'submitted_by', 'title', 'description',
+        'project_id', 'submitted_by', 'title', 'staff_member', 'site_location', 'photos', 'description',
         'estimated_cost', 'status', 'admin_notes', 'reviewed_at', 'reviewed_by',
     ];
 
@@ -19,6 +19,7 @@ class VariationRequest extends Model
         return [
             'estimated_cost' => 'decimal:2',
             'reviewed_at'    => 'datetime',
+            'photos'         => 'array',
         ];
     }
 
