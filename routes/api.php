@@ -34,8 +34,10 @@ Route::post('/webhooks/ghl-variation', [GHLWebhookController::class, 'handleVari
 Route::post('/webhooks/ghl-proposal', [GHLWebhookController::class, 'handleProposalStatus'])
     ->middleware('throttle:60,1');
 
-// Documents & Contracts completed sync from GHL Workflow
+// Documents & Contracts completed sync from GHL Workflow (both URL variants)
 Route::post('/webhooks/ghl-document', [GHLWebhookController::class, 'handleDocumentCompleted'])
+    ->middleware('throttle:60,1');
+Route::post('/webhooks/ghl-document-signed', [GHLWebhookController::class, 'handleDocumentCompleted'])
     ->middleware('throttle:60,1');
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
