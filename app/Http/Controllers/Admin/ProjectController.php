@@ -7,6 +7,7 @@ use App\Models\Document;
 use App\Models\Project;
 use App\Models\User;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use App\Models\PortalNotification;
 use App\Services\ClientProvisioningService;
 use App\Services\GHLService;
 use Illuminate\Http\Request;
@@ -212,7 +213,19 @@ class ProjectController extends Controller
         $project->update(Arr::except($validated, ['worker_ids']));
 
         if (array_key_exists('worker_ids', $validated)) {
+            $previousIds = $project->workers()->pluck('users.id')->toArray();
             $project->workers()->sync($validated['worker_ids']);
+
+            $newlyAssigned = array_diff($validated['worker_ids'], $previousIds);
+            foreach ($newlyAssigned as $workerId) {
+                PortalNotification::notifyUser(
+                    userId:  $workerId,
+                    type:    'project_assigned',
+                    title:   'New Project Assigned',
+                    message: 'You have been assigned to project: ' . $project->name,
+                    url:     route('worker.projects.show', $project->ghl_opportunity_id),
+                );
+            }
         }
 
         $this->ghl->forgetOpportunityCache($ghlId);

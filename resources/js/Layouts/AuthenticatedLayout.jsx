@@ -1,6 +1,12 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 
+const typeIcon = {
+    variation_submitted: '📋',
+    agreement_sent:      '📄',
+    project_assigned:    '🏗️',
+};
+
 // ── Toast system ───────────────────────────────────────────────────────────────
 
 function Toast({ toasts, remove }) {
@@ -101,7 +107,6 @@ function getNav(role) {
     ];
     return [
         { label: 'My Projects', icon: 'briefcase', href: () => route('client.dashboard'),        active: () => route().current('client.dashboard') || route().current('client.projects.*') },
-        { label: 'Documents',   icon: 'file',      href: () => route('client.documents.index'),  active: () => route().current('client.documents.*') },
         { label: 'Variations',  icon: 'edit',      href: () => route('client.variations.index'),  active: () => route().current('client.variations.*') },
         { label: 'Agreements',  icon: 'file',      href: () => route('client.agreements.index'), active: () => route().current('client.agreements.*') },
     ];
@@ -211,7 +216,7 @@ function SidebarContent({ user, role, nav, onNavigate }) {
 
 // ── Main layout ────────────────────────────────────────────────────────────
 export default function AuthenticatedLayout({ title, breadcrumb, children }) {
-    const { auth, flash } = usePage().props;
+    const { auth, flash, notifications } = usePage().props;
     const user  = auth.user;
     const role  = user?.roles?.[0] ?? 'client';
     const nav   = getNav(role);
@@ -233,6 +238,19 @@ export default function AuthenticatedLayout({ title, breadcrumb, children }) {
         if (flash?.success) addToast(flash.success, 'success');
         if (flash?.error)   addToast(flash.error,   'error');
     }, [flash?.success, flash?.error]);
+
+    // Poll for new notifications every 30 s — reload page props if count changed
+    useEffect(() => {
+        const known = notifications?.unread_count ?? 0;
+        const id = setInterval(async () => {
+            try {
+                const res = await fetch('/api/notifications/unread-count');
+                const { count } = await res.json();
+                if (count !== known) router.reload({ only: ['notifications'] });
+            } catch { /* ignore network errors */ }
+        }, 30000);
+        return () => clearInterval(id);
+    }, [notifications?.unread_count]);
 
     // Close drawer on Inertia navigation
     useEffect(() => {
@@ -337,23 +355,83 @@ export default function AuthenticatedLayout({ title, breadcrumb, children }) {
                             aria-label="Notifications"
                         >
                             <Icon name="bell" size={16} />
-                            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
-                                style={{ background: '#B2945B', border: '1.5px solid #F1F1EF' }} />
+                            {notifications?.unread_count > 0 && (
+                                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
+                                    style={{ background: '#B2945B', border: '1.5px solid #F1F1EF' }} />
+                            )}
                         </button>
 
                         {notifOpen && (
-                            <div className="absolute right-0 top-11 w-72 bg-white rounded-xl shadow-xl z-50"
-                                style={{ border: '0.5px solid #D1CDC7' }}>
-                                <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '0.5px solid #D1CDC7' }}>
-                                    <span className="text-sm font-medium text-forest">Notifications</span>
-                                    <button className="text-xs" style={{ color: '#B2945B' }}>Mark all read</button>
+                            <div className="absolute right-0 top-11 w-80 bg-white rounded-xl shadow-xl z-50 flex flex-col"
+                                style={{ border: '0.5px solid #D1CDC7', maxHeight: 420 }}>
+                                {/* Header */}
+                                <div className="flex items-center justify-between px-4 py-3 flex-shrink-0"
+                                    style={{ borderBottom: '0.5px solid #D1CDC7' }}>
+                                    <span className="text-sm font-medium text-forest">
+                                        Notifications
+                                        {notifications?.unread_count > 0 && (
+                                            <span className="ml-2 text-xs font-semibold px-1.5 py-0.5 rounded-full"
+                                                style={{ background: 'rgba(178,148,91,0.15)', color: '#B2945B' }}>
+                                                {notifications.unread_count}
+                                            </span>
+                                        )}
+                                    </span>
+                                    {notifications?.unread_count > 0 && (
+                                        <button
+                                            className="text-xs"
+                                            style={{ color: '#B2945B' }}
+                                            onClick={() => router.post(route('notifications.read-all'), {}, { preserveScroll: true })}
+                                        >
+                                            Mark all read
+                                        </button>
+                                    )}
                                 </div>
-                                <div className="flex gap-2.5 px-4 py-3">
-                                    <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: '#B2945B' }} />
-                                    <div>
-                                        <div className="text-xs text-forest leading-snug">Welcome to the BGR Client Portal</div>
-                                        <div className="text-xs mt-1" style={{ color: '#8a7e6e' }}>Just now</div>
-                                    </div>
+
+                                {/* Items */}
+                                <div className="overflow-y-auto flex-1">
+                                    {(!notifications?.items || notifications.items.length === 0) ? (
+                                        <div className="px-4 py-6 text-center text-xs" style={{ color: '#8a7e6e' }}>
+                                            No notifications yet
+                                        </div>
+                                    ) : notifications.items.map(n => (
+                                        <div key={n.id}
+                                            className="flex gap-3 px-4 py-3 cursor-pointer transition-colors"
+                                            style={{
+                                                borderBottom: '0.5px solid #F0EDE9',
+                                                background: n.read ? 'transparent' : 'rgba(178,148,91,0.04)',
+                                            }}
+                                            onClick={() => {
+                                                if (!n.read) {
+                                                    router.post(route('notifications.read', n.id), {}, { preserveScroll: true });
+                                                }
+                                                if (n.url) {
+                                                    setNotifOpen(false);
+                                                    router.visit(n.url);
+                                                }
+                                            }}
+                                        >
+                                            <span className="flex-shrink-0 text-base mt-0.5">
+                                                {typeIcon[n.type] ?? '🔔'}
+                                            </span>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <span className="text-xs font-medium text-forest leading-snug">
+                                                        {n.title}
+                                                    </span>
+                                                    {!n.read && (
+                                                        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1"
+                                                            style={{ background: '#B2945B' }} />
+                                                    )}
+                                                </div>
+                                                <p className="text-xs mt-0.5 leading-snug" style={{ color: '#6b6259' }}>
+                                                    {n.message}
+                                                </p>
+                                                <span className="text-xs mt-1 block" style={{ color: '#aaa09a' }}>
+                                                    {n.time}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         )}

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Agreement;
+use App\Models\PortalNotification;
 use App\Models\Project;
 use App\Models\VariationRequest;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -67,6 +68,8 @@ class AgreementController extends Controller
 
         $sendNow = (bool) ($data['send_now'] ?? false);
 
+        $project = Project::with('client')->findOrFail($data['project_id']);
+
         Agreement::create([
             'project_id'           => $data['project_id'],
             'variation_request_id' => $data['variation_request_id'] ?? null,
@@ -81,6 +84,16 @@ class AgreementController extends Controller
             'status'               => $sendNow ? 'sent' : 'draft',
             'sent_at'              => $sendNow ? now() : null,
         ]);
+
+        if ($sendNow && $project->client_id) {
+            PortalNotification::notifyUser(
+                userId:  $project->client_id,
+                type:    'agreement_sent',
+                title:   'Agreement Ready to Sign',
+                message: 'A new agreement "' . $data['title'] . '" has been sent for your signature.',
+                url:     route('client.agreements.index'),
+            );
+        }
 
         $msg = $sendNow ? 'Agreement created and sent to client.' : 'Agreement saved as draft.';
 
@@ -113,6 +126,17 @@ class AgreementController extends Controller
         abort_if($agreement->status === 'signed', 422, 'Agreement already signed.');
 
         $agreement->update(['status' => 'sent', 'sent_at' => now()]);
+
+        $clientId = $agreement->project?->client_id;
+        if ($clientId) {
+            PortalNotification::notifyUser(
+                userId:  $clientId,
+                type:    'agreement_sent',
+                title:   'Agreement Ready to Sign',
+                message: 'A new agreement "' . $agreement->title . '" has been sent for your signature.',
+                url:     route('client.agreements.index'),
+            );
+        }
 
         return back()->with('success', 'Agreement sent to client.');
     }

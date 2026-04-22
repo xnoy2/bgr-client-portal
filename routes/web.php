@@ -47,6 +47,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Notifications
+    Route::post('/notifications/read-all', function () {
+        \App\Models\PortalNotification::where('user_id', auth()->id())
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+        return back();
+    })->name('notifications.read-all');
+
+    Route::post('/notifications/{notification}/read', function (\App\Models\PortalNotification $notification) {
+        abort_if($notification->user_id !== auth()->id(), 403);
+        $notification->update(['read_at' => now()]);
+        return back();
+    })->name('notifications.read');
 });
 
 require __DIR__.'/auth.php';
