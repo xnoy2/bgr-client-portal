@@ -216,16 +216,24 @@ class GHLWebhookController extends Controller
         Log::info('GHLWebhook: appointment stub');
     }
 
+    // Called by GHL Workflow → Webhook action after "Documents & Contracts" trigger (Status = Completed)
+    public function handleDocumentCompleted(Request $request): Response
+    {
+        $payload = $request->json()->all();
+
+        Log::info('GHL DocumentCompleted webhook received — raw payload', ['payload' => $payload]);
+
+        return response('OK', 200);
+    }
+
     private function handleDocumentSigned(array $payload): void
     {
-        // TODO Phase 8: update document status, create document_signatures row, notify admin
-        Log::info('GHLWebhook: DocumentSigned stub');
+        Log::info('GHLWebhook: DocumentSigned payload received', ['payload' => $payload]);
     }
 
     private function handleDocumentDeclined(array $payload): void
     {
-        // TODO Phase 8: update document status, notify admin
-        Log::info('GHLWebhook: DocumentDeclined stub');
+        Log::info('GHLWebhook: DocumentDeclined payload received', ['payload' => $payload]);
     }
 
     private function handleFormSubmitted(array $payload): void
