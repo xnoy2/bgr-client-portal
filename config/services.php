@@ -40,8 +40,9 @@ return [
         'api_key'        => env('GHL_API_KEY',        'pit-dc4576e0-1d8d-4645-ac9f-a188b4d73244'),
         'location_id'    => env('GHL_LOCATION_ID',    'xUZ6e10rdKZbaHFi8Sr6'),
         'webhook_secret' => env('GHL_WEBHOOK_SECRET', 'jSu(WitU#vhX{s:Rgxb@lPoKM1C|(3hB'),
-        'pipeline_id'    => env('GHL_PIPELINE_ID',    'py2K3XQJdPu2ZUH3uHvy'),
-        'base_url'       => 'https://services.leadconnectorhq.com',
+        'pipeline_id'           => env('GHL_PIPELINE_ID',            'py2K3XQJdPu2ZUH3uHvy'),
+        'proposal_template_id'  => env('GHL_PROPOSAL_TEMPLATE_ID',  '6985b3ee69026a438f3efa83'),
+        'base_url'              => 'https://services.leadconnectorhq.com',
         'ssl_verify'     => env('GHL_SSL_VERIFY', true),
         'stages' => [
             'design_approved' => '68069241-332c-40c2-ac00-506056390255',

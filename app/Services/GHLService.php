@@ -457,4 +457,54 @@ class GHLService
             }
         }
     }
+
+    // ── Documents & Contracts ─────────────────────────────────────────────────
+
+    /**
+     * Send a Documents & Contracts template to a recipient.
+     * Returns ['documentId' => '...', 'documentLink' => '...'] on success, null on failure.
+     *
+     * Requires scope: documents_contracts/template/sendLink.write
+     * Endpoint: POST /documents-contracts/template/send-link
+     */
+    public function sendDocumentTemplate(
+        string $templateId,
+        string $recipientName,
+        string $recipientEmail,
+        string $title
+    ): ?array {
+        try {
+            $response = $this->http()->post('/documents-contracts/template/send-link', [
+                'locationId' => $this->locationId,
+                'templateId' => $templateId,
+                'title'      => $title,
+                'recipients' => [
+                    [
+                        'name'     => $recipientName,
+                        'email'    => $recipientEmail,
+                        'roleName' => 'Client',
+                    ],
+                ],
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                Log::info('GHL sendDocumentTemplate success', ['templateId' => $templateId, 'response' => $data]);
+                return [
+                    'documentId'   => $data['documentId']   ?? $data['id']   ?? null,
+                    'documentLink' => $data['documentLink'] ?? $data['link'] ?? $data['signingUrl'] ?? null,
+                ];
+            }
+
+            Log::warning('GHL sendDocumentTemplate failed', [
+                'templateId' => $templateId,
+                'status'     => $response->status(),
+                'body'       => $response->body(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('GHL sendDocumentTemplate exception', ['templateId' => $templateId, 'error' => $e->getMessage()]);
+        }
+
+        return null;
+    }
 }
