@@ -515,7 +515,6 @@ function VariationModal({ show, projects, user, editing, onClose, onSuccess }) {
                         </button>
                     </form>
                 </div>
-            </div>
         </ModalShell>
     );
 }
