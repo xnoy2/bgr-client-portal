@@ -119,6 +119,7 @@ Route::middleware(['auth', 'password.changed', 'role:client'])
         Route::get('/projects/{ghlId}',                   [ClientProjectController::class, 'show'])->name('projects.show');
         Route::get('/variations',                         [ClientVariationController::class, 'index'])->name('variations.index');
         Route::post('/variations',                        [ClientVariationController::class, 'store'])->name('variations.store');
+        Route::post('/variations/{variation}/update',     [ClientVariationController::class, 'update'])->name('variations.update');
         Route::get('/proposals',                          [ClientProposalController::class, 'index'])->name('proposals.index');
         Route::get('/documents',                         [ClientDocumentController::class, 'index'])->name('documents.index');
         Route::get('/documents/{document}/download',     [ClientDocumentController::class, 'download'])->name('documents.download');
