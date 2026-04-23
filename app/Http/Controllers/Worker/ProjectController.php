@@ -16,7 +16,7 @@ class ProjectController extends Controller
 {
     public function __construct(
         private GHLService $ghl,
-        private MediaStorageService $azure,
+        private MediaStorageService $storage,
     ) {}
 
     /**
@@ -37,12 +37,12 @@ class ProjectController extends Controller
             ->whereIn('status', ['active', 'paused'])
             ->get(['client_id', 'plan']);
 
-        // Resolve plan slugs â†’ display names from maintenance_plans table
+        // Resolve plan slugs Ã¢â€ â€™ display names from maintenance_plans table
         $slugs     = $subs->pluck('plan')->unique();
         $planNames = \App\Models\MaintenancePlan::whereIn('slug', $slugs)
             ->pluck('name', 'slug');
 
-        // Build client_id â†’ plan name map
+        // Build client_id Ã¢â€ â€™ plan name map
         $maintenanceByClient = $subs->mapWithKeys(fn ($s) => [
             $s->client_id => $planNames[$s->plan] ?? ucfirst($s->plan),
         ]);
@@ -86,7 +86,7 @@ class ProjectController extends Controller
 
     /**
      * GET /worker/projects/{ghlId}
-     * Project detail â€” worker can manage stages and post updates.
+     * Project detail Ã¢â‚¬â€ worker can manage stages and post updates.
      */
     public function show(string $ghlId)
     {
@@ -98,7 +98,7 @@ class ProjectController extends Controller
         $ghl = $this->ghl->getCachedOpportunity($ghlId);
 
         // Sync stages from GHL unless the worker has already completed all stages
-        // locally â€” prevents GHL from overriding a completed project back to in_progress.
+        // locally Ã¢â‚¬â€ prevents GHL from overriding a completed project back to in_progress.
         $allCompleted = $project->stages->isNotEmpty()
             && $project->stages->every(fn ($s) => $s->status === 'completed');
 
@@ -158,7 +158,7 @@ class ProjectController extends Controller
 
     /**
      * PUT /worker/projects/{ghlId}/stage
-     * Advance or update a stage â€” writes back to GHL.
+     * Advance or update a stage Ã¢â‚¬â€ writes back to GHL.
      */
     public function updateStage(Request $request, string $ghlId)
     {
@@ -203,7 +203,7 @@ class ProjectController extends Controller
         // Upload photos to Azure Blob Storage (private)
         $photoUrls = [];
         foreach ($request->file('photos', []) as $file) {
-            $path = $this->azure->upload($file, "project-updates/{$project->id}");
+            $path = $this->storage->upload($file, "project-updates/{$project->id}");
 
             $media = MediaFile::create([
                 'project_id'        => $project->id,
@@ -277,7 +277,7 @@ class ProjectController extends Controller
 
         // Upload any newly added photos to Azure Blob Storage (private)
         foreach ($request->file('new_photos', []) as $file) {
-            $path = $this->azure->upload($file, "project-updates/{$project->id}");
+            $path = $this->storage->upload($file, "project-updates/{$project->id}");
 
             $media = MediaFile::create([
                 'project_id'        => $project->id,

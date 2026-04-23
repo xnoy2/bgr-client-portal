@@ -14,7 +14,7 @@ use Inertia\Inertia;
 
 class DocumentController extends Controller
 {
-    public function __construct(private MediaStorageService $azure) {}
+    public function __construct(private MediaStorageService $storage) {}
 
     /**
      * GET /portal/documents
