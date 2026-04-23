@@ -17,6 +17,8 @@ class VariationController extends Controller
             ->map(fn ($v) => [
                 'id'             => $v->id,
                 'title'          => $v->title,
+                'staff_member'   => $v->staff_member,
+                'site_location'  => $v->site_location,
                 'description'    => $v->description,
                 'estimated_cost' => $v->estimated_cost,
                 'status'         => $v->status,

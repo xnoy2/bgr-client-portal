@@ -235,10 +235,11 @@ class GHLService
         }
     }
 
-    // ── Notes (progress updates → GHL) ───────────────────────────────────────
-
     // ── Notes ────────────────────────────────────────────────────────────────
 
+    /**
+     * Build a formatted note body with optional photo URLs.
+     */
     private function buildNoteBody(string $title, string $body, array $photoUrls = []): string
     {
         $lines = ["📋 {$title}", '', $body];
@@ -257,6 +258,7 @@ class GHLService
     /**
      * Post a note on a GHL contact (appears in the contact's Notes tab).
      * GHL API v2021-07-28 attaches notes to contacts, not opportunities directly.
+     * Include the project/opportunity name in $title so the note is identifiable.
      */
     public function postContactNote(
         string $contactId,
@@ -288,10 +290,9 @@ class GHLService
     }
 
     /**
-     * Post a note on the GHL opportunity.
-     * The GHL "Photos" custom field is a file-upload widget — it cannot be
-     * populated via the PUT API.  Instead we attach photo URLs as clickable
-     * links inside a note, which appears in the Notes tab of the opportunity.
+     * Post a note on a GHL opportunity.
+     * NOTE: /opportunities/{id}/notes returns 404 on API v2021-07-28.
+     * Use postContactNote() instead for reliable delivery.
      */
     public function postOpportunityNote(
         string $opportunityId,
@@ -299,22 +300,11 @@ class GHLService
         string $body,
         array  $photoUrls = []
     ): bool {
-        $lines   = ["📋 {$title}", '', $body];
-
-        if (! empty($photoUrls)) {
-            $lines[] = '';
-            $lines[] = '📷 Photos:';
-            foreach ($photoUrls as $url) {
-                $lines[] = $url;
-            }
-        }
-
-        $noteBody = implode("\n", $lines);
+        $noteBody = $this->buildNoteBody($title, $body, $photoUrls);
 
         try {
             $response = $this->http()->post("/opportunities/{$opportunityId}/notes", [
-                'body'   => $noteBody,
-                'userId' => null,
+                'body' => $noteBody,
             ]);
 
             if ($response->successful()) {

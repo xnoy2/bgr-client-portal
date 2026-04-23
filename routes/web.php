@@ -18,6 +18,7 @@ use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Project;
 use App\Models\User;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -63,9 +64,25 @@ Route::middleware('auth')->group(function () {
         $notification->update(['read_at' => now()]);
         return back();
     })->name('notifications.read');
+
+    // Authenticated media proxy — streams files from Azure Blob (private container)
+    Route::get('/media/photo/{mediaFile}',    [\App\Http\Controllers\MediaController::class, 'photo'])   ->name('media.photo');
+    Route::get('/media/document/{document}',  [\App\Http\Controllers\MediaController::class, 'document'])->name('media.document');
 });
 
 require __DIR__.'/auth.php';
+// Temporary: one-click Cloudinary cleanup (admin only, remove after use)
+Route::middleware(['auth', 'role:admin'])
+    ->get('/admin/tools/clean-cloudinary', function () {
+        Artisan::call('media:clean-cloudinary');
+        $output = Artisan::output();
+        return response('<pre style="font-family:monospace;padding:2rem;font-size:14px;">'
+            . '<strong>Cloudinary Cleanup Result:</strong><br><br>'
+            . e($output)
+            . '<br><br><a href="/admin/dashboard">Back to Dashboard</a></pre>');
+    })->name('admin.tools.clean-cloudinary');
+
+
 
 // â”€â”€â”€ Admin routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 Route::middleware(['auth', 'password.changed', 'role:admin'])
@@ -161,6 +178,7 @@ Route::middleware(['auth', 'password.changed', 'role:client'])
         Route::get('/projects/{ghlId}',                   [ClientProjectController::class, 'show'])->name('projects.show');
         Route::get('/variations',                         [ClientVariationController::class, 'index'])->name('variations.index');
         Route::post('/variations',                        [ClientVariationController::class, 'store'])->name('variations.store');
+        Route::post('/variations/{variation}/update',     [ClientVariationController::class, 'update'])->name('variations.update');
         Route::get('/proposals',                          [ClientProposalController::class, 'index'])->name('proposals.index');
         Route::get('/agreements',                         [ClientAgreementController::class, 'index'])->name('agreements.index');
         Route::get('/agreements/{agreement}',             [ClientAgreementController::class, 'show'])->name('agreements.show');

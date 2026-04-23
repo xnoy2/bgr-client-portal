@@ -7,14 +7,17 @@ use App\Models\MaintenanceSubscription;
 use App\Models\MediaFile;
 use App\Models\ProgressUpdate;
 use App\Models\Project;
+use App\Services\MediaStorageService;
 use App\Services\GHLService;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ProjectController extends Controller
 {
-    public function __construct(private GHLService $ghl) {}
+    public function __construct(
+        private GHLService $ghl,
+        private MediaStorageService $storage,
+    ) {}
 
     /**
      * GET /worker/dashboard
@@ -34,12 +37,12 @@ class ProjectController extends Controller
             ->whereIn('status', ['active', 'paused'])
             ->get(['client_id', 'plan']);
 
-        // Resolve plan slugs → display names from maintenance_plans table
+        // Resolve plan slugs Ã¢â€ â€™ display names from maintenance_plans table
         $slugs     = $subs->pluck('plan')->unique();
         $planNames = \App\Models\MaintenancePlan::whereIn('slug', $slugs)
             ->pluck('name', 'slug');
 
-        // Build client_id → plan name map
+        // Build client_id Ã¢â€ â€™ plan name map
         $maintenanceByClient = $subs->mapWithKeys(fn ($s) => [
             $s->client_id => $planNames[$s->plan] ?? ucfirst($s->plan),
         ]);
@@ -83,7 +86,7 @@ class ProjectController extends Controller
 
     /**
      * GET /worker/projects/{ghlId}
-     * Project detail — worker can manage stages and post updates.
+     * Project detail Ã¢â‚¬â€ worker can manage stages and post updates.
      */
     public function show(string $ghlId)
     {
@@ -95,7 +98,7 @@ class ProjectController extends Controller
         $ghl = $this->ghl->getCachedOpportunity($ghlId);
 
         // Sync stages from GHL unless the worker has already completed all stages
-        // locally — prevents GHL from overriding a completed project back to in_progress.
+        // locally Ã¢â‚¬â€ prevents GHL from overriding a completed project back to in_progress.
         $allCompleted = $project->stages->isNotEmpty()
             && $project->stages->every(fn ($s) => $s->status === 'completed');
 
@@ -155,7 +158,7 @@ class ProjectController extends Controller
 
     /**
      * PUT /worker/projects/{ghlId}/stage
-     * Advance or update a stage — writes back to GHL.
+     * Advance or update a stage Ã¢â‚¬â€ writes back to GHL.
      */
     public function updateStage(Request $request, string $ghlId)
     {
@@ -197,32 +200,24 @@ class ProjectController extends Controller
             $project->stages->firstOrFail('id', $validated['stage_id']);
         }
 
-        // Upload photos to Cloudinary (skipped if credentials not configured)
+        // Upload photos to Azure Blob Storage (private)
         $photoUrls = [];
-        if ($this->cloudinaryConfigured()) {
-            foreach ($request->file('photos', []) as $file) {
-                $result = Cloudinary::uploadApi()->upload($file->getRealPath(), [
-                    'folder'        => "bgr/project-updates/{$project->id}",
-                    'resource_type' => 'image',
-                    'quality'       => 'auto',
-                    'fetch_format'  => 'auto',
-                ]);
+        foreach ($request->file('photos', []) as $file) {
+            $path = $this->storage->upload($file, "project-updates/{$project->id}");
 
-                $url      = $result['secure_url'];
-                $publicId = $result['public_id'];
-                $photoUrls[] = $url;
+            $media = MediaFile::create([
+                'project_id'        => $project->id,
+                'user_id'           => auth()->id(),
+                'original_filename' => $file->getClientOriginalName(),
+                'storage_path'      => $path,
+                'storage_disk'      => 'r2',
+                'resource_type'     => 'photo',
+                'mime_type'         => $file->getMimeType(),
+                'file_size'         => $file->getSize(),
+            ]);
 
-                MediaFile::create([
-                    'project_id'        => $project->id,
-                    'user_id'           => auth()->id(),
-                    'original_filename' => $file->getClientOriginalName(),
-                    'url'               => $url,
-                    'ghl_file_id'       => $publicId,
-                    'resource_type'     => 'photo',
-                    'mime_type'         => $file->getMimeType(),
-                    'file_size'         => $file->getSize(),
-                ]);
-            }
+            // Store the authenticated proxy URL (not a direct Azure URL)
+            $photoUrls[] = route('media.photo', $media->id);
         }
 
         // Persist update record
@@ -280,31 +275,22 @@ class ProjectController extends Controller
         // Start with the photos the worker chose to keep
         $photoUrls = $validated['kept_photos'] ?? [];
 
-        // Upload any newly added photos to Cloudinary (skipped if credentials not configured)
-        if ($this->cloudinaryConfigured()) {
-            foreach ($request->file('new_photos', []) as $file) {
-                $result = Cloudinary::uploadApi()->upload($file->getRealPath(), [
-                    'folder'        => "bgr/project-updates/{$project->id}",
-                    'resource_type' => 'image',
-                    'quality'       => 'auto',
-                    'fetch_format'  => 'auto',
-                ]);
+        // Upload any newly added photos to Azure Blob Storage (private)
+        foreach ($request->file('new_photos', []) as $file) {
+            $path = $this->storage->upload($file, "project-updates/{$project->id}");
 
-                $url      = $result['secure_url'];
-                $publicId = $result['public_id'];
-                $photoUrls[] = $url;
+            $media = MediaFile::create([
+                'project_id'        => $project->id,
+                'user_id'           => auth()->id(),
+                'original_filename' => $file->getClientOriginalName(),
+                'storage_path'      => $path,
+                'storage_disk'      => 'r2',
+                'resource_type'     => 'photo',
+                'mime_type'         => $file->getMimeType(),
+                'file_size'         => $file->getSize(),
+            ]);
 
-                MediaFile::create([
-                    'project_id'        => $project->id,
-                    'user_id'           => auth()->id(),
-                    'original_filename' => $file->getClientOriginalName(),
-                    'url'               => $url,
-                    'ghl_file_id'       => $publicId,
-                    'resource_type'     => 'photo',
-                    'mime_type'         => $file->getMimeType(),
-                    'file_size'         => $file->getSize(),
-                ]);
-            }
+            $photoUrls[] = route('media.photo', $media->id);
         }
 
         $update->update([
@@ -324,12 +310,5 @@ class ProjectController extends Controller
         return round(($project->stages->where('status', 'completed')->count() / $total) * 100);
     }
 
-    private function cloudinaryConfigured(): bool
-    {
-        $url = config('cloudinary.cloud_url') ?? env('CLOUDINARY_URL');
-        if (empty($url)) return false;
 
-        // The package requires a valid cloudinary://key:secret@cloud_name URL
-        return str_starts_with($url, 'cloudinary://') && !str_contains($url, '@//');
-    }
 }
