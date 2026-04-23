@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ModalShell from '@/Components/ModalShell';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { useState, useEffect, useRef } from 'react';
 
@@ -44,29 +45,16 @@ function StatusBadge({ status }) {
 
 // ── Detail modal ──────────────────────────────────────────────────────────────
 
-function DetailModal({ variation, onClose }) {
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => { document.body.style.overflow = ''; };
-    }, []);
-    useEffect(() => {
-        const h = (e) => { if (e.key === 'Escape') onClose(); };
-        window.addEventListener('keydown', h);
-        return () => window.removeEventListener('keydown', h);
-    }, [onClose]);
+function DetailModal({ show, variation, onClose }) {
 
     const s = STATUS[variation.status] ?? STATUS.pending;
     const { description, staffMember, siteLocation } = parseVariation(variation);
     const photos = variation.photos ?? [];
 
     return (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
-            style={{ background: 'rgba(14,32,25,0.55)', backdropFilter: 'blur(3px)' }}
-            onClick={onClose}>
-
+        <ModalShell show={show} onClose={onClose} position="bottom">
             <div className="w-full sm:max-w-lg bg-white sm:rounded-2xl rounded-t-2xl overflow-hidden flex flex-col"
-                style={{ maxHeight: '88vh', border: '0.5px solid #D1CDC7' }}
-                onClick={e => e.stopPropagation()}>
+                style={{ maxHeight: '88vh', border: '0.5px solid #D1CDC7' }}>
 
                 <div className="flex justify-center pt-3 pb-1 sm:hidden">
                     <div className="w-10 h-1 rounded-full" style={{ background: '#d0c8bc' }} />
@@ -174,7 +162,7 @@ function DetailModal({ variation, onClose }) {
                     </button>
                 </div>
             </div>
-        </div>
+        </ModalShell>
     );
 }
 
@@ -214,7 +202,7 @@ function Toast({ message = 'Request submitted successfully', onDismiss }) {
 
 // ── Request Form Modal (create + edit) ────────────────────────────────────────
 
-function VariationModal({ projects, user, editing, onClose, onSuccess }) {
+function VariationModal({ show, projects, user, editing, onClose, onSuccess }) {
     const isEdit = !!editing;
     const today  = new Date().toLocaleDateString('en-AU', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const fileRef = useRef(null);
@@ -289,13 +277,9 @@ function VariationModal({ projects, user, editing, onClose, onSuccess }) {
     const allPhotosCount = existingPhotos.length + (data.photos?.length ?? 0);
 
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto"
-            style={{ background: 'rgba(14,32,25,0.55)', backdropFilter: 'blur(3px)' }}
-            onClick={onClose}>
-            <div className="flex min-h-full items-center justify-center p-4">
-                <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl"
-                    style={{ border: '0.5px solid #D1CDC7' }}
-                    onClick={e => e.stopPropagation()}>
+        <ModalShell show={show} onClose={onClose}>
+            <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-y-auto"
+                style={{ border: '0.5px solid #D1CDC7', maxHeight: '92vh' }}>
 
                     {/* Header */}
                     <div className="relative flex items-center justify-center px-6 py-4"
@@ -531,8 +515,7 @@ function VariationModal({ projects, user, editing, onClose, onSuccess }) {
                         </button>
                     </form>
                 </div>
-            </div>
-        </div>
+        </ModalShell>
     );
 }
 
@@ -617,10 +600,11 @@ export default function VariationsIndex({ variations, projects }) {
         <AuthenticatedLayout title="Variations" breadcrumb="Change requests for your project">
             <Head title="Variations" />
 
-            {viewing && <DetailModal variation={viewing} onClose={() => setViewing(null)} />}
+            {viewing && <DetailModal show variation={viewing} onClose={() => setViewing(null)} />}
 
             {showForm && (
                 <VariationModal
+                    show
                     projects={projects}
                     user={auth.user}
                     editing={editing}

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Worker;
 
 use App\Http\Controllers\Controller;
+use App\Models\MaintenanceSubscription;
 use App\Models\MediaFile;
 use App\Models\ProgressUpdate;
 use App\Models\Project;
@@ -26,7 +27,24 @@ class ProjectController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        $data = $projects->map(function ($project) {
+        // Pre-fetch active/paused maintenance subscriptions keyed by client_id
+        $clientIds = $projects->pluck('client_id')->filter()->unique()->values();
+
+        $subs = MaintenanceSubscription::whereIn('client_id', $clientIds)
+            ->whereIn('status', ['active', 'paused'])
+            ->get(['client_id', 'plan']);
+
+        // Resolve plan slugs → display names from maintenance_plans table
+        $slugs     = $subs->pluck('plan')->unique();
+        $planNames = \App\Models\MaintenancePlan::whereIn('slug', $slugs)
+            ->pluck('name', 'slug');
+
+        // Build client_id → plan name map
+        $maintenanceByClient = $subs->mapWithKeys(fn ($s) => [
+            $s->client_id => $planNames[$s->plan] ?? ucfirst($s->plan),
+        ]);
+
+        $data = $projects->map(function ($project) use ($maintenanceByClient) {
             $ghl = $project->ghl_opportunity_id
                 ? $this->ghl->getCachedOpportunity($project->ghl_opportunity_id)
                 : null;
@@ -54,6 +72,7 @@ class ProjectController extends Controller
                 'total_stages'       => $totalStages,
                 'ghl_stage'          => $ghl['stage_name'] ?? null,
                 'client_name'        => $project->client?->name,
+                'maintenance_plan'   => $maintenanceByClient[$project->client_id] ?? null,
             ];
         });
 
@@ -178,30 +197,32 @@ class ProjectController extends Controller
             $project->stages->firstOrFail('id', $validated['stage_id']);
         }
 
-        // Upload photos to Cloudinary
+        // Upload photos to Cloudinary (skipped if credentials not configured)
         $photoUrls = [];
-        foreach ($request->file('photos', []) as $file) {
-            $result = Cloudinary::uploadApi()->upload($file->getRealPath(), [
-                'folder'        => "bgr/project-updates/{$project->id}",
-                'resource_type' => 'image',
-                'quality'       => 'auto',
-                'fetch_format'  => 'auto',
-            ]);
+        if ($this->cloudinaryConfigured()) {
+            foreach ($request->file('photos', []) as $file) {
+                $result = Cloudinary::uploadApi()->upload($file->getRealPath(), [
+                    'folder'        => "bgr/project-updates/{$project->id}",
+                    'resource_type' => 'image',
+                    'quality'       => 'auto',
+                    'fetch_format'  => 'auto',
+                ]);
 
-            $url      = $result['secure_url'];
-            $publicId = $result['public_id'];
-            $photoUrls[] = $url;
+                $url      = $result['secure_url'];
+                $publicId = $result['public_id'];
+                $photoUrls[] = $url;
 
-            MediaFile::create([
-                'project_id'        => $project->id,
-                'user_id'           => auth()->id(),
-                'original_filename' => $file->getClientOriginalName(),
-                'url'               => $url,
-                'ghl_file_id'       => $publicId,
-                'resource_type'     => 'photo',
-                'mime_type'         => $file->getMimeType(),
-                'file_size'         => $file->getSize(),
-            ]);
+                MediaFile::create([
+                    'project_id'        => $project->id,
+                    'user_id'           => auth()->id(),
+                    'original_filename' => $file->getClientOriginalName(),
+                    'url'               => $url,
+                    'ghl_file_id'       => $publicId,
+                    'resource_type'     => 'photo',
+                    'mime_type'         => $file->getMimeType(),
+                    'file_size'         => $file->getSize(),
+                ]);
+            }
         }
 
         // Persist update record
@@ -259,29 +280,31 @@ class ProjectController extends Controller
         // Start with the photos the worker chose to keep
         $photoUrls = $validated['kept_photos'] ?? [];
 
-        // Upload any newly added photos to Cloudinary
-        foreach ($request->file('new_photos', []) as $file) {
-            $result = Cloudinary::uploadApi()->upload($file->getRealPath(), [
-                'folder'        => "bgr/project-updates/{$project->id}",
-                'resource_type' => 'image',
-                'quality'       => 'auto',
-                'fetch_format'  => 'auto',
-            ]);
+        // Upload any newly added photos to Cloudinary (skipped if credentials not configured)
+        if ($this->cloudinaryConfigured()) {
+            foreach ($request->file('new_photos', []) as $file) {
+                $result = Cloudinary::uploadApi()->upload($file->getRealPath(), [
+                    'folder'        => "bgr/project-updates/{$project->id}",
+                    'resource_type' => 'image',
+                    'quality'       => 'auto',
+                    'fetch_format'  => 'auto',
+                ]);
 
-            $url      = $result['secure_url'];
-            $publicId = $result['public_id'];
-            $photoUrls[] = $url;
+                $url      = $result['secure_url'];
+                $publicId = $result['public_id'];
+                $photoUrls[] = $url;
 
-            MediaFile::create([
-                'project_id'        => $project->id,
-                'user_id'           => auth()->id(),
-                'original_filename' => $file->getClientOriginalName(),
-                'url'               => $url,
-                'ghl_file_id'       => $publicId,
-                'resource_type'     => 'photo',
-                'mime_type'         => $file->getMimeType(),
-                'file_size'         => $file->getSize(),
-            ]);
+                MediaFile::create([
+                    'project_id'        => $project->id,
+                    'user_id'           => auth()->id(),
+                    'original_filename' => $file->getClientOriginalName(),
+                    'url'               => $url,
+                    'ghl_file_id'       => $publicId,
+                    'resource_type'     => 'photo',
+                    'mime_type'         => $file->getMimeType(),
+                    'file_size'         => $file->getSize(),
+                ]);
+            }
         }
 
         $update->update([
@@ -299,5 +322,14 @@ class ProjectController extends Controller
         $total = $project->stages->count();
         if ($total === 0) return 0;
         return round(($project->stages->where('status', 'completed')->count() / $total) * 100);
+    }
+
+    private function cloudinaryConfigured(): bool
+    {
+        $url = config('cloudinary.cloud_url') ?? env('CLOUDINARY_URL');
+        if (empty($url)) return false;
+
+        // The package requires a valid cloudinary://key:secret@cloud_name URL
+        return str_starts_with($url, 'cloudinary://') && !str_contains($url, '@//');
     }
 }

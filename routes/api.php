@@ -34,11 +34,17 @@ Route::post('/webhooks/ghl-variation', [GHLWebhookController::class, 'handleVari
 Route::post('/webhooks/ghl-proposal', [GHLWebhookController::class, 'handleProposalStatus'])
     ->middleware('throttle:60,1');
 
-// Documents & Contracts completed sync from GHL Workflow (both URL variants)
-Route::post('/webhooks/ghl-document', [GHLWebhookController::class, 'handleDocumentCompleted'])
+// Variation agreement signing status from GHL Workflow
+Route::post('/webhooks/ghl-agreement', [GHLWebhookController::class, 'handleAgreementStatus'])
     ->middleware('throttle:60,1');
-Route::post('/webhooks/ghl-document-signed', [GHLWebhookController::class, 'handleDocumentCompleted'])
-    ->middleware('throttle:60,1');
+
+// Notification unread count poll (lightweight, auth via session cookie)
+Route::middleware('web')->get('/notifications/unread-count', function () {
+    if (! auth()->check()) return response()->json(['count' => 0]);
+    $count = \App\Models\PortalNotification::where('user_id', auth()->id())
+        ->whereNull('read_at')->count();
+    return response()->json(['count' => $count]);
+})->middleware('throttle:60,1');
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 Route::prefix('auth')->group(function () {

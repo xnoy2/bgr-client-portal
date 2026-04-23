@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\Proposal;
+use App\Services\GHLService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -32,24 +33,46 @@ class ProposalController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, GHLService $ghl)
     {
         $data = $request->validate([
-            'project_id'      => 'required|exists:projects,id',
-            'title'           => 'required|string|max:255',
-            'ghl_link'        => 'required|url|max:500',
-            'ghl_proposal_id' => 'nullable|string|max:255',
-            'amount'          => 'nullable|numeric|min:0',
-            'notes'           => 'nullable|string|max:1000',
+            'project_id' => 'required|exists:projects,id',
+            'title'      => 'required|string|max:255',
+            'amount'     => 'nullable|numeric|min:0',
+            'notes'      => 'nullable|string|max:1000',
         ]);
+
+        $project = Project::with('client')->findOrFail($data['project_id']);
+        $client  = $project->client;
+
+        abort_unless($client, 422, 'This project has no linked client.');
+
+        $templateId = config('services.ghl.proposal_template_id', '6985b3ee69026a438f3efa83');
+
+        // Call GHL Documents & Contracts API to send the template
+        $result = $ghl->sendDocumentTemplate(
+            $templateId,
+            $client->name,
+            $client->email,
+            $data['title']
+        );
+
+        if (! $result) {
+            return back()->withErrors(['ghl' => 'Failed to send proposal via GHL. Please try again or check the API key scopes.']);
+        }
 
         Proposal::create([
-            ...$data,
-            'created_by' => auth()->id(),
-            'status'     => 'sent',
+            'project_id'      => $data['project_id'],
+            'created_by'      => auth()->id(),
+            'title'           => $data['title'],
+            'ghl_proposal_id' => $result['documentId'],
+            'ghl_link'        => $result['documentLink'] ?? '',
+            'amount'          => $data['amount'] ?? null,
+            'notes'           => $data['notes'] ?? null,
+            'status'          => 'sent',
         ]);
 
-        return back()->with('success', 'Proposal sent.');
+        return back()->with('success', "Proposal sent to {$client->email}.");
     }
 
     public function update(Request $request, Proposal $proposal)

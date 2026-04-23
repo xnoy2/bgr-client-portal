@@ -1,22 +1,23 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ModalShell from '@/Components/ModalShell';
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-// ── Parse variation fields (handles old concatenated format) ─────────────────
+const AGREEMENT_STATUS = {
+    pending_signature: { label: 'Awaiting Signature', bg: 'rgba(201,168,76,0.10)', border: '#c9a84c', text: '#a07a20' },
+    signed:            { label: 'Signed',             bg: 'rgba(26,96,46,0.08)',   border: '#4a9a6a', text: '#1a6030' },
+    declined:          { label: 'Sig. Declined',      bg: 'rgba(200,40,40,0.07)',  border: '#e07070', text: '#b03030' },
+};
 
-function parseVariation(v) {
-    if (v.staff_member || v.site_location) {
-        return { description: v.description, staffMember: v.staff_member, siteLocation: v.site_location };
-    }
-    const raw = v.description ?? '';
-    const staffMatch = raw.match(/Staff Member:\s*([^\n]+)/);
-    const locMatch   = raw.match(/Site Location:\s*([^\n]+)/);
-    const desc = raw.replace(/\n\n(Staff Member:|Site Location:)[^\n]*/g, '').trim();
-    return {
-        description:  desc || raw,
-        staffMember:  staffMatch?.[1]?.trim() ?? null,
-        siteLocation: locMatch?.[1]?.trim()   ?? null,
-    };
+function AgreementBadge({ status }) {
+    const s = AGREEMENT_STATUS[status];
+    if (!s) return null;
+    return (
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold"
+            style={{ background: s.bg, border: `1px solid ${s.border}`, color: s.text }}>
+            {s.label}
+        </span>
+    );
 }
 
 // ── Status config ─────────────────────────────────────────────────────────────
@@ -29,28 +30,27 @@ const STATUS = {
 
 // ── Review modal ──────────────────────────────────────────────────────────────
 
-function ReviewModal({ variation, onClose }) {
-    const [status, setStatus]   = useState(variation.status === 'pending' ? '' : variation.status);
-    const [notes,  setNotes]    = useState(variation.admin_notes ?? '');
-    const [busy,   setBusy]     = useState(false);
+function ReviewModal({ show, variation, onClose }) {
+    const [status,        setStatus]        = useState(variation.status === 'pending' ? '' : variation.status);
+    const [notes,         setNotes]         = useState(variation.admin_notes ?? '');
+    const [agreementLink, setAgreementLink] = useState(variation.agreement_link ?? '');
+    const [busy,          setBusy]          = useState(false);
 
-    const isPending = variation.status === 'pending';
-    const { description, staffMember, siteLocation } = parseVariation(variation);
+    const isPending  = variation.status === 'pending';
+    const isApproved = variation.status === 'approved' || status === 'approved';
 
     function submit(e) {
         e.preventDefault();
         if (!status) return;
         setBusy(true);
-        router.put(route('admin.variations.review', variation.id), { status, admin_notes: notes }, {
-            onSuccess: () => onClose(),
-            onFinish:  () => setBusy(false),
-        });
+        router.put(route('admin.variations.review', variation.id),
+            { status, admin_notes: notes, agreement_link: agreementLink || null },
+            { onSuccess: () => onClose(), onFinish: () => setBusy(false) }
+        );
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(14,32,25,0.75)', backdropFilter: 'blur(4px)' }}
-            onClick={e => e.target === e.currentTarget && onClose()}>
+        <ModalShell show={show} onClose={onClose}>
 
             <div className="w-full max-w-lg bg-white rounded-2xl overflow-hidden flex flex-col"
                 style={{ maxHeight: '90vh' }}>
@@ -78,27 +78,7 @@ function ReviewModal({ variation, onClose }) {
                     <div>
                         <p className="text-base font-bold text-forest mb-1">{variation.title}</p>
                         <p className="text-xs mb-3" style={{ color: '#888480' }}>Submitted {variation.submitted_at}</p>
-
-                        <div className="rounded-xl overflow-hidden" style={{ border: '0.5px solid #E8E4DF' }}>
-                            {staffMember && (
-                                <div className="flex gap-3 px-4 py-3" style={{ borderBottom: '0.5px solid #F1F1EF', background: '#fdfcfa' }}>
-                                    <span className="text-xs font-semibold w-32 flex-shrink-0 pt-0.5" style={{ color: '#888480' }}>Staff Member</span>
-                                    <span className="text-sm" style={{ color: '#25282D' }}>{staffMember}</span>
-                                </div>
-                            )}
-                            {siteLocation && (
-                                <div className="flex gap-3 px-4 py-3" style={{ borderBottom: '0.5px solid #F1F1EF', background: '#fdfcfa' }}>
-                                    <span className="text-xs font-semibold w-32 flex-shrink-0 pt-0.5" style={{ color: '#888480' }}>Site Location</span>
-                                    <span className="text-sm" style={{ color: '#25282D' }}>{siteLocation}</span>
-                                </div>
-                            )}
-                            {description && (
-                                <div className="flex gap-3 px-4 py-3" style={{ background: '#fdfcfa' }}>
-                                    <span className="text-xs font-semibold w-32 flex-shrink-0 pt-0.5" style={{ color: '#888480' }}>Description</span>
-                                    <span className="text-sm leading-relaxed" style={{ color: '#4a3f30' }}>{description}</span>
-                                </div>
-                            )}
-                        </div>
+                        <p className="text-sm leading-relaxed" style={{ color: '#4a3f30' }}>{variation.description}</p>
                     </div>
 
                     {variation.estimated_cost && (
@@ -160,6 +140,21 @@ function ReviewModal({ variation, onClose }) {
                             />
                         </div>
 
+                        {isApproved && (
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#4A4A4A' }}>
+                                    Agreement Link <span style={{ color: '#888480', fontWeight: 400, textTransform: 'none' }}>(optional — attach GHL variation agreement)</span>
+                                </label>
+                                <input type="url" value={agreementLink} onChange={e => setAgreementLink(e.target.value)}
+                                    placeholder="https://…"
+                                    className="w-full px-4 py-3 rounded-xl text-sm text-forest outline-none"
+                                    style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }}
+                                    onFocus={e => e.target.style.borderColor = '#25282D'}
+                                    onBlur={e => e.target.style.borderColor = '#D1CDC7'}
+                                />
+                            </div>
+                        )}
+
                         <div className="flex gap-2.5 pt-1 pb-1">
                             <button type="button" onClick={onClose}
                                 className="flex-1 py-3.5 rounded-xl text-sm font-semibold"
@@ -180,7 +175,7 @@ function ReviewModal({ variation, onClose }) {
                     </form>
                 </div>
             </div>
-        </div>
+        </ModalShell>
     );
 }
 
@@ -209,7 +204,7 @@ export default function VariationsIndex({ variations }) {
         <AuthenticatedLayout title="Variations" breadcrumb="All variation requests">
 
             {reviewing && (
-                <ReviewModal variation={reviewing} onClose={() => setReviewing(null)} />
+                <ReviewModal show variation={reviewing} onClose={() => setReviewing(null)} />
             )}
 
             <div className="w-full">
@@ -260,7 +255,15 @@ export default function VariationsIndex({ variations }) {
 
                                             {/* Status + action */}
                                             <div className="flex items-center gap-2.5 flex-shrink-0">
+                                                <AgreementBadge status={v.agreement_status} />
                                                 <StatusBadge status={v.status} />
+                                                {v.status === 'approved' && (
+                                                    <a href={route('admin.agreements.index') + `?type=variation_agreement&variation_id=${v.id}`}
+                                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold hidden sm:inline-flex items-center gap-1"
+                                                        style={{ background: 'rgba(201,168,76,0.10)', color: '#a07a20', border: '1px solid #c9a84c' }}>
+                                                        + Agreement
+                                                    </a>
+                                                )}
                                                 <button
                                                     onClick={() => setReviewing(v)}
                                                     className="px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-opacity"

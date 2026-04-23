@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ModalShell from '@/Components/ModalShell';
 import { Head } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 
@@ -25,15 +26,9 @@ function StatusBadge({ status }) {
 
 // ── Detail modal ──────────────────────────────────────────────────────────────
 
-function DetailModal({ proposal, onClose }) {
-    useEffect(() => {
-        window.document.body.style.overflow = 'hidden';
-        return () => { window.document.body.style.overflow = ''; };
-    }, []);
-
+function DetailModal({ show, proposal, onClose }) {
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(0,0,0,0.45)' }}>
+        <ModalShell show={show} onClose={onClose}>
             <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl">
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 pt-5 pb-4"
@@ -93,7 +88,7 @@ function DetailModal({ proposal, onClose }) {
                     </div>
                 </div>
             </div>
-        </div>
+        </ModalShell>
     );
 }
 
@@ -109,7 +104,7 @@ export default function ProposalsIndex({ proposals }) {
         <AuthenticatedLayout title="Proposals" breadcrumb="Your proposals & estimates">
             <Head title="Proposals" />
 
-            {viewing && <DetailModal proposal={viewing} onClose={() => setViewing(null)} />}
+            {viewing && <DetailModal show proposal={viewing} onClose={() => setViewing(null)} />}
 
             <div className="w-full">
                 {/* Header */}

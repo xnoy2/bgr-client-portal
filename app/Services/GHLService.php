@@ -237,6 +237,56 @@ class GHLService
 
     // ── Notes ────────────────────────────────────────────────────────────────
 
+    // ── Notes ────────────────────────────────────────────────────────────────
+
+    private function buildNoteBody(string $title, string $body, array $photoUrls = []): string
+    {
+        $lines = ["📋 {$title}", '', $body];
+
+        if (! empty($photoUrls)) {
+            $lines[] = '';
+            $lines[] = '📷 Photos:';
+            foreach ($photoUrls as $url) {
+                $lines[] = $url;
+            }
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Post a note on a GHL contact (appears in the contact's Notes tab).
+     * GHL API v2021-07-28 attaches notes to contacts, not opportunities directly.
+     */
+    public function postContactNote(
+        string $contactId,
+        string $title,
+        string $body,
+        array  $photoUrls = []
+    ): bool {
+        $noteBody = $this->buildNoteBody($title, $body, $photoUrls);
+
+        try {
+            $response = $this->http()->post("/contacts/{$contactId}/notes", [
+                'body' => $noteBody,
+            ]);
+
+            if ($response->successful()) {
+                return true;
+            }
+
+            Log::warning('GHL postContactNote failed', [
+                'contact_id' => $contactId,
+                'status'     => $response->status(),
+                'body'       => $response->body(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('GHL postContactNote exception', ['error' => $e->getMessage()]);
+        }
+
+        return false;
+    }
+
     /**
      * Build a formatted note body with optional photo URLs.
      */
@@ -496,5 +546,64 @@ class GHLService
                 $stage->status = $newStatus; // keep in-memory collection in sync
             }
         }
+    }
+
+    // ── Documents & Contracts ─────────────────────────────────────────────────
+
+    /**
+     * Send a Documents & Contracts template to a contact.
+     * GHL emails the signing link to the contact automatically.
+     * Returns ['documentId' => '...', 'documentLink' => '...'] on success, null on failure.
+     *
+     * Requires scope: documents_contracts/template/sendLink.write
+     * Endpoint: POST /proposals/templates/send
+     */
+    public function sendDocumentTemplate(
+        string $templateId,
+        string $recipientName,
+        string $recipientEmail,
+        string $title
+    ): ?array {
+        // Resolve GHL contact ID from email
+        $contactId = $this->findContactByEmail($recipientEmail);
+
+        if (! $contactId) {
+            Log::warning('GHL sendDocumentTemplate: no contact found', ['email' => $recipientEmail]);
+            return null;
+        }
+
+        $userId = config('services.ghl.default_user_id');
+
+        try {
+            $response = $this->http()->post('/proposals/templates/send', [
+                'locationId' => $this->locationId,
+                'templateId' => $templateId,
+                'contactId'  => $contactId,
+                'userId'     => $userId,
+            ]);
+
+            if ($response->successful()) {
+                $data  = $response->json();
+                $link  = $data['links'][0] ?? [];
+                $docId = $link['documentId'] ?? null;
+                Log::info('GHL sendDocumentTemplate success', ['templateId' => $templateId, 'documentId' => $docId]);
+                return [
+                    'documentId'   => $docId,
+                    'documentLink' => $docId
+                        ? "https://app.gohighlevel.com/v2/location/{$this->locationId}/proposals/{$docId}"
+                        : null,
+                ];
+            }
+
+            Log::warning('GHL sendDocumentTemplate failed', [
+                'templateId' => $templateId,
+                'status'     => $response->status(),
+                'body'       => $response->body(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('GHL sendDocumentTemplate exception', ['templateId' => $templateId, 'error' => $e->getMessage()]);
+        }
+
+        return null;
     }
 }

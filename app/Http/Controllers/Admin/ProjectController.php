@@ -7,6 +7,7 @@ use App\Models\Document;
 use App\Models\Project;
 use App\Models\User;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use App\Models\PortalNotification;
 use App\Services\ClientProvisioningService;
 use App\Services\GHLService;
 use Illuminate\Http\Request;
@@ -73,16 +74,28 @@ class ProjectController extends Controller
                 ->keyBy('ghl_opportunity_id');
         }
 
+        // Pre-fetch maintenance subscriptions keyed by client_id
+        $clientIds = $localByGhlId->pluck('client_id')->filter()->unique()->values();
+        $maintenanceSubs = \App\Models\MaintenanceSubscription::whereIn('client_id', $clientIds)
+            ->whereIn('status', ['active', 'paused'])
+            ->get(['client_id', 'plan']);
+        $slugs     = $maintenanceSubs->pluck('plan')->unique();
+        $planNames = \App\Models\MaintenancePlan::whereIn('slug', $slugs)->pluck('name', 'slug');
+        $maintenanceByClient = $maintenanceSubs->mapWithKeys(fn ($s) => [
+            $s->client_id => $planNames[$s->plan] ?? ucfirst($s->plan),
+        ]);
+
         // Enrich each GHL opp with any local data we already have
-        $opportunities = $ghlOpps->map(function ($opp) use ($localByGhlId) {
+        $opportunities = $ghlOpps->map(function ($opp) use ($localByGhlId, $maintenanceByClient) {
             $local = $localByGhlId->get($opp['id']);
             return array_merge($opp, [
                 'local' => $local ? [
-                    'id'            => $local->id,
-                    'status'        => $local->status,
-                    'address'       => $local->address,
-                    'workers_count' => $local->workers->count(),
-                    'client'        => $local->client
+                    'id'               => $local->id,
+                    'status'           => $local->status,
+                    'address'          => $local->address,
+                    'workers_count'    => $local->workers->count(),
+                    'maintenance_plan' => $maintenanceByClient[$local->client_id] ?? null,
+                    'client'           => $local->client
                         ? ['id' => $local->client->id, 'name' => $local->client->name]
                         : null,
                 ] : null,
@@ -212,7 +225,19 @@ class ProjectController extends Controller
         $project->update(Arr::except($validated, ['worker_ids']));
 
         if (array_key_exists('worker_ids', $validated)) {
+            $previousIds = $project->workers()->pluck('users.id')->toArray();
             $project->workers()->sync($validated['worker_ids']);
+
+            $newlyAssigned = array_diff($validated['worker_ids'], $previousIds);
+            foreach ($newlyAssigned as $workerId) {
+                PortalNotification::notifyUser(
+                    userId:  $workerId,
+                    type:    'project_assigned',
+                    title:   'New Project Assigned',
+                    message: 'You have been assigned to project: ' . $project->name,
+                    url:     route('worker.projects.show', $project->ghl_opportunity_id),
+                );
+            }
         }
 
         $this->ghl->forgetOpportunityCache($ghlId);

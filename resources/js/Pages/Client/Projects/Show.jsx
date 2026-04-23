@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ModalShell from '@/Components/ModalShell';
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useCallback, useEffect } from 'react';
 
@@ -145,16 +146,14 @@ function Lightbox({ photos, startIndex, onClose }) {
         function onKey(e) {
             if (e.key === 'ArrowLeft')  prev();
             if (e.key === 'ArrowRight') next();
-            if (e.key === 'Escape')     onClose();
         }
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
-    }, [prev, next, onClose]);
-
-    useEffect(() => { document.body.style.overflow = 'hidden'; return () => { document.body.style.overflow = ''; }; }, []);
+    }, [prev, next]);
 
     return (
-        <div className="fixed inset-0 z-[80] flex flex-col" style={{ background: 'rgba(0,0,0,0.95)' }} onClick={onClose}>
+        <ModalShell show onClose={onClose} position="full" zIndex="z-[80]" backdropBlur={false} backdropColor="rgba(0,0,0,0.95)">
+            <div className="flex flex-col h-full">
             {/* Top bar */}
             <div className="flex items-center justify-between px-4 py-3 flex-shrink-0" onClick={e => e.stopPropagation()}>
                 <span className="text-white text-sm font-medium opacity-60">{idx + 1} / {photos.length}</span>
@@ -213,7 +212,8 @@ function Lightbox({ photos, startIndex, onClose }) {
                     ))}
                 </div>
             )}
-        </div>
+            </div>
+        </ModalShell>
     );
 }
 
@@ -379,23 +379,16 @@ function SingleThumbnail({ photos, onClick }) {
 
 // ── Update detail modal ───────────────────────────────────────────────────────
 
-function UpdateDetailModal({ update, onClose }) {
+function UpdateDetailModal({ show, update, onClose }) {
     const [lightboxIdx, setLightboxIdx] = useState(null);
     const photos = update.photos ?? [];
-
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => { document.body.style.overflow = ''; };
-    }, []);
 
     return (
         <>
             {lightboxIdx !== null && (
                 <Lightbox photos={photos} startIndex={lightboxIdx} onClose={() => setLightboxIdx(null)} />
             )}
-            <div className="fixed inset-0 z-[52] flex items-center justify-center p-4"
-                style={{ background: 'rgba(14,32,25,0.75)', backdropFilter: 'blur(4px)' }}
-                onClick={e => e.target === e.currentTarget && onClose()}>
+            <ModalShell show={show} onClose={onClose} zIndex="z-[52]">
 
                 <div className="w-full max-w-lg bg-white rounded-2xl overflow-hidden flex flex-col"
                     style={{ maxHeight: '88vh' }}>
@@ -470,7 +463,7 @@ function UpdateDetailModal({ update, onClose }) {
                         </div>
                     </div>
                 </div>
-            </div>
+            </ModalShell>
         </>
     );
 }
@@ -498,7 +491,7 @@ function UpdatesTab({ updates }) {
     return (
         <>
             {detailUpdate && (
-                <UpdateDetailModal update={detailUpdate} onClose={() => setDetailUpdate(null)} />
+                <UpdateDetailModal show update={detailUpdate} onClose={() => setDetailUpdate(null)} />
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">

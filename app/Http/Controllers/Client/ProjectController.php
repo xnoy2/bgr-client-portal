@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Models\MaintenancePlan;
+use App\Models\MaintenanceSubscription;
 use App\Models\Project;
 use App\Models\ProgressUpdate;
 use App\Services\GHLService;
@@ -23,8 +25,19 @@ class ProjectController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
+        // Resolve maintenance plan name for this client (one lookup for all projects)
+        $sub = MaintenanceSubscription::where('client_id', auth()->id())
+            ->whereIn('status', ['active', 'paused'])
+            ->orderByDesc('created_at')
+            ->first(['plan']);
+        $maintenancePlan = null;
+        if ($sub) {
+            $plan = MaintenancePlan::where('slug', $sub->plan)->first(['name']);
+            $maintenancePlan = $plan?->name ?? ucfirst($sub->plan);
+        }
+
         // Enrich each project with cached GHL data
-        $data = $projects->map(function ($project) {
+        $data = $projects->map(function ($project) use ($maintenancePlan) {
             $ghl = $project->ghl_opportunity_id
                 ? $this->ghl->getCachedOpportunity($project->ghl_opportunity_id)
                 : null;
@@ -53,6 +66,7 @@ class ProjectController extends Controller
                 'workers_count'        => $project->workers->count(),
                 'ghl_stage'            => $ghl['stage_name'] ?? null,
                 'ghl_status'           => $ghl['status']     ?? null,
+                'maintenance_plan'     => $maintenancePlan,
             ];
         });
 

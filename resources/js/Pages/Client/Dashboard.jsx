@@ -59,7 +59,28 @@ function ProjectCard({ project }) {
             <div className="p-5">
                 {/* Title + status */}
                 <div className="flex items-start justify-between gap-3 mb-3">
-                    <h3 className="text-base font-semibold text-forest leading-snug flex-1">{project.name}</h3>
+                    <div className="flex-1 min-w-0">
+                        {project.maintenance_plan && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full mb-1.5"
+                                style={{
+                                    background: 'linear-gradient(135deg, #C9A96E 0%, #B2945B 60%, #8B6F3A 100%)',
+                                    boxShadow: '0 1px 4px rgba(178,148,91,0.35), inset 0 1px 0 rgba(255,255,255,0.18)',
+                                    border: '0.5px solid rgba(178,148,91,0.6)',
+                                }}>
+                                <svg width="9" height="9" viewBox="0 0 16 16" fill="rgba(255,255,255,0.9)" stroke="none">
+                                    <path d="M2 12h12l1-7-4 3-3-5-3 5-4-3 1 7z"/>
+                                </svg>
+                                <span style={{
+                                    fontSize: 9, fontWeight: 700, letterSpacing: '0.06em',
+                                    color: '#fff', textTransform: 'uppercase',
+                                    textShadow: '0 0.5px 1px rgba(0,0,0,0.2)',
+                                }}>
+                                    {project.maintenance_plan}
+                                </span>
+                            </span>
+                        )}
+                        <h3 className="text-base font-semibold text-forest leading-snug">{project.name}</h3>
+                    </div>
                     <StatusPill status={project.ghl_status ?? project.status} map={GHL_STATUS} />
                 </div>
 

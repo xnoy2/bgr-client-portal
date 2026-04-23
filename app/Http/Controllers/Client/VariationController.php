@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Models\PortalNotification;
 use App\Models\Project;
 use App\Models\VariationRequest;
 use App\Services\GHLService;
@@ -75,6 +76,13 @@ class VariationController extends Controller
         ]);
 
         $this->pushToGHL($project, $variation, 'new');
+
+        PortalNotification::notifyAdmins(
+            type:    'variation_submitted',
+            title:   'New Variation Request',
+            message: auth()->user()->name . ' submitted a variation for ' . $project->name,
+            url:     route('admin.variations.index'),
+        );
 
         return back()->with('success', 'Variation request submitted successfully.');
     }

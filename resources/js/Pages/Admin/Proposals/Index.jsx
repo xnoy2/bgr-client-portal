@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ModalShell from '@/Components/ModalShell';
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 
@@ -24,19 +25,14 @@ function StatusBadge({ status }) {
 
 // ── Add Proposal Modal ────────────────────────────────────────────────────────
 
-function AddModal({ projects, onClose }) {
-    useEffect(() => {
-        window.document.body.style.overflow = 'hidden';
-        return () => { window.document.body.style.overflow = ''; };
-    }, []);
+function AddModal({ show, projects, onClose }) {
 
     const { data, setData, post, processing, errors } = useForm({
         project_id:      '',
         title:           '',
         ghl_link:        '',
-        ghl_proposal_id: '',
-        amount:          '',
-        notes:           '',
+        amount: '',
+        notes:  '',
     });
 
     function submit(e) {
@@ -45,8 +41,7 @@ function AddModal({ projects, onClose }) {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(0,0,0,0.45)' }}>
+        <ModalShell show={show} onClose={onClose}>
             <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl flex flex-col max-h-[90vh]">
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 pt-5 pb-4"
@@ -92,38 +87,20 @@ function AddModal({ projects, onClose }) {
                         {errors.title && <p className="text-xs mt-1" style={{ color: '#b03030' }}>{errors.title}</p>}
                     </div>
 
-                    {/* GHL Link */}
-                    <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#4A4A4A' }}>
-                            GHL Shareable Link
-                        </label>
-                        <input type="url" value={data.ghl_link} onChange={e => setData('ghl_link', e.target.value)}
-                            required placeholder="https://..."
-                            className="w-full px-3 py-2.5 rounded-xl text-sm text-forest outline-none"
-                            style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }} />
-                        {errors.ghl_link && <p className="text-xs mt-1" style={{ color: '#b03030' }}>{errors.ghl_link}</p>}
+                    {/* Info banner */}
+                    <div className="px-3 py-2.5 rounded-xl text-xs" style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid #c9a84c', color: '#9a7520' }}>
+                        The Client Variation Agreement template will be sent automatically to the client's email via GHL.
                     </div>
 
-                    {/* Amount + GHL ID side by side */}
-                    <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#4A4A4A' }}>
-                                Amount (optional)
-                            </label>
-                            <input type="number" min="0" step="0.01" value={data.amount} onChange={e => setData('amount', e.target.value)}
-                                placeholder="0.00"
-                                className="w-full px-3 py-2.5 rounded-xl text-sm text-forest outline-none"
-                                style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }} />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#4A4A4A' }}>
-                                GHL Proposal ID
-                            </label>
-                            <input type="text" value={data.ghl_proposal_id} onChange={e => setData('ghl_proposal_id', e.target.value)}
-                                placeholder="optional"
-                                className="w-full px-3 py-2.5 rounded-xl text-sm text-forest outline-none"
-                                style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }} />
-                        </div>
+                    {/* Amount */}
+                    <div>
+                        <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#4A4A4A' }}>
+                            Amount <span style={{ color: '#888480', fontWeight: 400, textTransform: 'none' }}>(optional)</span>
+                        </label>
+                        <input type="number" min="0" step="0.01" value={data.amount} onChange={e => setData('amount', e.target.value)}
+                            placeholder="0.00"
+                            className="w-full px-3 py-2.5 rounded-xl text-sm text-forest outline-none"
+                            style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }} />
                     </div>
 
                     {/* Notes */}
@@ -137,6 +114,10 @@ function AddModal({ projects, onClose }) {
                             style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }} />
                     </div>
 
+                    {errors.ghl && (
+                        <p className="text-xs px-1" style={{ color: '#b03030' }}>{errors.ghl}</p>
+                    )}
+
                     <div className="flex gap-2.5 pt-1 pb-1">
                         <button type="button" onClick={onClose}
                             className="flex-1 py-3.5 rounded-xl text-sm font-semibold"
@@ -146,22 +127,18 @@ function AddModal({ projects, onClose }) {
                         <button type="submit" disabled={processing}
                             className="py-3.5 rounded-xl text-sm font-semibold transition-opacity"
                             style={{ flex: 2, background: '#25282D', color: '#FFFFFF', opacity: processing ? 0.6 : 1 }}>
-                            {processing ? 'Sending…' : 'Send Proposal'}
+                            {processing ? 'Sending via GHL…' : 'Send Proposal'}
                         </button>
                     </div>
                 </form>
             </div>
-        </div>
+        </ModalShell>
     );
 }
 
 // ── View / Edit Modal ─────────────────────────────────────────────────────────
 
-function ViewModal({ proposal, onClose }) {
-    useEffect(() => {
-        window.document.body.style.overflow = 'hidden';
-        return () => { window.document.body.style.overflow = ''; };
-    }, []);
+function ViewModal({ show, proposal, onClose }) {
 
     function handleDelete() {
         if (!confirm('Delete this proposal?')) return;
@@ -169,8 +146,7 @@ function ViewModal({ proposal, onClose }) {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(0,0,0,0.45)' }}>
+        <ModalShell show={show} onClose={onClose}>
             <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl">
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 pt-5 pb-4"
@@ -232,7 +208,7 @@ function ViewModal({ proposal, onClose }) {
                     </div>
                 </div>
             </div>
-        </div>
+        </ModalShell>
     );
 }
 
@@ -249,8 +225,8 @@ export default function ProposalsIndex({ proposals, projects }) {
         <AuthenticatedLayout title="Proposals" breadcrumb="All proposals & estimates">
             <Head title="Proposals" />
 
-            {showAdd  && <AddModal projects={projects} onClose={() => setShowAdd(false)} />}
-            {viewing  && <ViewModal proposal={viewing} onClose={() => setViewing(null)} />}
+            <AddModal show={showAdd} projects={projects} onClose={() => setShowAdd(false)} />
+            {viewing && <ViewModal show proposal={viewing} onClose={() => setViewing(null)} />}
 
             <div className="w-full">
                 {/* Header */}

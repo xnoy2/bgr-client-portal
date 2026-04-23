@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\PortalNotification;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -28,9 +29,29 @@ class HandleInertiaRequests extends Middleware
                     'roles' => $request->user()->getRoleNames(),
                 ] : null,
             ],
-            'notifications' => [
-                'unread_count' => 0, // notifications table added when notification feature is built
-            ],
+            'notifications' => function () use ($request) {
+                $user = $request->user();
+                if (! $user) return ['unread_count' => 0, 'items' => []];
+
+                $items = PortalNotification::where('user_id', $user->id)
+                    ->orderByDesc('created_at')
+                    ->limit(20)
+                    ->get()
+                    ->map(fn ($n) => [
+                        'id'      => $n->id,
+                        'type'    => $n->type,
+                        'title'   => $n->title,
+                        'message' => $n->message,
+                        'url'     => $n->url,
+                        'read'    => $n->read_at !== null,
+                        'time'    => $n->created_at->diffForHumans(),
+                    ]);
+
+                return [
+                    'unread_count' => $items->where('read', false)->count(),
+                    'items'        => $items->values(),
+                ];
+            },
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error'   => $request->session()->get('error'),

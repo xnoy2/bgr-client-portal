@@ -144,6 +144,60 @@ class GHLWebhookController extends Controller
         return response('OK', 200);
     }
 
+    // Called by GHL Workflow when a variation agreement is signed/declined
+    public function handleAgreementStatus(Request $request): Response
+    {
+        $payload = $request->json()->all();
+
+        Log::info('GHL AgreementStatus webhook received', ['payload' => $payload]);
+
+        // GHL may identify the document by contact email or a custom field we set
+        $email  = $payload['email'] ?? ($payload['contact']['email'] ?? null);
+        $status = strtolower($payload['status'] ?? $payload['event'] ?? '');
+
+        $statusMap = [
+            'signed'   => 'signed',
+            'accepted' => 'signed',
+            'completed'=> 'signed',
+            'declined' => 'declined',
+            'rejected' => 'declined',
+        ];
+
+        $mapped = $statusMap[$status] ?? null;
+
+        if (! $email || ! $mapped) {
+            Log::warning('GHL AgreementStatus: missing email or unrecognised status', ['payload' => $payload]);
+            return response('Bad payload', 422);
+        }
+
+        // Find the most recent approved variation for this user that has a pending agreement
+        $user = User::where('email', $email)->first();
+        if (! $user) {
+            Log::warning('GHL AgreementStatus: user not found', ['email' => $email]);
+            return response('Not found', 404);
+        }
+
+        $variation = VariationRequest::where('submitted_by', $user->id)
+            ->where('status', 'approved')
+            ->where('agreement_status', 'pending_signature')
+            ->latest()
+            ->first();
+
+        if (! $variation) {
+            Log::warning('GHL AgreementStatus: no pending agreement found', ['userId' => $user->id]);
+            return response('Not found', 404);
+        }
+
+        $variation->update([
+            'agreement_status'   => $mapped,
+            'agreement_signed_at' => $mapped === 'signed' ? now() : null,
+        ]);
+
+        Log::info('GHL AgreementStatus: updated', ['variationId' => $variation->id, 'status' => $mapped]);
+
+        return response('OK', 200);
+    }
+
     public function handle(Request $request): Response
     {
         // Validate HMAC signature
