@@ -17,12 +17,12 @@ class PortalDocumentController extends Controller
         abort_unless(in_array($category, ['terms_conditions', 'others']), 404);
 
         $request->validate([
-            'file' => 'required|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,png,jpg,jpeg,webp',
+            'project_id' => 'required|exists:projects,id',
+            'file'       => 'required|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,png,jpg,jpeg,webp',
         ]);
 
         $file = $request->file('file');
 
-        // Upload to R2 in production; fall back to local in dev
         if ($this->storage->configured()) {
             $path = $this->storage->upload($file, "portal-documents/{$category}");
             $disk = 'r2';
@@ -33,6 +33,7 @@ class PortalDocumentController extends Controller
 
         PortalDocument::create([
             'category'      => $category,
+            'project_id'    => $request->input('project_id'),
             'original_name' => $file->getClientOriginalName(),
             'disk_path'     => $path,
             'storage_disk'  => $disk,

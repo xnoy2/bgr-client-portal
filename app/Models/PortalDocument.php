@@ -9,6 +9,7 @@ class PortalDocument extends Model
 {
     protected $fillable = [
         'category',
+        'project_id',
         'original_name',
         'disk_path',
         'storage_disk',
@@ -16,6 +17,11 @@ class PortalDocument extends Model
         'file_size',
         'uploaded_by',
     ];
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Project::class);
+    }
 
     public function uploader(): BelongsTo
     {

@@ -416,16 +416,23 @@ function ViewModal({ show, agreement, onClose }) {
 
 // ── Document upload tab (Terms & Conditions / Others) ─────────────────────────
 
-function DocumentUploadTab({ category, docs }) {
-    const fileRef            = useRef(null);
-    const [uploading, setUploading] = useState(false);
-    const [deleting, setDeleting]   = useState(null);
+function DocumentUploadTab({ category, allDocs, projects }) {
+    const fileRef                         = useRef(null);
+    const [selectedProjectId, setSelectedProjectId] = useState('');
+    const [uploading, setUploading]       = useState(false);
+    const [deleting, setDeleting]         = useState(null);
+
+    const selectedProject = projects.find(p => String(p.id) === String(selectedProjectId));
+    const visibleDocs     = allDocs.filter(
+        d => d.category === category && String(d.project_id) === String(selectedProjectId)
+    );
 
     function upload(file) {
-        if (!file) return;
+        if (!file || !selectedProjectId) return;
         setUploading(true);
         const fd = new FormData();
         fd.append('file', file);
+        fd.append('project_id', selectedProjectId);
         router.post(route('admin.agreements.documents.store', category), fd, {
             forceFormData: true,
             onFinish: () => { setUploading(false); if (fileRef.current) fileRef.current.value = ''; },
@@ -442,114 +449,150 @@ function DocumentUploadTab({ category, docs }) {
 
     return (
         <div className="space-y-4">
-            {/* Upload zone */}
-            <div
-                className="glass-card rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all"
-                style={{ border: '1.5px dashed #D1CDC7', minHeight: 120 }}
-                onClick={() => !uploading && fileRef.current?.click()}
-                onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = '#25282D'; }}
-                onDragLeave={e => { e.currentTarget.style.borderColor = '#D1CDC7'; }}
-                onDrop={e => {
-                    e.preventDefault();
-                    e.currentTarget.style.borderColor = '#D1CDC7';
-                    upload(e.dataTransfer.files[0]);
-                }}>
-                {uploading ? (
-                    <div className="flex items-center gap-2" style={{ color: '#25282D' }}>
-                        <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                        </svg>
-                        <span className="text-sm font-medium">Uploading…</span>
-                    </div>
-                ) : (
-                    <>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#25282D" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="mb-2">
-                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                            <polyline points="17 8 12 3 7 8"/>
-                            <line x1="12" y1="3" x2="12" y2="15"/>
-                        </svg>
-                        <p className="text-sm font-semibold text-forest">Click or drag to upload</p>
-                        <p className="text-xs mt-1" style={{ color: '#888480' }}>PDF, Word, Excel — up to 20 MB</p>
-                    </>
-                )}
-                <input ref={fileRef} type="file" className="hidden"
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.png,.jpg,.jpeg"
-                    onChange={e => upload(e.target.files[0])} />
+            {/* Project selector */}
+            <div className="glass-card rounded-xl p-4">
+                <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#4A4A4A' }}>
+                    Select Project
+                </label>
+                <select
+                    value={selectedProjectId}
+                    onChange={e => setSelectedProjectId(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl text-sm text-forest outline-none"
+                    style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }}>
+                    <option value="">— Choose a project —</option>
+                    {projects.map(p => (
+                        <option key={p.id} value={p.id}>{p.name} — {p.client_name}</option>
+                    ))}
+                </select>
             </div>
 
-            {/* File table */}
-            {docs.length > 0 ? (
-                <div className="glass-card rounded-xl overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr style={{ borderBottom: '0.5px solid #D1CDC7', background: '#F1F1EF' }}>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#888480' }}>File</th>
-                                    <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#888480' }}>Size</th>
-                                    <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#888480' }}>Uploaded</th>
-                                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: '#888480' }}>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {docs.map((doc, i) => (
-                                    <tr key={doc.id}
-                                        style={{ borderBottom: i < docs.length - 1 ? '0.5px solid #F1F1EF' : 'none' }}
-                                        className="hover:bg-stone-50 transition-colors">
-                                        <td className="px-4 py-3 min-w-0">
-                                            <div className="flex items-center gap-3 min-w-0">
-                                                <FileIcon mimeType={doc.mime_type} size={32} />
-                                                <div className="min-w-0">
-                                                    <p className="text-xs font-medium text-forest truncate" title={doc.original_name}>
-                                                        {doc.original_name}
-                                                    </p>
-                                                    <p className="sm:hidden text-xs mt-0.5" style={{ color: '#888480' }}>
-                                                        {doc.file_size ? formatBytes(doc.file_size) : ''}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="hidden sm:table-cell px-4 py-3 text-xs" style={{ color: '#888480' }}>
-                                            {doc.file_size ? formatBytes(doc.file_size) : '—'}
-                                        </td>
-                                        <td className="hidden sm:table-cell px-4 py-3 text-xs" style={{ color: '#888480' }}>
-                                            {doc.uploaded_at}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <a href={route('admin.agreements.documents.download', doc.id)}
-                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity hover:opacity-75"
-                                                    style={{ background: '#F1F1EF', color: '#25282D', border: '0.5px solid #D1CDC7' }}>
-                                                    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                                                        <path d="M8 2v8M4 7l4 4 4-4"/><path d="M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/>
-                                                    </svg>
-                                                    <span className="hidden sm:inline">Download</span>
-                                                </a>
-                                                <button
-                                                    onClick={() => deleteDoc(doc.id)}
-                                                    disabled={deleting === doc.id}
-                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity disabled:opacity-50 hover:opacity-75"
-                                                    style={{ background: '#fef2f2', color: '#b91c1c', border: '0.5px solid rgba(239,68,68,0.3)' }}>
-                                                    {deleting === doc.id
-                                                        ? <svg className="animate-spin" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
-                                                        : <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>
-                                                    }
-                                                    <span className="hidden sm:inline">Delete</span>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+            {!selectedProjectId ? (
+                <div className="glass-card rounded-xl px-5 py-10 text-center">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#D1CDC7" strokeWidth="1.5" strokeLinecap="round" className="mx-auto mb-3">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <p className="text-sm font-medium text-forest mb-1">Select a project above</p>
+                    <p className="text-xs" style={{ color: '#888480' }}>Choose a project to view and upload its documents.</p>
                 </div>
             ) : (
-                !uploading && (
-                    <div className="glass-card rounded-xl px-5 py-8 text-center">
-                        <p className="text-sm font-medium text-forest mb-1">No documents yet</p>
-                        <p className="text-xs" style={{ color: '#888480' }}>Upload PDF or Word documents above.</p>
+                <>
+                    {/* Upload zone */}
+                    <div
+                        className="glass-card rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all"
+                        style={{ border: '1.5px dashed #D1CDC7', minHeight: 120 }}
+                        onClick={() => !uploading && fileRef.current?.click()}
+                        onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = '#25282D'; }}
+                        onDragLeave={e => { e.currentTarget.style.borderColor = '#D1CDC7'; }}
+                        onDrop={e => {
+                            e.preventDefault();
+                            e.currentTarget.style.borderColor = '#D1CDC7';
+                            upload(e.dataTransfer.files[0]);
+                        }}>
+                        {uploading ? (
+                            <div className="flex items-center gap-2" style={{ color: '#25282D' }}>
+                                <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                                </svg>
+                                <span className="text-sm font-medium">Uploading…</span>
+                            </div>
+                        ) : (
+                            <>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#25282D" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="mb-2">
+                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                                <p className="text-sm font-semibold text-forest">Click or drag to upload</p>
+                                <p className="text-xs mt-0.5" style={{ color: '#888480' }}>
+                                    For <span className="font-medium">{selectedProject?.name}</span> · PDF, Word, Excel — up to 20 MB
+                                </p>
+                            </>
+                        )}
+                        <input ref={fileRef} type="file" className="hidden"
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.png,.jpg,.jpeg"
+                            onChange={e => upload(e.target.files[0])} />
                     </div>
-                )
+
+                    {/* File table */}
+                    {visibleDocs.length > 0 ? (
+                        <div className="glass-card rounded-xl overflow-hidden">
+                            <div className="px-4 pt-4 pb-2">
+                                <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#888480', fontSize: 10 }}>
+                                    {visibleDocs.length} document{visibleDocs.length !== 1 ? 's' : ''} for {selectedProject?.name}
+                                </span>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead>
+                                        <tr style={{ borderBottom: '0.5px solid #D1CDC7', background: '#F1F1EF' }}>
+                                            <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#888480' }}>File</th>
+                                            <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#888480' }}>Size</th>
+                                            <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#888480' }}>Uploaded</th>
+                                            <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: '#888480' }}>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {visibleDocs.map((doc, i) => (
+                                            <tr key={doc.id}
+                                                style={{ borderBottom: i < visibleDocs.length - 1 ? '0.5px solid #F1F1EF' : 'none' }}
+                                                className="hover:bg-stone-50 transition-colors">
+                                                <td className="px-4 py-3 min-w-0">
+                                                    <div className="flex items-center gap-3 min-w-0">
+                                                        <FileIcon mimeType={doc.mime_type} size={32} />
+                                                        <div className="min-w-0">
+                                                            <p className="text-xs font-medium text-forest truncate" title={doc.original_name}>
+                                                                {doc.original_name}
+                                                            </p>
+                                                            <p className="sm:hidden text-xs mt-0.5" style={{ color: '#888480' }}>
+                                                                {doc.file_size ? formatBytes(doc.file_size) : ''}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="hidden sm:table-cell px-4 py-3 text-xs" style={{ color: '#888480' }}>
+                                                    {doc.file_size ? formatBytes(doc.file_size) : '—'}
+                                                </td>
+                                                <td className="hidden sm:table-cell px-4 py-3 text-xs" style={{ color: '#888480' }}>
+                                                    {doc.uploaded_at}
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <a href={route('admin.agreements.documents.download', doc.id)}
+                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity hover:opacity-75"
+                                                            style={{ background: '#F1F1EF', color: '#25282D', border: '0.5px solid #D1CDC7' }}>
+                                                            <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                                                                <path d="M8 2v8M4 7l4 4 4-4"/><path d="M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/>
+                                                            </svg>
+                                                            <span className="hidden sm:inline">Download</span>
+                                                        </a>
+                                                        <button
+                                                            onClick={() => deleteDoc(doc.id)}
+                                                            disabled={deleting === doc.id}
+                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity disabled:opacity-50 hover:opacity-75"
+                                                            style={{ background: '#fef2f2', color: '#b91c1c', border: '0.5px solid rgba(239,68,68,0.3)' }}>
+                                                            {deleting === doc.id
+                                                                ? <svg className="animate-spin" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+                                                                : <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>
+                                                            }
+                                                            <span className="hidden sm:inline">Delete</span>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ) : (
+                        !uploading && (
+                            <div className="glass-card rounded-xl px-5 py-8 text-center">
+                                <p className="text-sm font-medium text-forest mb-1">No documents yet</p>
+                                <p className="text-xs" style={{ color: '#888480' }}>Upload PDF or Word documents for {selectedProject?.name} above.</p>
+                            </div>
+                        )
+                    )}
+                </>
             )}
         </div>
     );
@@ -640,8 +683,7 @@ function VariationAgreementsTab({ agreements, projects, variations }) {
 export default function AgreementsIndex({ agreements, projects, variations, portalDocs }) {
     const [tab, setTab] = useState('Variation Agreements');
 
-    const tcDocs     = portalDocs?.terms_conditions ?? [];
-    const othersDocs = portalDocs?.others           ?? [];
+    const allDocs = portalDocs ?? [];
 
     return (
         <AuthenticatedLayout title="Agreements" breadcrumb="Client agreements & documents">
@@ -662,10 +704,10 @@ export default function AgreementsIndex({ agreements, projects, variations, port
                     />
                 )}
                 {tab === 'Terms & Conditions' && (
-                    <DocumentUploadTab category="terms_conditions" docs={tcDocs} />
+                    <DocumentUploadTab category="terms_conditions" allDocs={allDocs} projects={projects} />
                 )}
                 {tab === 'Others' && (
-                    <DocumentUploadTab category="others" docs={othersDocs} />
+                    <DocumentUploadTab category="others" allDocs={allDocs} projects={projects} />
                 )}
             </div>
         </AuthenticatedLayout>
