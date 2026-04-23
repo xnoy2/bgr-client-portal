@@ -11,6 +11,7 @@ class PortalDocument extends Model
         'category',
         'original_name',
         'disk_path',
+        'storage_disk',
         'mime_type',
         'file_size',
         'uploaded_by',
