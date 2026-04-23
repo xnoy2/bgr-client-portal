@@ -17,6 +17,7 @@ use App\Http\Controllers\Auth\ChangePasswordController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Project;
 use App\Models\User;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -72,8 +73,8 @@ require __DIR__.'/auth.php';
 // Temporary: one-click Cloudinary cleanup (admin only, remove after use)
 Route::middleware(['auth', 'role:admin'])
     ->get('/admin/tools/clean-cloudinary', function () {
-        IlluminateSupportFacadesArtisan::call('media:clean-cloudinary');
-        $output = IlluminateSupportFacadesArtisan::output();
+        Artisan::call('media:clean-cloudinary');
+        $output = Artisan::output();
         return response('<pre style="font-family:monospace;padding:2rem;font-size:14px;">'
             . '<strong>Cloudinary Cleanup Result:</strong><br><br>'
             . e($output)
