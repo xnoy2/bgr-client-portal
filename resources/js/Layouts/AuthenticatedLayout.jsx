@@ -2,9 +2,11 @@ import { Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 
 const typeIcon = {
-    variation_submitted: '📋',
-    agreement_sent:      '📄',
-    project_assigned:    '🏗️',
+    variation_submitted:      '📋',
+    agreement_sent:           '📄',
+    project_assigned:         '🏗️',
+    maintenance_enquiry:      '🔧',
+    maintenance_subscription: '✅',
 };
 
 // ── Toast system ───────────────────────────────────────────────────────────────
@@ -99,16 +101,18 @@ function getNav(role) {
         { label: 'Projects',      icon: 'briefcase', href: () => route('admin.projects.index'), active: () => route().current('admin.projects.*') },
         { label: 'Users',         icon: 'users',     href: () => route('admin.users.index'),    active: () => route().current('admin.users.*') },
         { label: 'Updates',       icon: 'list',      href: () => route('admin.updates.index'),  active: () => route().current('admin.updates.*') },
-        { label: 'Variations',    icon: 'edit',      href: () => route('admin.variations.index'),  active: () => route().current('admin.variations.*') },
-        { label: 'Agreements',    icon: 'file',      href: () => route('admin.agreements.index'), active: () => route().current('admin.agreements.*') },
+        { label: 'Variations',    icon: 'edit',      href: () => route('admin.variations.index'),   active: () => route().current('admin.variations.*') },
+        { label: 'Agreements',    icon: 'file',      href: () => route('admin.agreements.index'),  active: () => route().current('admin.agreements.*') },
+        { label: 'Maintenance',   icon: 'tool',      href: () => route('admin.maintenance.index'), active: () => route().current('admin.maintenance.*') },
     ];
     if (role === 'worker') return [
         { label: 'My Projects',   icon: 'briefcase', href: () => route('worker.dashboard'),   active: () => route().current('worker.dashboard') || route().current('worker.projects.*') },
     ];
     return [
-        { label: 'My Projects', icon: 'briefcase', href: () => route('client.dashboard'),        active: () => route().current('client.dashboard') || route().current('client.projects.*') },
-        { label: 'Variations',  icon: 'edit',      href: () => route('client.variations.index'),  active: () => route().current('client.variations.*') },
-        { label: 'Agreements',  icon: 'file',      href: () => route('client.agreements.index'), active: () => route().current('client.agreements.*') },
+        { label: 'My Projects',  icon: 'briefcase', href: () => route('client.dashboard'),           active: () => route().current('client.dashboard') || route().current('client.projects.*') },
+        { label: 'Variations',   icon: 'edit',      href: () => route('client.variations.index'),   active: () => route().current('client.variations.*') },
+        { label: 'Agreements',   icon: 'file',      href: () => route('client.agreements.index'),   active: () => route().current('client.agreements.*') },
+        { label: 'Maintenance',  icon: 'tool',      href: () => route('client.maintenance.index'),  active: () => route().current('client.maintenance.*') },
     ];
 }
 
@@ -223,7 +227,8 @@ export default function AuthenticatedLayout({ title, breadcrumb, children }) {
 
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [notifOpen,  setNotifOpen]  = useState(false);
-    const notifRef = useRef(null);
+    const bellRef    = useRef(null);
+    const dropdownRef = useRef(null);
 
     const [toasts, setToasts] = useState([]);
     const removeToast = (id) => setToasts(t => t.filter(x => x.id !== id));
@@ -252,9 +257,9 @@ export default function AuthenticatedLayout({ title, breadcrumb, children }) {
         return () => clearInterval(id);
     }, [notifications?.unread_count]);
 
-    // Close drawer on Inertia navigation
+    // Close drawer + notification on Inertia navigation
     useEffect(() => {
-        const close = () => setDrawerOpen(false);
+        const close = () => { setDrawerOpen(false); setNotifOpen(false); };
         document.addEventListener('inertia:navigate', close);
         return () => document.removeEventListener('inertia:navigate', close);
     }, []);
@@ -265,10 +270,12 @@ export default function AuthenticatedLayout({ title, breadcrumb, children }) {
         return () => { document.body.style.overflow = ''; };
     }, [drawerOpen]);
 
-    // Close notif on outside click
+    // Close notif when clicking outside both the bell button and the dropdown panel
     useEffect(() => {
         const handler = (e) => {
-            if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false);
+            const insideBell     = bellRef.current     && bellRef.current.contains(e.target);
+            const insideDropdown = dropdownRef.current && dropdownRef.current.contains(e.target);
+            if (!insideBell && !insideDropdown) setNotifOpen(false);
         };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
@@ -346,96 +353,20 @@ export default function AuthenticatedLayout({ title, breadcrumb, children }) {
                         )}
                     </div>
 
-                    {/* Bell */}
-                    <div className="relative flex-shrink-0" ref={notifRef}>
-                        <button
-                            onClick={() => setNotifOpen(o => !o)}
-                            className="relative flex items-center justify-center w-9 h-9 rounded-lg transition-colors"
-                            style={{ background: '#E8E6E2', border: '0.5px solid #D1CDC7', color: '#4A4A4A' }}
-                            aria-label="Notifications"
-                        >
-                            <Icon name="bell" size={16} />
-                            {notifications?.unread_count > 0 && (
-                                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
-                                    style={{ background: '#B2945B', border: '1.5px solid #F1F1EF' }} />
-                            )}
-                        </button>
-
-                        {notifOpen && (
-                            <div className="absolute right-0 top-11 w-80 bg-white rounded-xl shadow-xl z-50 flex flex-col"
-                                style={{ border: '0.5px solid #D1CDC7', maxHeight: 420 }}>
-                                {/* Header */}
-                                <div className="flex items-center justify-between px-4 py-3 flex-shrink-0"
-                                    style={{ borderBottom: '0.5px solid #D1CDC7' }}>
-                                    <span className="text-sm font-medium text-forest">
-                                        Notifications
-                                        {notifications?.unread_count > 0 && (
-                                            <span className="ml-2 text-xs font-semibold px-1.5 py-0.5 rounded-full"
-                                                style={{ background: 'rgba(178,148,91,0.15)', color: '#B2945B' }}>
-                                                {notifications.unread_count}
-                                            </span>
-                                        )}
-                                    </span>
-                                    {notifications?.unread_count > 0 && (
-                                        <button
-                                            className="text-xs"
-                                            style={{ color: '#B2945B' }}
-                                            onClick={() => router.post(route('notifications.read-all'), {}, { preserveScroll: true })}
-                                        >
-                                            Mark all read
-                                        </button>
-                                    )}
-                                </div>
-
-                                {/* Items */}
-                                <div className="overflow-y-auto flex-1">
-                                    {(!notifications?.items || notifications.items.length === 0) ? (
-                                        <div className="px-4 py-6 text-center text-xs" style={{ color: '#8a7e6e' }}>
-                                            No notifications yet
-                                        </div>
-                                    ) : notifications.items.map(n => (
-                                        <div key={n.id}
-                                            className="flex gap-3 px-4 py-3 cursor-pointer transition-colors"
-                                            style={{
-                                                borderBottom: '0.5px solid #F0EDE9',
-                                                background: n.read ? 'transparent' : 'rgba(178,148,91,0.04)',
-                                            }}
-                                            onClick={() => {
-                                                if (!n.read) {
-                                                    router.post(route('notifications.read', n.id), {}, { preserveScroll: true });
-                                                }
-                                                if (n.url) {
-                                                    setNotifOpen(false);
-                                                    router.visit(n.url);
-                                                }
-                                            }}
-                                        >
-                                            <span className="flex-shrink-0 text-base mt-0.5">
-                                                {typeIcon[n.type] ?? '🔔'}
-                                            </span>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-start justify-between gap-2">
-                                                    <span className="text-xs font-medium text-forest leading-snug">
-                                                        {n.title}
-                                                    </span>
-                                                    {!n.read && (
-                                                        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1"
-                                                            style={{ background: '#B2945B' }} />
-                                                    )}
-                                                </div>
-                                                <p className="text-xs mt-0.5 leading-snug" style={{ color: '#6b6259' }}>
-                                                    {n.message}
-                                                </p>
-                                                <span className="text-xs mt-1 block" style={{ color: '#aaa09a' }}>
-                                                    {n.time}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                    {/* Bell — button only, dropdown is rendered outside the header */}
+                    <button
+                        ref={bellRef}
+                        onClick={() => setNotifOpen(o => !o)}
+                        className="relative flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0 transition-colors"
+                        style={{ background: '#E8E6E2', border: '0.5px solid #D1CDC7', color: '#4A4A4A' }}
+                        aria-label="Notifications"
+                    >
+                        <Icon name="bell" size={16} />
+                        {notifications?.unread_count > 0 && (
+                            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
+                                style={{ background: '#B2945B', border: '1.5px solid #F1F1EF' }} />
                         )}
-                    </div>
+                    </button>
                 </header>
 
                 <Toast toasts={toasts} remove={removeToast} />
@@ -445,6 +376,90 @@ export default function AuthenticatedLayout({ title, breadcrumb, children }) {
                     {children}
                 </main>
             </div>
+
+            {/* ── Notification dropdown — rendered outside header to escape its stacking context ── */}
+            {notifOpen && (
+                <div
+                    ref={dropdownRef}
+                    className="fixed right-4 w-[calc(100vw-2rem)] sm:w-80 bg-white rounded-xl shadow-2xl flex flex-col"
+                    style={{
+                        top: 68,
+                        border: '0.5px solid #D1CDC7',
+                        maxHeight: 'min(420px, calc(100vh - 84px))',
+                        zIndex: 9999,
+                    }}
+                >
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-4 py-3 flex-shrink-0"
+                        style={{ borderBottom: '0.5px solid #E8E6E2' }}>
+                        <span className="text-sm font-semibold text-forest">
+                            Notifications
+                            {notifications?.unread_count > 0 && (
+                                <span className="ml-2 text-xs font-semibold px-1.5 py-0.5 rounded-full"
+                                    style={{ background: 'rgba(178,148,91,0.15)', color: '#B2945B' }}>
+                                    {notifications.unread_count}
+                                </span>
+                            )}
+                        </span>
+                        <div className="flex items-center gap-3">
+                            {notifications?.unread_count > 0 && (
+                                <button className="text-xs font-medium" style={{ color: '#B2945B' }}
+                                    onClick={() => router.post(route('notifications.read-all'), {}, { preserveScroll: true })}>
+                                    Mark all read
+                                </button>
+                            )}
+                            <button onClick={() => setNotifOpen(false)}
+                                className="flex items-center justify-center w-6 h-6 rounded-md transition-colors"
+                                style={{ background: '#F1F1EF', color: '#6b6259' }}>
+                                <Icon name="close" size={11} />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Items */}
+                    <div className="overflow-y-auto flex-1">
+                        {(!notifications?.items || notifications.items.length === 0) ? (
+                            <div className="px-4 py-8 text-center text-xs" style={{ color: '#8a7e6e' }}>
+                                No notifications yet
+                            </div>
+                        ) : notifications.items.map(n => (
+                            <button key={n.id} type="button"
+                                className="w-full text-left flex gap-3 px-4 py-3 transition-colors"
+                                style={{
+                                    borderBottom: '0.5px solid #F0EDE9',
+                                    background: n.read ? 'transparent' : 'rgba(178,148,91,0.04)',
+                                }}
+                                onClick={() => {
+                                    if (!n.read) router.post(route('notifications.read', n.id), {}, { preserveScroll: true });
+                                    if (n.url) { setNotifOpen(false); router.visit(n.url); }
+                                    else setNotifOpen(false);
+                                }}
+                            >
+                                <span className="flex-shrink-0 text-base mt-0.5">
+                                    {typeIcon[n.type] ?? '🔔'}
+                                </span>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <span className="text-xs font-medium text-forest leading-snug">
+                                            {n.title}
+                                        </span>
+                                        {!n.read && (
+                                            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1"
+                                                style={{ background: '#B2945B' }} />
+                                        )}
+                                    </div>
+                                    <p className="text-xs mt-0.5 leading-snug" style={{ color: '#6b6259' }}>
+                                        {n.message}
+                                    </p>
+                                    <span className="text-xs mt-1 block" style={{ color: '#aaa09a' }}>
+                                        {n.time}
+                                    </span>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
