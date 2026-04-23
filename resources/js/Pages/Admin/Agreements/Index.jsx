@@ -443,10 +443,7 @@ function ProjectSelect({ projects, value, onChange }) {
                     borderBottomRightRadius: open ? 0 : undefined,
                 }}>
                 {selected ? (
-                    <span className="flex items-baseline gap-2 min-w-0">
-                        <span className="font-medium text-forest truncate">{selected.name}</span>
-                        <span className="text-xs italic flex-shrink-0" style={{ color: '#888480' }}>{selected.client_name}</span>
-                    </span>
+                    <span className="font-medium text-forest truncate">{selected.name}</span>
                 ) : (
                     <span style={{ color: '#888480' }}>— Choose a project —</span>
                 )}
@@ -465,13 +462,12 @@ function ProjectSelect({ projects, value, onChange }) {
                     ) : projects.map((p, i) => (
                         <button key={p.id} type="button"
                             onClick={() => { onChange(String(p.id)); setOpen(false); }}
-                            className="w-full flex items-baseline gap-2 px-4 py-2.5 text-left transition-colors hover:bg-stone-50"
+                            className="w-full px-4 py-2.5 text-left transition-colors hover:bg-stone-50"
                             style={{
                                 borderTop: i > 0 ? '0.5px solid #f0ebe3' : 'none',
                                 background: String(p.id) === String(value) ? 'rgba(26,60,46,0.04)' : undefined,
                             }}>
                             <span className="text-sm font-medium text-forest">{p.name}</span>
-                            <span className="text-xs italic" style={{ color: '#888480' }}>{p.client_name}</span>
                         </button>
                     ))}
                 </div>
