@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\UpdateController;
@@ -20,7 +20,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// â”€â”€â”€ First-login password change â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+//â”€â”€â”€ First-login password change â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 Route::middleware('auth')
     ->group(function () {
         Route::get('/change-password', [ChangePasswordController::class, 'show'])
