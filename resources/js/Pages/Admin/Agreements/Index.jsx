@@ -196,12 +196,7 @@ function CreateModal({ show, projects, variations, onClose }) {
                 <form onSubmit={submit} className="overflow-y-auto px-5 py-4 space-y-4">
                     <div>
                         <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#4A4A4A' }}>Project</label>
-                        <select value={projectId} onChange={e => handleProjectChange(e.target.value)} required
-                            className="w-full px-3 py-2.5 rounded-xl text-sm text-forest outline-none"
-                            style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }}>
-                            <option value="">Select project…</option>
-                            {projects.map(p => <option key={p.id} value={p.id}>{p.name} — {p.client_name}</option>)}
-                        </select>
+                        <ProjectSelect projects={projects} value={projectId} onChange={handleProjectChange} />
                     </div>
                     <div>
                         <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#4A4A4A' }}>
@@ -418,34 +413,44 @@ function ViewModal({ show, agreement, onClose }) {
 
 // ── Project selector dropdown ─────────────────────────────────────────────────
 
-function ProjectSelect({ projects, value, onChange }) {
-    const [open, setOpen] = useState(false);
-    const ref = useRef(null);
+function ProjectSelect({ projects, value, onChange, placeholder = '— Choose a project —' }) {
+    const [open, setOpen]       = useState(false);
+    const [dropPos, setDropPos] = useState({ top: 0, left: 0, width: 0 });
+    const triggerRef = useRef(null);
+    const wrapRef    = useRef(null);
 
     useEffect(() => {
-        function handler(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+        function handler(e) {
+            if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+        }
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
+    function handleOpen() {
+        if (open) { setOpen(false); return; }
+        const rect = triggerRef.current.getBoundingClientRect();
+        setDropPos({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX, width: rect.width });
+        setOpen(true);
+    }
+
     const selected = projects.find(p => String(p.id) === String(value));
 
     return (
-        <div ref={ref} className="relative">
+        <div ref={wrapRef} className="relative">
             <button
+                ref={triggerRef}
                 type="button"
-                onClick={() => setOpen(o => !o)}
+                onClick={handleOpen}
                 className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm text-left transition-colors"
                 style={{
                     background: '#F1F1EF',
                     border: `1.5px solid ${open ? '#25282D' : '#D1CDC7'}`,
-                    borderBottomLeftRadius:  open ? 0 : undefined,
-                    borderBottomRightRadius: open ? 0 : undefined,
                 }}>
                 {selected ? (
                     <span className="font-medium text-forest truncate">{selected.name}</span>
                 ) : (
-                    <span style={{ color: '#888480' }}>— Choose a project —</span>
+                    <span style={{ color: '#888480' }}>{placeholder}</span>
                 )}
                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#888480" strokeWidth="2"
                     strokeLinecap="round" className="flex-shrink-0 ml-2"
@@ -455,8 +460,13 @@ function ProjectSelect({ projects, value, onChange }) {
             </button>
 
             {open && (
-                <div className="absolute left-0 right-0 z-20 rounded-b-xl overflow-hidden"
-                    style={{ border: '1.5px solid #25282D', borderTop: 'none', background: '#fff', boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}>
+                <div className="fixed z-50 rounded-xl overflow-hidden"
+                    style={{
+                        top: dropPos.top + 2, left: dropPos.left, width: dropPos.width,
+                        border: '1.5px solid #D1CDC7', background: '#fff',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
+                        maxHeight: 240, overflowY: 'auto',
+                    }}>
                     {projects.length === 0 ? (
                         <p className="px-4 py-3 text-xs" style={{ color: '#888480' }}>No projects available.</p>
                     ) : projects.map((p, i) => (
