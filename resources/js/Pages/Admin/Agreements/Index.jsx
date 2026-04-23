@@ -873,10 +873,6 @@ export default function AgreementsIndex({ agreements, projects, variations, port
         <AuthenticatedLayout title="Agreements" breadcrumb="Client agreements & documents">
             <Head title="Agreements" />
             <div className="w-full">
-                <div className="mb-6">
-                    <h1 className="text-xl font-semibold text-forest">Agreements</h1>
-                    <p className="text-sm mt-0.5" style={{ color: '#aaa49e' }}>Manage variation agreements and project documents</p>
-                </div>
                 <TabBar active={tab} onChange={setTab} />
                 {tab === 'Variation Agreements' && (
                     <VariationAgreementsTab agreements={agreements} projects={projects} variations={variations} />
