@@ -1,11 +1,11 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Document;
 use App\Models\Project;
-use App\Services\AzureStorageService;
+use App\Services\MediaStorageService;
 use App\Services\PdfSigningService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -14,7 +14,7 @@ use Inertia\Inertia;
 
 class DocumentController extends Controller
 {
-    public function __construct(private AzureStorageService $azure) {}
+    public function __construct(private MediaStorageService $azure) {}
 
     /**
      * GET /portal/documents
@@ -70,7 +70,7 @@ class DocumentController extends Controller
 
             // 1. Get the source PDF bytes
             $sourcePdf = $document->storage_path
-                ? Storage::disk('azure')->get($document->storage_path)
+                ? Storage::disk('r2')->get($document->storage_path)
                 : \Illuminate\Support\Facades\Http::timeout(30)->get($document->url)->body();
 
             // 2. Stamp the PDF
@@ -81,12 +81,12 @@ class DocumentController extends Controller
             $baseName = pathinfo($document->filename ?? 'document', PATHINFO_FILENAME);
             $path     = "documents/{$project->id}/{$baseName}_signed_{$signedAt->timestamp}.pdf";
 
-            Storage::disk('azure')->put($path, $signedPdf);
+            Storage::disk('r2')->put($path, $signedPdf);
 
             // 4. Mark as signed
             $document->update([
                 'storage_path' => $path,
-                'storage_disk' => 'azure',
+                'storage_disk' => 'r2',
                 'filename'     => $baseName . '_signed.pdf',
                 'mime_type'    => 'application/pdf',
                 'sign_status'  => 'signed',

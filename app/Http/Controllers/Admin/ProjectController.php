@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Document;
 use App\Models\Project;
 use App\Models\User;
-use App\Services\AzureStorageService;
+use App\Services\MediaStorageService;
 use App\Models\PortalNotification;
 use App\Services\ClientProvisioningService;
 use App\Services\GHLService;
@@ -20,7 +20,7 @@ class ProjectController extends Controller
     public function __construct(
         private GHLService $ghl,
         private ClientProvisioningService $clientProvisioning,
-        private AzureStorageService $azure,
+        private MediaStorageService $azure,
     ) {}
 
     // â”€â”€ Index â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -319,7 +319,7 @@ class ProjectController extends Controller
             'title'        => $title,
             'filename'     => $filename,
             'storage_path' => $path,
-            'storage_disk' => 'azure',
+            'storage_disk' => 'r2',
             'mime_type'    => $file->getMimeType(),
             'file_size'    => $file->getSize(),
             'category'     => $request->input('category', 'other'),

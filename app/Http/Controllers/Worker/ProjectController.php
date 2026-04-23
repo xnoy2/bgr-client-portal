@@ -7,7 +7,7 @@ use App\Models\MaintenanceSubscription;
 use App\Models\MediaFile;
 use App\Models\ProgressUpdate;
 use App\Models\Project;
-use App\Services\AzureStorageService;
+use App\Services\MediaStorageService;
 use App\Services\GHLService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,7 +16,7 @@ class ProjectController extends Controller
 {
     public function __construct(
         private GHLService $ghl,
-        private AzureStorageService $azure,
+        private MediaStorageService $azure,
     ) {}
 
     /**
@@ -210,7 +210,7 @@ class ProjectController extends Controller
                 'user_id'           => auth()->id(),
                 'original_filename' => $file->getClientOriginalName(),
                 'storage_path'      => $path,
-                'storage_disk'      => 'azure',
+                'storage_disk'      => 'r2',
                 'resource_type'     => 'photo',
                 'mime_type'         => $file->getMimeType(),
                 'file_size'         => $file->getSize(),
@@ -284,7 +284,7 @@ class ProjectController extends Controller
                 'user_id'           => auth()->id(),
                 'original_filename' => $file->getClientOriginalName(),
                 'storage_path'      => $path,
-                'storage_disk'      => 'azure',
+                'storage_disk'      => 'r2',
                 'resource_type'     => 'photo',
                 'mime_type'         => $file->getMimeType(),
                 'file_size'         => $file->getSize(),

@@ -6,11 +6,13 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class AzureStorageService
+class MediaStorageService
 {
+    private const DISK = 'r2';
+
     /**
-     * Upload a file to Azure Blob Storage and return the blob path.
-     * Returns null if Azure is not configured (falls back gracefully in dev).
+     * Upload a file to Cloudflare R2 and return the object path.
+     * Returns null if R2 is not configured (falls back gracefully in dev).
      */
     public function upload(UploadedFile $file, string $folder): ?string
     {
@@ -21,31 +23,37 @@ class AzureStorageService
         $extension = $file->getClientOriginalExtension() ?: $file->extension();
         $path      = "{$folder}/" . Str::uuid() . ($extension ? ".{$extension}" : '');
 
-        Storage::disk('azure')->put($path, file_get_contents($file->getRealPath()));
+        Storage::disk(self::DISK)->put($path, file_get_contents($file->getRealPath()));
 
         return $path;
     }
 
     /**
-     * Delete a file from Azure Blob Storage.
+     * Delete a file from Cloudflare R2.
      */
     public function delete(string $path): void
     {
         if (! $this->configured()) return;
 
         try {
-            Storage::disk('azure')->delete($path);
+            Storage::disk(self::DISK)->delete($path);
         } catch (\Throwable) {
-            // Non-fatal — log but don't crash
+            // Non-fatal
         }
     }
 
     /**
-     * Returns true when Azure credentials are present.
+     * Returns true when R2 credentials are present.
      */
     public function configured(): bool
     {
-        return ! empty(config('filesystems.disks.azure.account'))
-            && ! empty(config('filesystems.disks.azure.key'));
+        return ! empty(config('filesystems.disks.r2.key'))
+            && ! empty(config('filesystems.disks.r2.secret'))
+            && ! empty(config('filesystems.disks.r2.endpoint'));
+    }
+
+    public static function disk(): string
+    {
+        return self::DISK;
     }
 }

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers;
 
@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 class MediaController extends Controller
 {
     /**
-     * Stream a progress-update photo — only accessible to the project's client, workers, or admin.
+     * Stream a progress-update photo â€” only accessible to the project's client, workers, or admin.
      */
     public function photo(MediaFile $mediaFile)
     {
@@ -23,7 +23,7 @@ class MediaController extends Controller
 
         abort_unless($allowed, 403);
 
-        return $this->streamFromAzure(
+        return $this->streamFromStorage(
             $mediaFile->storage_path,
             $mediaFile->mime_type ?? 'image/jpeg',
             $mediaFile->original_filename ?? 'photo',
@@ -32,7 +32,7 @@ class MediaController extends Controller
     }
 
     /**
-     * Download a project document — only accessible to the project's client or admin.
+     * Download a project document â€” only accessible to the project's client or admin.
      */
     public function document(Document $document)
     {
@@ -47,7 +47,7 @@ class MediaController extends Controller
 
         // New Azure-stored documents
         if ($document->storage_path) {
-            return $this->streamFromAzure(
+            return $this->streamFromStorage(
                 $document->storage_path,
                 $document->mime_type ?? 'application/octet-stream',
                 $document->filename  ?? 'document',
@@ -55,7 +55,7 @@ class MediaController extends Controller
             );
         }
 
-        // Legacy Cloudinary documents — proxy through HTTP
+        // Legacy Cloudinary documents â€” proxy through HTTP
         $response = \Illuminate\Support\Facades\Http::timeout(30)->get($document->url);
         abort_unless($response->successful(), 502, 'Could not retrieve the file.');
 
@@ -67,16 +67,16 @@ class MediaController extends Controller
         ]);
     }
 
-    private function streamFromAzure(string $path, string $mime, string $filename, bool $download): \Symfony\Component\HttpFoundation\StreamedResponse
+    private function streamFromStorage(string $path, string $mime, string $filename, bool $download): \Symfony\Component\HttpFoundation\StreamedResponse
     {
-        abort_unless(Storage::disk('azure')->exists($path), 404);
+        abort_unless(Storage::disk('r2')->exists($path), 404);
 
         $disposition = $download
             ? 'attachment; filename="' . str_replace('"', '', $filename) . '"'
             : 'inline';
 
         return response()->stream(function () use ($path) {
-            $stream = Storage::disk('azure')->readStream($path);
+            $stream = Storage::disk('r2')->readStream($path);
             fpassthru($stream);
             fclose($stream);
         }, 200, [
