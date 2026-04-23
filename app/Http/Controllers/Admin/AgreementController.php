@@ -8,12 +8,15 @@ use App\Models\PortalDocument;
 use App\Models\PortalNotification;
 use App\Models\Project;
 use App\Models\VariationRequest;
+use App\Services\GHLService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class AgreementController extends Controller
 {
+    public function __construct(private GHLService $ghl) {}
+
     public function index()
     {
         $agreements = Agreement::with(['project.client', 'creator', 'variationRequest'])
@@ -21,19 +24,27 @@ class AgreementController extends Controller
             ->get()
             ->map(fn ($a) => $this->format($a));
 
-        $projects = Project::with('client')
-            ->whereNotNull('client_id')
-            ->whereNotIn('status', ['cancelled'])
-            ->orderByDesc('id')
+        // Use live GHL pipeline opportunities as the authoritative project list,
+        // matched to local project records (needed for foreign key references)
+        $opportunities = collect($this->ghl->getCachedPipelineOpportunities()['opportunities'] ?? []);
+        $ghlIds        = $opportunities->pluck('id');
+        $localProjects = Project::with('client')
+            ->whereIn('ghl_opportunity_id', $ghlIds)
             ->get()
-            ->unique(fn ($p) => $p->name . '|' . $p->client_id)
+            ->keyBy('ghl_opportunity_id');
+
+        $projects = $opportunities
+            ->filter(fn ($opp) => $localProjects->has($opp['id']))
+            ->map(function ($opp) use ($localProjects) {
+                $local = $localProjects->get($opp['id']);
+                return [
+                    'id'          => $local->id,
+                    'name'        => $opp['name'],
+                    'client_name' => $opp['contact']['name'] ?? $local->client?->name ?? '—',
+                    'address'     => $local->address ?? '',
+                ];
+            })
             ->sortBy('name')
-            ->map(fn ($p) => [
-                'id'          => $p->id,
-                'name'        => $p->name,
-                'client_name' => $p->client?->name ?? '—',
-                'address'     => $p->address ?? '',
-            ])
             ->values();
 
         $variations = VariationRequest::with('project')
