@@ -237,56 +237,6 @@ class GHLService
 
     // ── Notes ────────────────────────────────────────────────────────────────
 
-    // ── Notes ────────────────────────────────────────────────────────────────
-
-    private function buildNoteBody(string $title, string $body, array $photoUrls = []): string
-    {
-        $lines = ["📋 {$title}", '', $body];
-
-        if (! empty($photoUrls)) {
-            $lines[] = '';
-            $lines[] = '📷 Photos:';
-            foreach ($photoUrls as $url) {
-                $lines[] = $url;
-            }
-        }
-
-        return implode("\n", $lines);
-    }
-
-    /**
-     * Post a note on a GHL contact (appears in the contact's Notes tab).
-     * GHL API v2021-07-28 attaches notes to contacts, not opportunities directly.
-     */
-    public function postContactNote(
-        string $contactId,
-        string $title,
-        string $body,
-        array  $photoUrls = []
-    ): bool {
-        $noteBody = $this->buildNoteBody($title, $body, $photoUrls);
-
-        try {
-            $response = $this->http()->post("/contacts/{$contactId}/notes", [
-                'body' => $noteBody,
-            ]);
-
-            if ($response->successful()) {
-                return true;
-            }
-
-            Log::warning('GHL postContactNote failed', [
-                'contact_id' => $contactId,
-                'status'     => $response->status(),
-                'body'       => $response->body(),
-            ]);
-        } catch (\Exception $e) {
-            Log::error('GHL postContactNote exception', ['error' => $e->getMessage()]);
-        }
-
-        return false;
-    }
-
     /**
      * Build a formatted note body with optional photo URLs.
      */
