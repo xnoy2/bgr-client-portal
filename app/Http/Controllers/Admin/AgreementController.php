@@ -22,14 +22,18 @@ class AgreementController extends Controller
             ->map(fn ($a) => $this->format($a));
 
         $projects = Project::with('client')
+            ->whereNotNull('client_id')
+            ->whereNotIn('status', ['cancelled'])
             ->orderBy('name')
             ->get()
+            ->unique('ghl_opportunity_id')
             ->map(fn ($p) => [
                 'id'          => $p->id,
                 'name'        => $p->name,
                 'client_name' => $p->client?->name ?? '—',
                 'address'     => $p->address ?? '',
-            ]);
+            ])
+            ->values();
 
         $variations = VariationRequest::with('project')
             ->where('status', 'approved')
@@ -45,14 +49,16 @@ class AgreementController extends Controller
 
         $portalDocs = PortalDocument::orderByDesc('created_at')
             ->get()
-            ->groupBy('category')
-            ->map(fn ($group) => $group->map(fn ($d) => [
+            ->map(fn ($d) => [
                 'id'            => $d->id,
+                'category'      => $d->category,
+                'project_id'    => $d->project_id,
                 'original_name' => $d->original_name,
                 'mime_type'     => $d->mime_type,
                 'file_size'     => $d->file_size,
                 'uploaded_at'   => $d->created_at->format('j M Y'),
-            ])->values());
+            ])
+            ->values();
 
         return Inertia::render('Admin/Agreements/Index', [
             'agreements'    => $agreements,
