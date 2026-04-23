@@ -1,15 +1,16 @@
-﻿<?php
+<?php
 
 namespace App\Http\Controllers;
 
 use App\Models\Document;
 use App\Models\MediaFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
 class MediaController extends Controller
 {
     /**
-     * Stream a progress-update photo â€” only accessible to the project's client, workers, or admin.
+     * Stream a progress-update photo — only accessible to the project's client, workers, or admin.
      */
     public function photo(MediaFile $mediaFile)
     {
@@ -32,7 +33,7 @@ class MediaController extends Controller
     }
 
     /**
-     * Download a project document â€” only accessible to the project's client or admin.
+     * Download a project document — only accessible to the project's client or admin.
      */
     public function document(Document $document)
     {
@@ -45,7 +46,7 @@ class MediaController extends Controller
 
         abort_unless($allowed, 403);
 
-        // New Azure-stored documents
+        // New R2-stored documents
         if ($document->storage_path) {
             return $this->streamFromStorage(
                 $document->storage_path,
@@ -55,8 +56,8 @@ class MediaController extends Controller
             );
         }
 
-        // Legacy Cloudinary documents â€” proxy through HTTP
-        $response = \Illuminate\Support\Facades\Http::timeout(30)->get($document->url);
+        // Legacy Cloudinary documents — proxy through HTTP
+        $response = Http::timeout(30)->get($document->url);
         abort_unless($response->successful(), 502, 'Could not retrieve the file.');
 
         return response($response->body(), 200, [
