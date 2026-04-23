@@ -540,8 +540,8 @@ function EditUpdateModal({ show, ghlId, update, stages, onClose }) {
     );
 
     return (
-        <ModalShell show={show} onClose={onClose} position="bottom">
-            <div className="w-full sm:max-w-lg bg-white flex flex-col rounded-t-3xl sm:rounded-2xl overflow-hidden"
+        <ModalShell show={show} onClose={onClose}>
+            <div className="w-full max-w-lg bg-white flex flex-col rounded-2xl overflow-hidden"
                 style={{ maxHeight: '92vh' }}>
 
                 <div className="flex justify-center pt-3 pb-1 sm:hidden">
