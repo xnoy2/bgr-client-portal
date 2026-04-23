@@ -217,6 +217,12 @@ function ProjectSelect({ projects, value, onChange, placeholder = '— Choose a 
     const triggerRef = useRef(null);
     const wrapRef    = useRef(null);
 
+    function recalc() {
+        if (!triggerRef.current) return;
+        const rect = triggerRef.current.getBoundingClientRect();
+        setDropPos({ top: rect.bottom, left: rect.left, width: rect.width });
+    }
+
     useEffect(() => {
         function handler(e) {
             if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
@@ -225,10 +231,20 @@ function ProjectSelect({ projects, value, onChange, placeholder = '— Choose a 
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
+    // Re-position on any ancestor scroll (capture=true catches non-bubbling scroll events)
+    useEffect(() => {
+        if (!open) return;
+        window.addEventListener('scroll', recalc, true);
+        window.addEventListener('resize', recalc);
+        return () => {
+            window.removeEventListener('scroll', recalc, true);
+            window.removeEventListener('resize', recalc);
+        };
+    }, [open]);
+
     function handleOpen() {
         if (open) { setOpen(false); return; }
-        const rect = triggerRef.current.getBoundingClientRect();
-        setDropPos({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX, width: rect.width });
+        recalc();
         setOpen(true);
     }
 
