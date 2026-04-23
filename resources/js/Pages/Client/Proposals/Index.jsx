@@ -87,7 +87,8 @@ function DetailModal({ show, proposal, onClose }) {
                         </button>
                     </div>
                 </div>
-            </ModalShell>
+            </div>
+        </ModalShell>
     );
 }
 
