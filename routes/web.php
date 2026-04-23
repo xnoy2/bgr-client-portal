@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\UpdateController;
@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AgreementController as AdminAgreementController;
 use App\Http\Controllers\Admin\ProposalController as AdminProposalController;
 use App\Http\Controllers\Admin\VariationController as AdminVariationController;
+use App\Http\Controllers\Admin\MaintenanceController as AdminMaintenanceController;
 use App\Http\Controllers\Client\AgreementController as ClientAgreementController;
 use App\Http\Controllers\Client\DocumentController as ClientDocumentController;
 use App\Http\Controllers\Client\ProposalController as ClientProposalController;
@@ -19,7 +20,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// ─── First-login password change ─────────────────────────────────────────────
+// â”€â”€â”€ First-login password change â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 Route::middleware('auth')
     ->group(function () {
         Route::get('/change-password', [ChangePasswordController::class, 'show'])
@@ -28,7 +29,7 @@ Route::middleware('auth')
             ->name('password.change.update');
     });
 
-// Landing + post-login redirect — both / and /dashboard route here
+// Landing + post-login redirect â€” both / and /dashboard route here
 Route::middleware('auth')->get('/dashboard', function () {
     $user = auth()->user();
     if ($user->hasRole('admin'))  return redirect()->route('admin.dashboard');
@@ -42,7 +43,7 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// ─── Profile routes ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Profile routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -65,7 +66,7 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__.'/auth.php';
 
-// ─── Admin routes ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Admin routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 Route::middleware(['auth', 'password.changed', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
@@ -111,7 +112,18 @@ Route::middleware(['auth', 'password.changed', 'role:admin'])
         Route::put('/proposals/{proposal}',         [AdminProposalController::class, 'update'])->name('proposals.update');
         Route::delete('/proposals/{proposal}',      [AdminProposalController::class, 'destroy'])->name('proposals.destroy');
 
-        // Project management — {ghlId} is the GHL opportunity ID (string)
+        // Maintenance enquiries & subscriptions
+        Route::get('/maintenance',                                           [AdminMaintenanceController::class, 'index'])->name('maintenance.index');
+        Route::put('/maintenance/enquiries/{enquiry}',                       [AdminMaintenanceController::class, 'updateEnquiry'])->name('maintenance.enquiries.update');
+        Route::post('/maintenance/enquiries/{enquiry}/convert',               [AdminMaintenanceController::class, 'convertEnquiry'])->name('maintenance.enquiries.convert');
+        Route::post('/maintenance/subscriptions',                            [AdminMaintenanceController::class, 'storeSubscription'])->name('maintenance.subscriptions.store');
+        Route::put('/maintenance/subscriptions/{subscription}',              [AdminMaintenanceController::class, 'updateSubscription'])->name('maintenance.subscriptions.update');
+        Route::delete('/maintenance/subscriptions/{subscription}',           [AdminMaintenanceController::class, 'destroySubscription'])->name('maintenance.subscriptions.destroy');
+        Route::post('/maintenance/plans',                                        [AdminMaintenanceController::class, 'storePlan'])->name('maintenance.plans.store');
+        Route::put('/maintenance/plans/{plan}',                                  [AdminMaintenanceController::class, 'updatePlan'])->name('maintenance.plans.update');
+        Route::delete('/maintenance/plans/{plan}',                               [AdminMaintenanceController::class, 'destroyPlan'])->name('maintenance.plans.destroy');
+
+        // Project management â€” {ghlId} is the GHL opportunity ID (string)
         Route::get('/projects',                            [ProjectController::class, 'index'])->name('projects.index');
         Route::post('/projects/refresh-pipeline',          [ProjectController::class, 'refreshPipeline'])->name('projects.refresh-pipeline');
         Route::get('/projects/{ghlId}',                    [ProjectController::class, 'show'])->name('projects.show');
@@ -123,7 +135,7 @@ Route::middleware(['auth', 'password.changed', 'role:admin'])
         Route::get('/projects/{ghlId}/documents/{document}/download',     [ProjectController::class, 'downloadDocument'])->name('projects.documents.download');
     });
 
-// ─── Worker routes ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Worker routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 Route::middleware(['auth', 'password.changed', 'role:worker|admin'])
     ->prefix('worker')
     ->name('worker.')
@@ -135,7 +147,7 @@ Route::middleware(['auth', 'password.changed', 'role:worker|admin'])
         Route::put('/projects/{ghlId}/updates/{updateId}', [WorkerProjectController::class, 'editUpdate'])->name('projects.update.edit');
     });
 
-// ─── Client portal routes ────────────────────────────────────────────────────
+// â”€â”€â”€ Client portal routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 Route::middleware(['auth', 'password.changed', 'role:client'])
     ->prefix('portal')
     ->name('client.')
@@ -152,4 +164,35 @@ Route::middleware(['auth', 'password.changed', 'role:client'])
         Route::get('/documents',                         [ClientDocumentController::class, 'index'])->name('documents.index');
         Route::get('/documents/{document}/download',     [ClientDocumentController::class, 'download'])->name('documents.download');
         Route::post('/documents/{document}/sign',        [ClientDocumentController::class, 'sign'])->name('documents.sign');
+
+        // Maintenance plans
+        Route::get('/maintenance', function () {
+            $plans = \App\Models\MaintenancePlan::where('is_active', true)
+                ->orderBy('sort_order')
+                ->get()
+                ->map(fn ($p) => [
+                    'id'       => $p->id,
+                    'key'      => $p->slug,
+                    'name'     => $p->name,
+                    'price'    => $p->price,
+                    'popular'  => $p->is_popular,
+                    'features' => collect($p->features ?? [])->map(fn ($f) => ['label' => $f])->values()->all(),
+                ]);
+            $subscription = \App\Models\MaintenanceSubscription::where('client_id', auth()->id())
+                ->whereIn('status', ['active', 'paused'])
+                ->orderByDesc('created_at')
+                ->first();
+            $subPlan = $subscription ? \App\Models\MaintenancePlan::where('slug', $subscription->plan)->first() : null;
+            return \Inertia\Inertia::render('Client/Maintenance/Index', [
+                'plans'        => $plans,
+                'subscription' => $subscription ? [
+                    'plan'         => $subscription->plan,
+                    'plan_name'    => $subPlan?->name ?? ucfirst($subscription->plan),
+                    'price'        => $subPlan ? '£' . number_format($subPlan->price) . '/yr' : null,
+                    'status'       => $subscription->status,
+                    'renewal_date' => $subscription->renewal_date?->format('d M Y'),
+                ] : null,
+            ]);
+        })->name('maintenance.index');
+        Route::post('/maintenance/enquire', [\App\Http\Controllers\Client\MaintenanceController::class, 'enquire'])->name('maintenance.enquire');
     });

@@ -356,8 +356,8 @@ function PostUpdateModal({ show, ghlId, stages, initialStageId, onClose, onCompl
                         />
                     </div>
 
-                    {/* Stage picker */}
-                    {stages?.length > 0 && (
+                    {/* Stage picker — only shown for free-form updates, not when completing a stage */}
+                    {stages?.length > 0 && !onComplete && (
                         <div>
                             <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: '#4A4A4A' }}>
                                 Stage
@@ -761,22 +761,24 @@ function OverviewTab({ project, ghl }) {
 
 // ── Stages tab ────────────────────────────────────────────────────────────────
 
-function StagesTab({ project, onShowUpdates, onCompleteStage, advanceStage, saving }) {
+function StagesTab({ project, onShowUpdates, onCompleteStage, saving }) {
 
-    const currentOrder = project.stages?.find(s => s.status === 'in_progress')?.order ?? 0;
+    // Stages sorted by order — single source of truth
+    const stages = [...(project.stages ?? [])].sort((a, b) => a.order - b.order);
+    const allDone = stages.length > 0 && stages.every(s => s.status === 'completed');
 
     return (
         <div className="space-y-3">
-            {/* Timeline card */}
+            {/* Pipeline timeline */}
             <div className="glass-card rounded-2xl p-4">
                 <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: '#888480' }}>
                     Pipeline
                 </p>
                 {/* Mobile vertical */}
                 <div className="flex flex-col sm:hidden">
-                    {project.stages?.map((stage, i) => {
+                    {stages.map((stage, i) => {
                         const s = STAGE_STYLE[stage.status] ?? STAGE_STYLE.pending;
-                        const isLast = i === (project.stages.length - 1);
+                        const isLast = i === stages.length - 1;
                         return (
                             <div key={stage.id} className="flex gap-3">
                                 <div className="flex flex-col items-center" style={{ width: 32 }}>
@@ -787,9 +789,7 @@ function StagesTab({ project, onShowUpdates, onCompleteStage, advanceStage, savi
                                             <span style={{ fontSize: 10, fontWeight: 700, color: s.text }}>{stage.order}</span>
                                         )}
                                     </div>
-                                    {!isLast && (
-                                        <div className="w-0.5 flex-1 my-1" style={{ background: s.line, minHeight: 20 }} />
-                                    )}
+                                    {!isLast && <div className="w-0.5 flex-1 my-1" style={{ background: s.line, minHeight: 20 }} />}
                                 </div>
                                 <div className={`flex-1 min-w-0 ${isLast ? 'pb-0' : 'pb-4'}`} style={{ paddingTop: 4 }}>
                                     <p className="text-sm font-semibold leading-tight" style={{ color: stage.status === 'pending' ? '#888480' : '#25282D' }}>
@@ -805,9 +805,9 @@ function StagesTab({ project, onShowUpdates, onCompleteStage, advanceStage, savi
                 </div>
                 {/* Desktop horizontal */}
                 <div className="hidden sm:flex items-start">
-                    {project.stages?.map((stage, i) => {
+                    {stages.map((stage, i) => {
                         const s = STAGE_STYLE[stage.status] ?? STAGE_STYLE.pending;
-                        const isLast = i === (project.stages.length - 1);
+                        const isLast = i === stages.length - 1;
                         return (
                             <div key={stage.id} className="flex items-start flex-1 min-w-0">
                                 <div className="flex flex-col items-center flex-1 min-w-0 px-1">
@@ -837,29 +837,42 @@ function StagesTab({ project, onShowUpdates, onCompleteStage, advanceStage, savi
                 </div>
             </div>
 
-            {/* Stage action cards */}
-            {project.stages?.map(stage => {
+            {/* All done banner */}
+            {allDone && (
+                <div className="rounded-2xl px-5 py-4 flex items-center gap-3"
+                    style={{ background: '#D1FAE5', border: '1px solid #BBF7D0' }}>
+                    <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#065F46" strokeWidth="2.5" strokeLinecap="round">
+                        <polyline points="3,8 7,12 13,4"/>
+                    </svg>
+                    <p className="text-sm font-semibold" style={{ color: '#065F46' }}>All stages completed — project finished!</p>
+                </div>
+            )}
+
+            {/* Unified stage list — sorted by order, one action at a time */}
+            {stages.map(stage => {
                 const s        = STAGE_STYLE[stage.status] ?? STAGE_STYLE.pending;
                 const isActive = stage.status === 'in_progress';
-                const canStart = stage.status === 'pending' && stage.order === currentOrder + 1;
-                if (!isActive && !canStart) return null;
+                const isLocked = stage.status === 'pending';
 
                 return (
                     <div key={stage.id}
-                        onClick={() => onShowUpdates(stage.name)}
+                        onClick={() => (stage.status === 'completed' || isActive) && onShowUpdates(stage.name)}
                         className="rounded-2xl p-4 transition-all duration-150"
                         style={{
-                            background: isActive ? 'linear-gradient(135deg, rgba(26,26,26,0.04), rgba(26,26,26,0.02))' : '#fff',
+                            background: isActive
+                                ? 'linear-gradient(135deg, rgba(26,26,26,0.04), rgba(26,26,26,0.02))'
+                                : isLocked ? 'rgba(241,241,239,0.5)' : '#fff',
                             border: isActive ? '1.5px solid rgba(26,26,26,0.15)' : '1px solid #f0ebe3',
-                            cursor: 'pointer',
+                            cursor: isLocked ? 'default' : 'pointer',
+                            opacity: isLocked ? 0.65 : 1,
                         }}
-                        onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.07)'}
+                        onMouseEnter={e => { if (!isLocked) e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.07)'; }}
                         onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
                                 style={{ background: s.bg, border: `2px solid ${s.border}` }}>
                                 <StageIcon status={stage.status} />
-                                {stage.status === 'pending' && (
+                                {isLocked && (
                                     <span style={{ fontSize: 11, fontWeight: 700, color: s.text }}>{stage.order}</span>
                                 )}
                             </div>
@@ -870,73 +883,45 @@ function StagesTab({ project, onShowUpdates, onCompleteStage, advanceStage, savi
                                         <span className="text-xs font-semibold" style={{ color: '#25282D' }}>In Progress</span>
                                     </div>
                                 )}
-                                <p className="text-sm font-bold text-forest leading-tight">{stage.name}</p>
-                                <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: '#888480' }}>
-                                    Stage {stage.order} of {project.stages.length}
-                                    <span style={{ color: '#D1CDC7' }}>·</span>
-                                    <span style={{ color: '#25282D' }}>View updates</span>
+                                <p className="text-sm font-bold leading-tight"
+                                    style={{ color: isLocked ? '#888480' : '#25282D' }}>
+                                    {stage.name}
+                                </p>
+                                <p className="text-xs mt-0.5" style={{ color: '#888480' }}>
+                                    Stage {stage.order} of {stages.length}
+                                    {!isLocked && (
+                                        <> <span style={{ color: '#D1CDC7' }}>·</span> <span style={{ color: '#25282D' }}>View updates</span></>
+                                    )}
+                                    {isLocked && <> · Waiting for previous stage</>}
                                 </p>
                             </div>
                             <div className="flex-shrink-0 flex items-center gap-2">
                                 {isActive && (
-                                    <button onClick={e => { e.stopPropagation(); onCompleteStage(stage); }} disabled={saving}
+                                    <button
+                                        onClick={e => { e.stopPropagation(); onCompleteStage(stage); }}
+                                        disabled={saving}
                                         className="px-4 py-2 rounded-xl text-xs font-bold transition-opacity"
                                         style={{ background: '#25282D', color: '#fff', opacity: saving ? 0.5 : 1 }}>
                                         {saving ? '…' : 'Complete ✓'}
                                     </button>
                                 )}
-                                {canStart && (
-                                    <button onClick={e => { e.stopPropagation(); advanceStage(stage.order); }} disabled={saving}
-                                        className="px-4 py-2 rounded-xl text-xs font-bold transition-opacity"
-                                        style={{ background: 'transparent', color: '#25282D', border: '1px solid #D1CDC7', opacity: saving ? 0.5 : 1 }}>
-                                        {saving ? '…' : 'Start →'}
-                                    </button>
+                                {!isLocked && (
+                                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#25282D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="6,3 11,8 6,13"/>
+                                    </svg>
                                 )}
-                                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#25282D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="6,3 11,8 6,13"/>
-                                </svg>
+                                {isLocked && (
+                                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#C0BAB4" strokeWidth="1.8" strokeLinecap="round">
+                                        <rect x="4" y="7" width="8" height="7" rx="1.5"/>
+                                        <path d="M6 7V5a2 2 0 014 0v2"/>
+                                    </svg>
+                                )}
                             </div>
                         </div>
                     </div>
                 );
             })}
 
-            {/* All other stages (read-only) */}
-            {project.stages?.filter(s => s.status !== 'in_progress' && !(s.status === 'pending' && s.order === currentOrder + 1)).map(stage => {
-                const s = STAGE_STYLE[stage.status] ?? STAGE_STYLE.pending;
-                return (
-                    <div key={stage.id}
-                        onClick={() => onShowUpdates(stage.name)}
-                        className="glass-card rounded-2xl px-4 py-3 flex items-center gap-3 transition-all duration-150"
-                        style={{ border: '1px solid #f0ebe3', cursor: 'pointer' }}
-                        onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.07)'}
-                        onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                            style={{ background: s.bg, border: `2px solid ${s.border}` }}>
-                            <StageIcon status={stage.status} />
-                            {stage.status === 'pending' && (
-                                <span style={{ fontSize: 10, fontWeight: 700, color: s.text }}>{stage.order}</span>
-                            )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold leading-tight"
-                                style={{ color: stage.status === 'pending' ? '#888480' : '#25282D' }}>
-                                {stage.name}
-                            </p>
-                        </div>
-                        <span className="text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0"
-                            style={stage.status === 'completed'
-                                ? { background: 'rgba(26,26,26,0.07)', color: '#25282D' }
-                                : { background: '#F1F1EF', color: '#888480' }
-                            }>
-                            {STAGE_LABELS[stage.status]}
-                        </span>
-                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#D1CDC7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="6,3 11,8 6,13"/>
-                        </svg>
-                    </div>
-                );
-            })}
         </div>
     );
 }
@@ -1283,7 +1268,7 @@ export default function WorkerProjectShow({ project, ghl, updates }) {
             <TabBar tabs={TABS} active={tab} onChange={t => { setTab(t); setStageFilter(null); }} />
 
             {tab === 'Overview' && <OverviewTab project={project} ghl={ghl} />}
-            {tab === 'Stages'   && <StagesTab   project={project} onPostUpdate={openModal} onShowUpdates={showUpdatesForStage} onCompleteStage={openModalForComplete} advanceStage={advanceStage} saving={saving} />}
+            {tab === 'Stages'   && <StagesTab   project={project} onShowUpdates={showUpdatesForStage} onCompleteStage={openModalForComplete} saving={saving} />}
             {tab === 'Updates'  && <UpdatesTab  updates={updates} onPostUpdate={openModal} ghlId={project.ghl_opportunity_id} stages={project.stages} stageFilter={stageFilter} onClearFilter={() => setStageFilter(null)} />}
 
             {modalOpen && (

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Worker;
 
 use App\Http\Controllers\Controller;
+use App\Models\MaintenanceSubscription;
 use App\Models\MediaFile;
 use App\Models\ProgressUpdate;
 use App\Models\Project;
@@ -26,7 +27,24 @@ class ProjectController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        $data = $projects->map(function ($project) {
+        // Pre-fetch active/paused maintenance subscriptions keyed by client_id
+        $clientIds = $projects->pluck('client_id')->filter()->unique()->values();
+
+        $subs = MaintenanceSubscription::whereIn('client_id', $clientIds)
+            ->whereIn('status', ['active', 'paused'])
+            ->get(['client_id', 'plan']);
+
+        // Resolve plan slugs → display names from maintenance_plans table
+        $slugs     = $subs->pluck('plan')->unique();
+        $planNames = \App\Models\MaintenancePlan::whereIn('slug', $slugs)
+            ->pluck('name', 'slug');
+
+        // Build client_id → plan name map
+        $maintenanceByClient = $subs->mapWithKeys(fn ($s) => [
+            $s->client_id => $planNames[$s->plan] ?? ucfirst($s->plan),
+        ]);
+
+        $data = $projects->map(function ($project) use ($maintenanceByClient) {
             $ghl = $project->ghl_opportunity_id
                 ? $this->ghl->getCachedOpportunity($project->ghl_opportunity_id)
                 : null;
@@ -54,6 +72,7 @@ class ProjectController extends Controller
                 'total_stages'       => $totalStages,
                 'ghl_stage'          => $ghl['stage_name'] ?? null,
                 'client_name'        => $project->client?->name,
+                'maintenance_plan'   => $maintenanceByClient[$project->client_id] ?? null,
             ];
         });
 
