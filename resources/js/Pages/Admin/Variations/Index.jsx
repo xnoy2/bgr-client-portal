@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ModalShell from '@/Components/ModalShell';
 import { router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 
@@ -29,7 +30,7 @@ const STATUS = {
 
 // ── Review modal ──────────────────────────────────────────────────────────────
 
-function ReviewModal({ variation, onClose }) {
+function ReviewModal({ show, variation, onClose }) {
     const [status,        setStatus]        = useState(variation.status === 'pending' ? '' : variation.status);
     const [notes,         setNotes]         = useState(variation.admin_notes ?? '');
     const [agreementLink, setAgreementLink] = useState(variation.agreement_link ?? '');
@@ -37,11 +38,6 @@ function ReviewModal({ variation, onClose }) {
 
     const isPending  = variation.status === 'pending';
     const isApproved = variation.status === 'approved' || status === 'approved';
-
-    useEffect(() => {
-        window.document.body.style.overflow = 'hidden';
-        return () => { window.document.body.style.overflow = ''; };
-    }, []);
 
     function submit(e) {
         e.preventDefault();
@@ -54,9 +50,7 @@ function ReviewModal({ variation, onClose }) {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(14,32,25,0.75)', backdropFilter: 'blur(4px)' }}
-            onClick={e => e.target === e.currentTarget && onClose()}>
+        <ModalShell show={show} onClose={onClose}>
 
             <div className="w-full max-w-lg bg-white rounded-2xl overflow-hidden flex flex-col"
                 style={{ maxHeight: '90vh' }}>
@@ -181,7 +175,7 @@ function ReviewModal({ variation, onClose }) {
                     </form>
                 </div>
             </div>
-        </div>
+        </ModalShell>
     );
 }
 
@@ -210,7 +204,7 @@ export default function VariationsIndex({ variations }) {
         <AuthenticatedLayout title="Variations" breadcrumb="All variation requests">
 
             {reviewing && (
-                <ReviewModal variation={reviewing} onClose={() => setReviewing(null)} />
+                <ReviewModal show variation={reviewing} onClose={() => setReviewing(null)} />
             )}
 
             <div className="w-full">

@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ModalShell from '@/Components/ModalShell';
 import { Head, Link, router } from '@inertiajs/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -84,29 +85,22 @@ function Lightbox({ photos, startIndex, onClose }) {
     const prev = useCallback(() => setIdx(i => (i - 1 + photos.length) % photos.length), [photos.length]);
     const next = useCallback(() => setIdx(i => (i + 1) % photos.length), [photos.length]);
 
-    // Keyboard navigation
+    // Keyboard navigation (arrow keys only — Escape handled by ModalShell)
     useEffect(() => {
         function onKey(e) {
             if (e.key === 'ArrowLeft')  prev();
             if (e.key === 'ArrowRight') next();
-            if (e.key === 'Escape')     onClose();
         }
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
-    }, [prev, next, onClose]);
-
-    // Prevent body scroll
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => { document.body.style.overflow = ''; };
-    }, []);
+    }, [prev, next]);
 
     const hasPrev = photos.length > 1;
     const hasNext = photos.length > 1;
 
     return (
-        <div className="fixed inset-0 z-[60] flex flex-col"
-            style={{ background: 'rgba(5,12,8,0.95)', backdropFilter: 'blur(8px)' }}>
+        <ModalShell show onClose={onClose} position="full" zIndex="z-[60]" backdropBlur={false} backdropColor="rgba(5,12,8,0.95)">
+            <div className="flex flex-col h-full">
 
             {/* Top bar */}
             <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
@@ -187,7 +181,8 @@ function Lightbox({ photos, startIndex, onClose }) {
                     ))}
                 </div>
             )}
-        </div>
+            </div>
+        </ModalShell>
     );
 }
 
@@ -230,7 +225,8 @@ function CameraCapture({ onCapture, onClose }) {
     }
 
     return (
-        <div className="fixed inset-0 z-[60] flex flex-col" style={{ background: '#000' }}>
+        <ModalShell show onClose={onClose} position="full" zIndex="z-[60]" backdropBlur={false} backdropColor="#000">
+            <div className="flex flex-col h-full">
             {error ? (
                 <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
                     <p className="text-white text-sm">{error}</p>
@@ -261,13 +257,14 @@ function CameraCapture({ onCapture, onClose }) {
                     </div>
                 </>
             )}
-        </div>
+            </div>
+        </ModalShell>
     );
 }
 
 // ── Post Update Modal ─────────────────────────────────────────────────────────
 
-function PostUpdateModal({ ghlId, stages, initialStageId, onClose, onComplete }) {
+function PostUpdateModal({ show, ghlId, stages, initialStageId, onClose, onComplete }) {
     const [title,      setTitle]      = useState('');
     const [body,       setBody]       = useState('');
     const [stageId,    setStageId]    = useState(initialStageId ?? '');
@@ -313,11 +310,8 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose, onComplete })
     );
 
     return (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
-            style={{ background: 'rgba(14,32,25,0.7)', backdropFilter: 'blur(4px)' }}
-            onClick={e => e.target === e.currentTarget && onClose()}>
-
-            <div className="w-full sm:max-w-lg bg-white flex flex-col rounded-t-3xl sm:rounded-2xl overflow-hidden"
+        <ModalShell show={show} onClose={onClose}>
+            <div className="w-full max-w-lg bg-white flex flex-col rounded-2xl overflow-hidden"
                 style={{ maxHeight: '92vh' }}>
 
                 {/* Drag handle (mobile) */}
@@ -488,13 +482,13 @@ function PostUpdateModal({ ghlId, stages, initialStageId, onClose, onComplete })
                     </div>
                 </form>
             </div>
-        </div>
+        </ModalShell>
     );
 }
 
 // ── Edit Update Modal ─────────────────────────────────────────────────────────
 
-function EditUpdateModal({ ghlId, update, stages, onClose }) {
+function EditUpdateModal({ show, ghlId, update, stages, onClose }) {
     const [title,      setTitle]     = useState(update.title);
     const [body,       setBody]      = useState(update.body);
     const [stageId,    setStageId]   = useState(update.stage_id ? String(update.stage_id) : '');
@@ -546,11 +540,8 @@ function EditUpdateModal({ ghlId, update, stages, onClose }) {
     );
 
     return (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
-            style={{ background: 'rgba(14,32,25,0.7)', backdropFilter: 'blur(4px)' }}
-            onClick={e => e.target === e.currentTarget && onClose()}>
-
-            <div className="w-full sm:max-w-lg bg-white flex flex-col rounded-t-3xl sm:rounded-2xl overflow-hidden"
+        <ModalShell show={show} onClose={onClose}>
+            <div className="w-full max-w-lg bg-white flex flex-col rounded-2xl overflow-hidden"
                 style={{ maxHeight: '92vh' }}>
 
                 <div className="flex justify-center pt-3 pb-1 sm:hidden">
@@ -717,7 +708,7 @@ function EditUpdateModal({ ghlId, update, stages, onClose }) {
                     </div>
                 </form>
             </div>
-        </div>
+        </ModalShell>
     );
 }
 
@@ -1053,6 +1044,7 @@ function UpdatesTab({ updates, onPostUpdate, ghlId, stages, stageFilter, onClear
 
             {editUpdate && (
                 <EditUpdateModal
+                    show
                     ghlId={ghlId}
                     update={editUpdate}
                     stages={stages}
@@ -1281,6 +1273,7 @@ export default function WorkerProjectShow({ project, ghl, updates }) {
 
             {modalOpen && (
                 <PostUpdateModal
+                    show
                     ghlId={project.ghl_opportunity_id}
                     stages={project.stages}
                     initialStageId={initialStageId}

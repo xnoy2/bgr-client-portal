@@ -197,30 +197,32 @@ class ProjectController extends Controller
             $project->stages->firstOrFail('id', $validated['stage_id']);
         }
 
-        // Upload photos to Cloudinary
+        // Upload photos to Cloudinary (skipped if credentials not configured)
         $photoUrls = [];
-        foreach ($request->file('photos', []) as $file) {
-            $result = Cloudinary::uploadApi()->upload($file->getRealPath(), [
-                'folder'        => "bgr/project-updates/{$project->id}",
-                'resource_type' => 'image',
-                'quality'       => 'auto',
-                'fetch_format'  => 'auto',
-            ]);
+        if ($this->cloudinaryConfigured()) {
+            foreach ($request->file('photos', []) as $file) {
+                $result = Cloudinary::uploadApi()->upload($file->getRealPath(), [
+                    'folder'        => "bgr/project-updates/{$project->id}",
+                    'resource_type' => 'image',
+                    'quality'       => 'auto',
+                    'fetch_format'  => 'auto',
+                ]);
 
-            $url      = $result['secure_url'];
-            $publicId = $result['public_id'];
-            $photoUrls[] = $url;
+                $url      = $result['secure_url'];
+                $publicId = $result['public_id'];
+                $photoUrls[] = $url;
 
-            MediaFile::create([
-                'project_id'        => $project->id,
-                'user_id'           => auth()->id(),
-                'original_filename' => $file->getClientOriginalName(),
-                'url'               => $url,
-                'ghl_file_id'       => $publicId,
-                'resource_type'     => 'photo',
-                'mime_type'         => $file->getMimeType(),
-                'file_size'         => $file->getSize(),
-            ]);
+                MediaFile::create([
+                    'project_id'        => $project->id,
+                    'user_id'           => auth()->id(),
+                    'original_filename' => $file->getClientOriginalName(),
+                    'url'               => $url,
+                    'ghl_file_id'       => $publicId,
+                    'resource_type'     => 'photo',
+                    'mime_type'         => $file->getMimeType(),
+                    'file_size'         => $file->getSize(),
+                ]);
+            }
         }
 
         // Persist update record
@@ -278,29 +280,31 @@ class ProjectController extends Controller
         // Start with the photos the worker chose to keep
         $photoUrls = $validated['kept_photos'] ?? [];
 
-        // Upload any newly added photos to Cloudinary
-        foreach ($request->file('new_photos', []) as $file) {
-            $result = Cloudinary::uploadApi()->upload($file->getRealPath(), [
-                'folder'        => "bgr/project-updates/{$project->id}",
-                'resource_type' => 'image',
-                'quality'       => 'auto',
-                'fetch_format'  => 'auto',
-            ]);
+        // Upload any newly added photos to Cloudinary (skipped if credentials not configured)
+        if ($this->cloudinaryConfigured()) {
+            foreach ($request->file('new_photos', []) as $file) {
+                $result = Cloudinary::uploadApi()->upload($file->getRealPath(), [
+                    'folder'        => "bgr/project-updates/{$project->id}",
+                    'resource_type' => 'image',
+                    'quality'       => 'auto',
+                    'fetch_format'  => 'auto',
+                ]);
 
-            $url      = $result['secure_url'];
-            $publicId = $result['public_id'];
-            $photoUrls[] = $url;
+                $url      = $result['secure_url'];
+                $publicId = $result['public_id'];
+                $photoUrls[] = $url;
 
-            MediaFile::create([
-                'project_id'        => $project->id,
-                'user_id'           => auth()->id(),
-                'original_filename' => $file->getClientOriginalName(),
-                'url'               => $url,
-                'ghl_file_id'       => $publicId,
-                'resource_type'     => 'photo',
-                'mime_type'         => $file->getMimeType(),
-                'file_size'         => $file->getSize(),
-            ]);
+                MediaFile::create([
+                    'project_id'        => $project->id,
+                    'user_id'           => auth()->id(),
+                    'original_filename' => $file->getClientOriginalName(),
+                    'url'               => $url,
+                    'ghl_file_id'       => $publicId,
+                    'resource_type'     => 'photo',
+                    'mime_type'         => $file->getMimeType(),
+                    'file_size'         => $file->getSize(),
+                ]);
+            }
         }
 
         $update->update([
@@ -318,5 +322,14 @@ class ProjectController extends Controller
         $total = $project->stages->count();
         if ($total === 0) return 0;
         return round(($project->stages->where('status', 'completed')->count() / $total) * 100);
+    }
+
+    private function cloudinaryConfigured(): bool
+    {
+        $url = config('cloudinary.cloud_url') ?? env('CLOUDINARY_URL');
+        if (empty($url)) return false;
+
+        // The package requires a valid cloudinary://key:secret@cloud_name URL
+        return str_starts_with($url, 'cloudinary://') && !str_contains($url, '@//');
     }
 }

@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ModalShell from '@/Components/ModalShell';
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 
@@ -95,11 +96,7 @@ function ItemsTable({ items, onChange }) {
 
 // ── Create Modal ──────────────────────────────────────────────────────────────
 
-function CreateModal({ projects, variations, onClose }) {
-    useEffect(() => {
-        window.document.body.style.overflow = 'hidden';
-        return () => { window.document.body.style.overflow = ''; };
-    }, []);
+function CreateModal({ show, projects, variations, onClose }) {
 
     const [projectId, setProjectId]         = useState('');
     const [variationId, setVariationId]     = useState('');
@@ -157,8 +154,7 @@ function CreateModal({ projects, variations, onClose }) {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(0,0,0,0.45)' }}>
+        <ModalShell show={show} onClose={onClose}>
             <div className="relative w-full max-w-xl rounded-2xl bg-white shadow-2xl flex flex-col max-h-[92vh]">
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 pt-5 pb-4"
@@ -283,17 +279,13 @@ function CreateModal({ projects, variations, onClose }) {
                     </div>
                 </form>
             </div>
-        </div>
+        </ModalShell>
     );
 }
 
 // ── View Modal ────────────────────────────────────────────────────────────────
 
-function ViewModal({ agreement, onClose }) {
-    useEffect(() => {
-        window.document.body.style.overflow = 'hidden';
-        return () => { window.document.body.style.overflow = ''; };
-    }, []);
+function ViewModal({ show, agreement, onClose }) {
 
     const [busy, setBusy] = useState(false);
 
@@ -313,8 +305,7 @@ function ViewModal({ agreement, onClose }) {
     const items = agreement.items ?? [];
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(0,0,0,0.45)' }}>
+        <ModalShell show={show} onClose={onClose}>
             <div className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl flex flex-col max-h-[90vh]">
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 pt-5 pb-4"
@@ -432,7 +423,7 @@ function ViewModal({ agreement, onClose }) {
                     </div>
                 </div>
             </div>
-        </div>
+        </ModalShell>
     );
 }
 
@@ -450,8 +441,8 @@ export default function AgreementsIndex({ agreements, projects, variations }) {
         <AuthenticatedLayout title="Agreements" breadcrumb="Client agreements & proposals">
             <Head title="Agreements" />
 
-            {showCreate && <CreateModal projects={projects} variations={variations} onClose={() => setShowCreate(false)} />}
-            {viewing    && <ViewModal agreement={viewing} onClose={() => setViewing(null)} />}
+            <CreateModal show={showCreate} projects={projects} variations={variations} onClose={() => setShowCreate(false)} />
+            {viewing && <ViewModal show agreement={viewing} onClose={() => setViewing(null)} />}
 
             <div className="w-full">
                 {/* Header */}

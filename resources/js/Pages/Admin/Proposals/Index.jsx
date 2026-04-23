@@ -1,4 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import ModalShell from '@/Components/ModalShell';
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 
@@ -24,11 +25,7 @@ function StatusBadge({ status }) {
 
 // ── Add Proposal Modal ────────────────────────────────────────────────────────
 
-function AddModal({ projects, onClose }) {
-    useEffect(() => {
-        window.document.body.style.overflow = 'hidden';
-        return () => { window.document.body.style.overflow = ''; };
-    }, []);
+function AddModal({ show, projects, onClose }) {
 
     const { data, setData, post, processing, errors } = useForm({
         project_id:      '',
@@ -44,8 +41,7 @@ function AddModal({ projects, onClose }) {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(0,0,0,0.45)' }}>
+        <ModalShell show={show} onClose={onClose}>
             <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl flex flex-col max-h-[90vh]">
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 pt-5 pb-4"
@@ -136,17 +132,13 @@ function AddModal({ projects, onClose }) {
                     </div>
                 </form>
             </div>
-        </div>
+        </ModalShell>
     );
 }
 
 // ── View / Edit Modal ─────────────────────────────────────────────────────────
 
-function ViewModal({ proposal, onClose }) {
-    useEffect(() => {
-        window.document.body.style.overflow = 'hidden';
-        return () => { window.document.body.style.overflow = ''; };
-    }, []);
+function ViewModal({ show, proposal, onClose }) {
 
     function handleDelete() {
         if (!confirm('Delete this proposal?')) return;
@@ -154,8 +146,7 @@ function ViewModal({ proposal, onClose }) {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(0,0,0,0.45)' }}>
+        <ModalShell show={show} onClose={onClose}>
             <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl">
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 pt-5 pb-4"
@@ -217,7 +208,7 @@ function ViewModal({ proposal, onClose }) {
                     </div>
                 </div>
             </div>
-        </div>
+        </ModalShell>
     );
 }
 
@@ -234,8 +225,8 @@ export default function ProposalsIndex({ proposals, projects }) {
         <AuthenticatedLayout title="Proposals" breadcrumb="All proposals & estimates">
             <Head title="Proposals" />
 
-            {showAdd  && <AddModal projects={projects} onClose={() => setShowAdd(false)} />}
-            {viewing  && <ViewModal proposal={viewing} onClose={() => setViewing(null)} />}
+            <AddModal show={showAdd} projects={projects} onClose={() => setShowAdd(false)} />
+            {viewing && <ViewModal show proposal={viewing} onClose={() => setViewing(null)} />}
 
             <div className="w-full">
                 {/* Header */}
