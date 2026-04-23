@@ -59,7 +59,7 @@ export default function ModalShell({
     }[position];
 
     return (
-        <Transition show={show}>
+        <Transition show={show} appear>
             <div className={`fixed inset-0 ${zIndex} ${layoutClass}`}>
 
                 {/* Backdrop */}
