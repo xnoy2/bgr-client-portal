@@ -310,8 +310,8 @@ function PostUpdateModal({ show, ghlId, stages, initialStageId, onClose, onCompl
     );
 
     return (
-        <ModalShell show={show} onClose={onClose} position="bottom">
-            <div className="w-full sm:max-w-lg bg-white flex flex-col rounded-t-3xl sm:rounded-2xl overflow-hidden"
+        <ModalShell show={show} onClose={onClose}>
+            <div className="w-full max-w-lg bg-white flex flex-col rounded-2xl overflow-hidden"
                 style={{ maxHeight: '92vh' }}>
 
                 {/* Drag handle (mobile) */}
