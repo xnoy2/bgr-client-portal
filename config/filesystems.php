@@ -52,6 +52,14 @@ return [
             'url'    => env('CLOUDINARY_URL'),
         ],
 
+        'azure' => [
+            'driver'    => 'azure',
+            'account'   => env('AZURE_STORAGE_ACCOUNT'),
+            'key'       => env('AZURE_STORAGE_KEY'),
+            'container' => env('AZURE_STORAGE_CONTAINER', 'bgr-portal'),
+            'prefix'    => null,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

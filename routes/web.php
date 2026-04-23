@@ -62,6 +62,10 @@ Route::middleware('auth')->group(function () {
         $notification->update(['read_at' => now()]);
         return back();
     })->name('notifications.read');
+
+    // Authenticated media proxy — streams files from Azure Blob (private container)
+    Route::get('/media/photo/{mediaFile}',    [\App\Http\Controllers\MediaController::class, 'photo'])   ->name('media.photo');
+    Route::get('/media/document/{document}',  [\App\Http\Controllers\MediaController::class, 'document'])->name('media.document');
 });
 
 require __DIR__.'/auth.php';

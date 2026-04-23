@@ -54,6 +54,43 @@ class PdfSigningService
         }
     }
 
+    /**
+     * Same as stamp() but accepts the raw PDF bytes directly (no HTTP download).
+     * Used when the source PDF is already in memory (e.g. fetched from Azure Blob).
+     */
+    public function stampFromContent(string $pdfContent, string $signerName, Carbon $signedAt): string
+    {
+        if (! defined('FPDF_FONTPATH')) {
+            define('FPDF_FONTPATH', base_path('vendor/setasign/fpdf/font') . DIRECTORY_SEPARATOR);
+        }
+
+        $tmpIn = tempnam(sys_get_temp_dir(), 'bgr_pdf_') . '.tmp';
+        file_put_contents($tmpIn, $pdfContent);
+
+        try {
+            $pdf       = new Fpdi();
+            $pdf->SetAutoPageBreak(false);
+            $pageCount = $pdf->setSourceFile($tmpIn);
+
+            for ($i = 1; $i <= $pageCount; $i++) {
+                $tpl  = $pdf->importPage($i);
+                $size = $pdf->getTemplateSize($tpl);
+
+                $orientation = ($size['width'] > $size['height']) ? 'L' : 'P';
+                $pdf->AddPage($orientation, [$size['width'], $size['height']]);
+                $pdf->useTemplate($tpl);
+
+                if ($i === $pageCount) {
+                    $this->addSignatureBlock($pdf, $size['width'], $size['height'], $signerName, $signedAt);
+                }
+            }
+
+            return $pdf->Output('S', '');
+        } finally {
+            @unlink($tmpIn);
+        }
+    }
+
     private function addSignatureBlock(
         Fpdi $pdf,
         float $pageW,

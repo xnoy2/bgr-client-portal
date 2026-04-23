@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Document;
 use App\Models\Project;
 use App\Models\User;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use App\Services\AzureStorageService;
 use App\Models\PortalNotification;
 use App\Services\ClientProvisioningService;
 use App\Services\GHLService;
@@ -19,10 +19,11 @@ class ProjectController extends Controller
 {
     public function __construct(
         private GHLService $ghl,
-        private ClientProvisioningService $clientProvisioning
+        private ClientProvisioningService $clientProvisioning,
+        private AzureStorageService $azure,
     ) {}
 
-    // ── Index ─────────────────────────────────────────────────────────────────
+    // â”€â”€ Index â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
      * GET /admin/projects
@@ -41,7 +42,7 @@ class ProjectController extends Controller
 
         // For every GHL opportunity that has a contact email but no linked client,
         // ensure a local project record exists and provision the client account.
-        // This runs automatically when admin views the Projects page — no webhook needed.
+        // This runs automatically when admin views the Projects page â€” no webhook needed.
         $provisioned = false;
         foreach ($ghlOpps as $opp) {
             $contact = $opp['contact'] ?? [];
@@ -110,7 +111,7 @@ class ProjectController extends Controller
         ]);
     }
 
-    // ── Show ──────────────────────────────────────────────────────────────────
+    // â”€â”€ Show â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
      * GET /admin/projects/{ghlId}
@@ -118,7 +119,7 @@ class ProjectController extends Controller
      */
     public function show(string $ghlId)
     {
-        // 1. Fetch live GHL data first — it's the source of truth
+        // 1. Fetch live GHL data first â€” it's the source of truth
         $ghl = $this->ghl->getCachedOpportunity($ghlId);
 
         if (! $ghl) {
@@ -150,7 +151,7 @@ class ProjectController extends Controller
             $project->refresh()->load(['client', 'workers', 'stages', 'documents.uploader']);
         }
 
-        // Sync local stage statuses from GHL — skip if all stages are already completed
+        // Sync local stage statuses from GHL â€” skip if all stages are already completed
         // so GHL cannot revert a completed project back to in_progress.
         $allCompleted = $project->stages->isNotEmpty()
             && $project->stages->every(fn ($s) => $s->status === 'completed');
@@ -201,7 +202,7 @@ class ProjectController extends Controller
         ]);
     }
 
-    // ── Update ────────────────────────────────────────────────────────────────
+    // â”€â”€ Update â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
      * PUT /admin/projects/{ghlId}
@@ -245,7 +246,7 @@ class ProjectController extends Controller
         return back()->with('success', 'Project updated.');
     }
 
-    // ── Stage update ──────────────────────────────────────────────────────────
+    // â”€â”€ Stage update â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
      * PUT /admin/projects/{ghlId}/stage
@@ -271,7 +272,7 @@ class ProjectController extends Controller
         return back()->with('success', 'Stage updated.');
     }
 
-    // ── Cache helpers ─────────────────────────────────────────────────────────
+    // â”€â”€ Cache helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
      * POST /admin/projects/refresh-pipeline
@@ -292,7 +293,7 @@ class ProjectController extends Controller
         return back()->with('success', 'GHL data refreshed.');
     }
 
-    // ── Documents ─────────────────────────────────────────────────────────────
+    // â”€â”€ Documents â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
      * POST /admin/projects/{ghlId}/documents
@@ -310,25 +311,21 @@ class ProjectController extends Controller
         $filename = $file->getClientOriginalName();
         $title    = pathinfo($filename, PATHINFO_FILENAME);
 
-        $result = Cloudinary::uploadApi()->upload($file->getRealPath(), [
-            'folder'        => "bgr/documents/{$project->id}",
-            'resource_type' => 'raw',
-            'public_id'     => pathinfo($filename, PATHINFO_FILENAME) . '_' . time(),
-        ]);
+        $path = $this->azure->upload($file, "documents/{$project->id}");
 
         Document::create([
-            'project_id'  => $project->id,
-            'uploaded_by' => auth()->id(),
-            'title'       => $title,
-            'filename'    => $filename,
-            'url'         => $result['secure_url'],
-            'mime_type'   => $file->getMimeType(),
-            'file_size'   => $file->getSize(),
-            'category'    => $request->input('category', 'other'),
-            'visibility'  => 'client',
-            'ghl_file_id' => $result['public_id'],
-            'sign_status' => 'pending',
-            'sent_at'     => now(),
+            'project_id'   => $project->id,
+            'uploaded_by'  => auth()->id(),
+            'title'        => $title,
+            'filename'     => $filename,
+            'storage_path' => $path,
+            'storage_disk' => 'azure',
+            'mime_type'    => $file->getMimeType(),
+            'file_size'    => $file->getSize(),
+            'category'     => $request->input('category', 'other'),
+            'visibility'   => 'client',
+            'sign_status'  => 'pending',
+            'sent_at'      => now(),
         ]);
 
         return back()->with('success', 'Document uploaded.');
@@ -346,7 +343,7 @@ class ProjectController extends Controller
         try {
             Cloudinary::uploadApi()->destroy($document->ghl_file_id, ['resource_type' => 'raw']);
         } catch (\Throwable) {
-            // Non-fatal — remove local record even if CDN delete fails
+            // Non-fatal â€” remove local record even if CDN delete fails
         }
 
         $document->delete();
@@ -356,25 +353,13 @@ class ProjectController extends Controller
 
     /**
      * GET /admin/projects/{ghlId}/documents/{document}/download
-     * Proxies the file from Cloudinary with proper Content-Disposition headers.
+     * Streams the document securely via the MediaController proxy.
      */
     public function downloadDocument(string $ghlId, Document $document)
     {
         $project = Project::where('ghl_opportunity_id', $ghlId)->firstOrFail();
         abort_unless($document->project_id === $project->id, 403);
 
-        $response = Http::timeout(30)->get($document->url);
-
-        abort_unless($response->successful(), 502, 'Could not retrieve the file.');
-
-        $mime     = $document->mime_type ?? $response->header('Content-Type') ?? 'application/octet-stream';
-        $filename = $document->filename  ?? 'document';
-
-        return response($response->body(), 200, [
-            'Content-Type'        => $mime,
-            'Content-Disposition' => 'attachment; filename="' . str_replace('"', '', $filename) . '"',
-            'Content-Length'      => strlen($response->body()),
-            'Cache-Control'       => 'no-store',
-        ]);
+        return redirect()->route('media.document', $document->id);
     }
 }
