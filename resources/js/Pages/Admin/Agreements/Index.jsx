@@ -515,8 +515,8 @@ function DocumentUploadTab({ category, allDocs, projects }) {
 
     return (
         <div className="space-y-4">
-            {/* Project selector */}
-            <div className="glass-card rounded-xl p-4">
+            {/* Project selector — plain card (no backdrop-filter) to avoid CSS stacking context trapping the dropdown */}
+            <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.85)', border: '0.5px solid rgba(255,255,255,0.9)', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
                 <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#4A4A4A' }}>
                     Select Project
                 </label>
