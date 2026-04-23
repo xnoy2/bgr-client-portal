@@ -24,9 +24,10 @@ class AgreementController extends Controller
         $projects = Project::with('client')
             ->whereNotNull('client_id')
             ->whereNotIn('status', ['cancelled'])
-            ->orderBy('name')
+            ->orderByDesc('id')
             ->get()
-            ->unique('ghl_opportunity_id')
+            ->unique(fn ($p) => $p->name . '|' . $p->client_id)
+            ->sortBy('name')
             ->map(fn ($p) => [
                 'id'          => $p->id,
                 'name'        => $p->name,
