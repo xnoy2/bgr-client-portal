@@ -1,7 +1,16 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import ModalShell from '@/Components/ModalShell';
-import { Head, router, useForm } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { Head, router } from '@inertiajs/react';
+import { useState, useRef } from 'react';
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function formatBytes(bytes) {
+    if (!bytes) return '';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
 
 // ── Status config ─────────────────────────────────────────────────────────────
 
@@ -21,19 +30,59 @@ function StatusBadge({ status }) {
     );
 }
 
+// ── File type icon ────────────────────────────────────────────────────────────
+
+function FileIcon({ mimeType, size = 32 }) {
+    const ext = (mimeType ?? '').toLowerCase();
+    let color = '#888480', label = 'FILE';
+    if (ext.includes('pdf'))                                                  { color = '#e53e3e'; label = 'PDF'; }
+    else if (ext.includes('word') || ext.includes('doc'))                     { color = '#2b6cb0'; label = 'DOC'; }
+    else if (ext.includes('sheet') || ext.includes('excel') || ext.includes('xls')) { color = '#276749'; label = 'XLS'; }
+    else if (ext.includes('image') || ext.includes('png') || ext.includes('jpg'))   { color = '#6b46c1'; label = 'IMG'; }
+    return (
+        <div className="flex flex-col items-center justify-center rounded-lg relative flex-shrink-0"
+            style={{ width: size, height: size, background: `${color}14`, border: `1.5px solid ${color}28` }}>
+            <svg width={size * 0.5} height={size * 0.5} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <span className="absolute bottom-0.5 text-center font-bold leading-none"
+                style={{ fontSize: size * 0.18, color, letterSpacing: '-0.02em' }}>
+                {label}
+            </span>
+        </div>
+    );
+}
+
+// ── Tab bar ───────────────────────────────────────────────────────────────────
+
+const TABS = ['Variation Agreements', 'Terms & Conditions', 'Others'];
+
+function TabBar({ active, onChange }) {
+    return (
+        <div className="flex p-1 rounded-2xl mb-6" style={{ background: '#ebe5dc' }}>
+            {TABS.map(t => (
+                <button key={t} onClick={() => onChange(t)}
+                    className="flex-1 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200"
+                    style={active === t
+                        ? { background: '#fff', color: '#25282D', boxShadow: '0 2px 8px rgba(0,0,0,0.10)' }
+                        : { color: '#9a8d7e' }
+                    }>
+                    {t}
+                </button>
+            ))}
+        </div>
+    );
+}
+
 // ── Items table helpers ───────────────────────────────────────────────────────
 
 function ItemsTable({ items, onChange }) {
     function updateItem(i, field, value) {
-        const next = items.map((row, idx) => idx === i ? { ...row, [field]: value } : row);
-        onChange(next);
+        onChange(items.map((row, idx) => idx === i ? { ...row, [field]: value } : row));
     }
-    function addRow() {
-        onChange([...items, { description: '', price: '' }]);
-    }
-    function removeRow(i) {
-        onChange(items.filter((_, idx) => idx !== i));
-    }
+    function addRow() { onChange([...items, { description: '', price: '' }]); }
+    function removeRow(i) { onChange(items.filter((_, idx) => idx !== i)); }
 
     return (
         <div>
@@ -50,24 +99,16 @@ function ItemsTable({ items, onChange }) {
                         {items.map((row, i) => (
                             <tr key={i} style={{ borderBottom: i < items.length - 1 ? '1px solid #F1F1EF' : 'none' }}>
                                 <td className="px-3 py-1.5">
-                                    <input
-                                        type="text"
-                                        value={row.description}
+                                    <input type="text" value={row.description}
                                         onChange={e => updateItem(i, 'description', e.target.value)}
                                         placeholder="Item description…"
-                                        className="w-full text-sm text-forest outline-none bg-transparent"
-                                    />
+                                        className="w-full text-sm text-forest outline-none bg-transparent" />
                                 </td>
                                 <td className="px-3 py-1.5">
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        value={row.price}
+                                    <input type="number" min="0" step="0.01" value={row.price}
                                         onChange={e => updateItem(i, 'price', e.target.value)}
                                         placeholder="0.00"
-                                        className="w-full text-sm text-right text-forest outline-none bg-transparent"
-                                    />
+                                        className="w-full text-sm text-right text-forest outline-none bg-transparent" />
                                 </td>
                                 <td className="px-2 py-1.5 text-center">
                                     <button type="button" onClick={() => removeRow(i)}
@@ -94,72 +135,56 @@ function ItemsTable({ items, onChange }) {
     );
 }
 
-// ── Create Modal ──────────────────────────────────────────────────────────────
+// ── Create Agreement Modal ─────────────────────────────────────────────────────
 
 function CreateModal({ show, projects, variations, onClose }) {
-
-    const [projectId, setProjectId]         = useState('');
-    const [variationId, setVariationId]     = useState('');
-    const [title, setTitle]                 = useState('');
-    const [clientName, setClientName]       = useState('');
+    const [projectId, setProjectId]           = useState('');
+    const [variationId, setVariationId]       = useState('');
+    const [title, setTitle]                   = useState('');
+    const [clientName, setClientName]         = useState('');
     const [projectAddress, setProjectAddress] = useState('');
-    const [contractRef, setContractRef]     = useState('');
-    const [items, setItems]                 = useState([{ description: '', price: '' }]);
-    const [notes, setNotes]                 = useState('');
-    const [sendNow, setSendNow]             = useState(false);
-    const [busy, setBusy]                   = useState(false);
+    const [contractRef, setContractRef]       = useState('');
+    const [items, setItems]                   = useState([{ description: '', price: '' }]);
+    const [notes, setNotes]                   = useState('');
+    const [sendNow, setSendNow]               = useState(false);
+    const [busy, setBusy]                     = useState(false);
 
     const total = items.reduce((sum, r) => sum + (parseFloat(r.price) || 0), 0);
 
-    // Auto-fill client name and address when project is selected
     function handleProjectChange(id) {
         setProjectId(id);
         const p = projects.find(p => String(p.id) === String(id));
-        if (p) {
-            setClientName(p.client_name);
-            setProjectAddress(p.address || '');
-        }
+        if (p) { setClientName(p.client_name); setProjectAddress(p.address || ''); }
     }
 
-    // Auto-fill from variation when selected
     function handleVariationChange(id) {
         setVariationId(id);
         const v = variations.find(v => String(v.id) === String(id));
         if (v) {
             setTitle(v.title || title);
-            if (v.description) {
-                setItems([{ description: v.description, price: v.estimated_cost || '' }]);
-            }
+            if (v.description) setItems([{ description: v.description, price: v.estimated_cost || '' }]);
         }
     }
 
-    // Filter variations by selected project
     const projectVariations = variations.filter(v => String(v.project_id) === String(projectId));
 
     function submit(e) {
         e.preventDefault();
         setBusy(true);
         router.post(route('admin.agreements.store'), {
-            project_id:           projectId,
-            variation_request_id: variationId || null,
-            title,
-            client_name:     clientName,
-            project_address: projectAddress,
-            contract_reference: contractRef,
-            items:           items.filter(r => r.description),
-            total_amount:    total,
-            notes,
-            send_now:        sendNow,
+            project_id: projectId, variation_request_id: variationId || null,
+            title, client_name: clientName, project_address: projectAddress,
+            contract_reference: contractRef, items: items.filter(r => r.description),
+            total_amount: total, notes, send_now: sendNow,
         }, { onSuccess: onClose, onFinish: () => setBusy(false) });
     }
 
     return (
         <ModalShell show={show} onClose={onClose}>
             <div className="relative w-full max-w-xl rounded-2xl bg-white shadow-2xl flex flex-col max-h-[92vh]">
-                {/* Header */}
                 <div className="flex items-center justify-between px-5 pt-5 pb-4"
                     style={{ borderBottom: '0.5px solid #f0ebe3' }}>
-                    <h2 className="text-base font-bold text-forest">Create Agreement</h2>
+                    <h2 className="text-base font-bold text-forest">Create Variation Agreement</h2>
                     <button onClick={onClose}
                         className="w-8 h-8 flex items-center justify-center rounded-full flex-shrink-0"
                         style={{ background: '#F1F1EF', color: '#4A4A4A' }}>
@@ -168,22 +193,16 @@ function CreateModal({ show, projects, variations, onClose }) {
                         </svg>
                     </button>
                 </div>
-
                 <form onSubmit={submit} className="overflow-y-auto px-5 py-4 space-y-4">
-                    {/* Project */}
                     <div>
                         <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#4A4A4A' }}>Project</label>
                         <select value={projectId} onChange={e => handleProjectChange(e.target.value)} required
                             className="w-full px-3 py-2.5 rounded-xl text-sm text-forest outline-none"
                             style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }}>
                             <option value="">Select project…</option>
-                            {projects.map(p => (
-                                <option key={p.id} value={p.id}>{p.name} — {p.client_name}</option>
-                            ))}
+                            {projects.map(p => <option key={p.id} value={p.id}>{p.name} — {p.client_name}</option>)}
                         </select>
                     </div>
-
-                    {/* Variation Request */}
                     <div>
                         <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#4A4A4A' }}>
                             Variation Request <span style={{ color: '#888480', fontWeight: 400, textTransform: 'none' }}>(optional — auto-fills items)</span>
@@ -192,13 +211,9 @@ function CreateModal({ show, projects, variations, onClose }) {
                             className="w-full px-3 py-2.5 rounded-xl text-sm text-forest outline-none"
                             style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }}>
                             <option value="">None — fill manually</option>
-                            {projectVariations.map(v => (
-                                <option key={v.id} value={v.id}>{v.title}</option>
-                            ))}
+                            {projectVariations.map(v => <option key={v.id} value={v.id}>{v.title}</option>)}
                         </select>
                     </div>
-
-                    {/* Title */}
                     <div>
                         <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#4A4A4A' }}>Title</label>
                         <input type="text" value={title} onChange={e => setTitle(e.target.value)} required
@@ -206,8 +221,6 @@ function CreateModal({ show, projects, variations, onClose }) {
                             className="w-full px-3 py-2.5 rounded-xl text-sm text-forest outline-none"
                             style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }} />
                     </div>
-
-                    {/* Client Name / Project Address */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#4A4A4A' }}>Client Name</label>
@@ -224,8 +237,6 @@ function CreateModal({ show, projects, variations, onClose }) {
                                 style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }} />
                         </div>
                     </div>
-
-                    {/* Contract Reference */}
                     <div>
                         <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#4A4A4A' }}>
                             Contract / Proposal Reference <span style={{ color: '#888480', fontWeight: 400, textTransform: 'none' }}>(opt.)</span>
@@ -235,8 +246,6 @@ function CreateModal({ show, projects, variations, onClose }) {
                             className="w-full px-3 py-2.5 rounded-xl text-sm text-forest outline-none"
                             style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }} />
                     </div>
-
-                    {/* Items */}
                     <div>
                         <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#4A4A4A' }}>Items</label>
                         <ItemsTable items={items} onChange={setItems} />
@@ -246,8 +255,6 @@ function CreateModal({ show, projects, variations, onClose }) {
                             </div>
                         )}
                     </div>
-
-                    {/* Notes */}
                     <div>
                         <label className="block text-xs font-semibold uppercase tracking-wide mb-1.5" style={{ color: '#4A4A4A' }}>
                             Notes <span style={{ color: '#888480', fontWeight: 400, textTransform: 'none' }}>(opt.)</span>
@@ -257,14 +264,11 @@ function CreateModal({ show, projects, variations, onClose }) {
                             className="w-full px-3 py-2.5 rounded-xl text-sm text-forest outline-none resize-none"
                             style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }} />
                     </div>
-
-                    {/* Send now toggle */}
                     <label className="flex items-center gap-2.5 cursor-pointer select-none">
                         <input type="checkbox" checked={sendNow} onChange={e => setSendNow(e.target.checked)}
                             className="w-4 h-4 rounded accent-forest" />
                         <span className="text-sm text-forest">Send to client immediately</span>
                     </label>
-
                     <div className="flex gap-2.5 pt-1 pb-1">
                         <button type="button" onClick={onClose}
                             className="flex-1 py-3.5 rounded-xl text-sm font-semibold"
@@ -283,17 +287,15 @@ function CreateModal({ show, projects, variations, onClose }) {
     );
 }
 
-// ── View Modal ────────────────────────────────────────────────────────────────
+// ── View Agreement Modal ──────────────────────────────────────────────────────
 
 function ViewModal({ show, agreement, onClose }) {
-
     const [busy, setBusy] = useState(false);
 
     function handleSend() {
         setBusy(true);
         router.post(route('admin.agreements.send', agreement.id), {}, {
-            onSuccess: onClose,
-            onFinish: () => setBusy(false),
+            onSuccess: onClose, onFinish: () => setBusy(false),
         });
     }
 
@@ -307,13 +309,10 @@ function ViewModal({ show, agreement, onClose }) {
     return (
         <ModalShell show={show} onClose={onClose}>
             <div className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl flex flex-col max-h-[90vh]">
-                {/* Header */}
                 <div className="flex items-center justify-between px-5 pt-5 pb-4"
                     style={{ borderBottom: '0.5px solid #f0ebe3' }}>
                     <div>
-                        <div className="flex items-center gap-2 mb-0.5">
-                            <h2 className="text-base font-bold text-forest">{agreement.title}</h2>
-                        </div>
+                        <h2 className="text-base font-bold text-forest">{agreement.title}</h2>
                         <p className="text-xs" style={{ color: '#888480' }}>{agreement.project_name} · {agreement.client_name}</p>
                     </div>
                     <button onClick={onClose}
@@ -324,9 +323,7 @@ function ViewModal({ show, agreement, onClose }) {
                         </svg>
                     </button>
                 </div>
-
                 <div className="overflow-y-auto px-5 py-4 space-y-3">
-                    {/* Status row */}
                     <div className="flex items-center gap-2">
                         <StatusBadge status={agreement.status} />
                         {agreement.signed_at && (
@@ -336,8 +333,6 @@ function ViewModal({ show, agreement, onClose }) {
                             <span className="text-xs" style={{ color: '#888480' }}>Sent {agreement.sent_at}</span>
                         )}
                     </div>
-
-                    {/* Details */}
                     <div className="rounded-xl px-3 py-2.5 space-y-1.5" style={{ background: '#F1F1EF' }}>
                         {agreement.project_address && (
                             <div className="flex gap-2 text-sm">
@@ -352,8 +347,6 @@ function ViewModal({ show, agreement, onClose }) {
                             </div>
                         )}
                     </div>
-
-                    {/* Items */}
                     {items.length > 0 && (
                         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #D1CDC7' }}>
                             <table className="w-full text-sm">
@@ -380,24 +373,18 @@ function ViewModal({ show, agreement, onClose }) {
                             </table>
                         </div>
                     )}
-
-                    {/* Signature */}
                     {agreement.signature_data && (
                         <div className="rounded-xl p-3" style={{ background: '#F1F1EF', border: '1px solid #D1CDC7' }}>
                             <p className="text-xs font-semibold mb-2" style={{ color: '#888480' }}>Client Signature</p>
                             <img src={agreement.signature_data} alt="Signature" className="max-h-16 max-w-full" />
                         </div>
                     )}
-
-                    {/* Notes */}
                     {agreement.notes && (
                         <div className="rounded-xl px-3 py-2.5" style={{ background: '#F1F1EF', border: '1px solid #D1CDC7' }}>
                             <p className="text-xs font-semibold mb-1" style={{ color: '#888480' }}>Notes</p>
                             <p className="text-sm" style={{ color: '#4a3f30' }}>{agreement.notes}</p>
                         </div>
                     )}
-
-                    {/* Actions */}
                     <div className="flex gap-2.5 pt-1">
                         {agreement.status === 'draft' && (
                             <button onClick={handleSend} disabled={busy}
@@ -427,9 +414,150 @@ function ViewModal({ show, agreement, onClose }) {
     );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
+// ── Document upload tab (Terms & Conditions / Others) ─────────────────────────
 
-export default function AgreementsIndex({ agreements, projects, variations }) {
+function DocumentUploadTab({ category, docs }) {
+    const fileRef            = useRef(null);
+    const [uploading, setUploading] = useState(false);
+    const [deleting, setDeleting]   = useState(null);
+
+    function upload(file) {
+        if (!file) return;
+        setUploading(true);
+        const fd = new FormData();
+        fd.append('file', file);
+        router.post(route('admin.agreements.documents.store', category), fd, {
+            forceFormData: true,
+            onFinish: () => { setUploading(false); if (fileRef.current) fileRef.current.value = ''; },
+        });
+    }
+
+    function deleteDoc(id) {
+        setDeleting(id);
+        router.delete(route('admin.agreements.documents.destroy', id), {
+            preserveScroll: true,
+            onFinish: () => setDeleting(null),
+        });
+    }
+
+    return (
+        <div className="space-y-4">
+            {/* Upload zone */}
+            <div
+                className="glass-card rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all"
+                style={{ border: '1.5px dashed #D1CDC7', minHeight: 120 }}
+                onClick={() => !uploading && fileRef.current?.click()}
+                onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = '#25282D'; }}
+                onDragLeave={e => { e.currentTarget.style.borderColor = '#D1CDC7'; }}
+                onDrop={e => {
+                    e.preventDefault();
+                    e.currentTarget.style.borderColor = '#D1CDC7';
+                    upload(e.dataTransfer.files[0]);
+                }}>
+                {uploading ? (
+                    <div className="flex items-center gap-2" style={{ color: '#25282D' }}>
+                        <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                        </svg>
+                        <span className="text-sm font-medium">Uploading…</span>
+                    </div>
+                ) : (
+                    <>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#25282D" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="mb-2">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <p className="text-sm font-semibold text-forest">Click or drag to upload</p>
+                        <p className="text-xs mt-1" style={{ color: '#888480' }}>PDF, Word, Excel — up to 20 MB</p>
+                    </>
+                )}
+                <input ref={fileRef} type="file" className="hidden"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.png,.jpg,.jpeg"
+                    onChange={e => upload(e.target.files[0])} />
+            </div>
+
+            {/* File table */}
+            {docs.length > 0 ? (
+                <div className="glass-card rounded-xl overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr style={{ borderBottom: '0.5px solid #D1CDC7', background: '#F1F1EF' }}>
+                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#888480' }}>File</th>
+                                    <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#888480' }}>Size</th>
+                                    <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#888480' }}>Uploaded</th>
+                                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: '#888480' }}>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {docs.map((doc, i) => (
+                                    <tr key={doc.id}
+                                        style={{ borderBottom: i < docs.length - 1 ? '0.5px solid #F1F1EF' : 'none' }}
+                                        className="hover:bg-stone-50 transition-colors">
+                                        <td className="px-4 py-3 min-w-0">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <FileIcon mimeType={doc.mime_type} size={32} />
+                                                <div className="min-w-0">
+                                                    <p className="text-xs font-medium text-forest truncate" title={doc.original_name}>
+                                                        {doc.original_name}
+                                                    </p>
+                                                    <p className="sm:hidden text-xs mt-0.5" style={{ color: '#888480' }}>
+                                                        {doc.file_size ? formatBytes(doc.file_size) : ''}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="hidden sm:table-cell px-4 py-3 text-xs" style={{ color: '#888480' }}>
+                                            {doc.file_size ? formatBytes(doc.file_size) : '—'}
+                                        </td>
+                                        <td className="hidden sm:table-cell px-4 py-3 text-xs" style={{ color: '#888480' }}>
+                                            {doc.uploaded_at}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <a href={route('admin.agreements.documents.download', doc.id)}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity hover:opacity-75"
+                                                    style={{ background: '#F1F1EF', color: '#25282D', border: '0.5px solid #D1CDC7' }}>
+                                                    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                                                        <path d="M8 2v8M4 7l4 4 4-4"/><path d="M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/>
+                                                    </svg>
+                                                    <span className="hidden sm:inline">Download</span>
+                                                </a>
+                                                <button
+                                                    onClick={() => deleteDoc(doc.id)}
+                                                    disabled={deleting === doc.id}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity disabled:opacity-50 hover:opacity-75"
+                                                    style={{ background: '#fef2f2', color: '#b91c1c', border: '0.5px solid rgba(239,68,68,0.3)' }}>
+                                                    {deleting === doc.id
+                                                        ? <svg className="animate-spin" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+                                                        : <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>
+                                                    }
+                                                    <span className="hidden sm:inline">Delete</span>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            ) : (
+                !uploading && (
+                    <div className="glass-card rounded-xl px-5 py-8 text-center">
+                        <p className="text-sm font-medium text-forest mb-1">No documents yet</p>
+                        <p className="text-xs" style={{ color: '#888480' }}>Upload PDF or Word documents above.</p>
+                    </div>
+                )
+            )}
+        </div>
+    );
+}
+
+// ── Variation Agreements tab ──────────────────────────────────────────────────
+
+function VariationAgreementsTab({ agreements, projects, variations }) {
     const [showCreate, setShowCreate] = useState(false);
     const [viewing, setViewing]       = useState(null);
 
@@ -438,81 +566,107 @@ export default function AgreementsIndex({ agreements, projects, variations }) {
     const signed = agreements.filter(a => a.status === 'signed').length;
 
     return (
-        <AuthenticatedLayout title="Agreements" breadcrumb="Client agreements & proposals">
-            <Head title="Agreements" />
-
+        <>
             <CreateModal show={showCreate} projects={projects} variations={variations} onClose={() => setShowCreate(false)} />
             {viewing && <ViewModal show agreement={viewing} onClose={() => setViewing(null)} />}
 
-            <div className="w-full">
-                {/* Header */}
-                <div className="mb-6 flex items-start justify-between gap-4">
-                    <div>
-                        <h1 className="text-xl font-semibold text-forest">Agreements</h1>
-                        <p className="text-sm mt-0.5" style={{ color: '#888480' }}>
-                            {agreements.length} total · {draft} draft · {sent} pending signature · {signed} signed
-                        </p>
+            <div className="mb-4 flex items-center justify-between gap-4">
+                <p className="text-sm" style={{ color: '#888480' }}>
+                    {agreements.length} total · {draft} draft · {sent} pending signature · {signed} signed
+                </p>
+                <button onClick={() => setShowCreate(true)}
+                    className="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold"
+                    style={{ background: '#25282D', color: '#FFFFFF' }}>
+                    + Create Agreement
+                </button>
+            </div>
+
+            <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '0.5px solid #D1CDC7' }}>
+                {agreements.length === 0 ? (
+                    <div className="px-6 py-12 text-center">
+                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
+                            style={{ background: '#F1F1EF' }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888480" strokeWidth="1.5">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14,2 14,8 20,8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                            </svg>
+                        </div>
+                        <p className="text-sm font-bold text-forest mb-1">No agreements yet</p>
+                        <p className="text-xs" style={{ color: '#888480' }}>Create an agreement to get started.</p>
                     </div>
-                    <button onClick={() => setShowCreate(true)}
-                        className="flex-shrink-0 px-4 py-2 rounded-xl text-sm font-semibold"
-                        style={{ background: '#25282D', color: '#FFFFFF' }}>
-                        + Create Agreement
-                    </button>
+                ) : (
+                    <>
+                        <div className="px-4 sm:px-6 pt-5 pb-3">
+                            <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#888480', fontSize: 10 }}>
+                                All Variation Agreements
+                            </span>
+                        </div>
+                        <div className="divide-y" style={{ borderColor: '#F1F1EF' }}>
+                            {agreements.map(a => (
+                                <div key={a.id} className="flex items-center gap-3 px-4 sm:px-6 py-3.5">
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-semibold text-forest">{a.title}</p>
+                                        <p className="text-xs mt-0.5" style={{ color: '#888480' }}>
+                                            {a.project_name} · {a.client_name} · Created {a.created_at}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-2.5 flex-shrink-0">
+                                        {a.total_amount && (
+                                            <span className="text-xs font-semibold text-forest hidden sm:inline">
+                                                £{Number(a.total_amount).toLocaleString()}
+                                            </span>
+                                        )}
+                                        <StatusBadge status={a.status} />
+                                        <button onClick={() => setViewing(a)}
+                                            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold"
+                                            style={{ background: '#F1F1EF', color: '#4A4A4A' }}>
+                                            View
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                )}
+            </div>
+        </>
+    );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
+export default function AgreementsIndex({ agreements, projects, variations, portalDocs }) {
+    const [tab, setTab] = useState('Variation Agreements');
+
+    const tcDocs     = portalDocs?.terms_conditions ?? [];
+    const othersDocs = portalDocs?.others           ?? [];
+
+    return (
+        <AuthenticatedLayout title="Agreements" breadcrumb="Client agreements & documents">
+            <Head title="Agreements" />
+
+            <div className="w-full">
+                <div className="mb-6">
+                    <h1 className="text-xl font-semibold text-forest">Agreements</h1>
                 </div>
 
-                {/* List */}
-                <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '0.5px solid #D1CDC7' }}>
-                    {agreements.length === 0 ? (
-                        <div className="px-6 py-12 text-center">
-                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3"
-                                style={{ background: '#F1F1EF' }}>
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888480" strokeWidth="1.5">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                    <polyline points="14,2 14,8 20,8"/>
-                                    <line x1="16" y1="13" x2="8" y2="13"/>
-                                    <line x1="16" y1="17" x2="8" y2="17"/>
-                                </svg>
-                            </div>
-                            <p className="text-sm font-bold text-forest mb-1">No agreements yet</p>
-                            <p className="text-xs" style={{ color: '#888480' }}>Create an agreement to get started.</p>
-                        </div>
-                    ) : (
-                        <>
-                            <div className="px-4 sm:px-6 pt-5 pb-3">
-                                <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: '#888480', fontSize: 10 }}>
-                                    All Agreements
-                                </span>
-                            </div>
-                            <div className="divide-y" style={{ borderColor: '#F1F1EF' }}>
-                                {agreements.map(a => (
-                                    <div key={a.id} className="flex items-center gap-3 px-4 sm:px-6 py-3.5">
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                                <p className="text-sm font-semibold text-forest">{a.title}</p>
-                                            </div>
-                                            <p className="text-xs mt-0.5" style={{ color: '#888480' }}>
-                                                {a.project_name} · {a.client_name} · Created {a.created_at}
-                                            </p>
-                                        </div>
-                                        <div className="flex items-center gap-2.5 flex-shrink-0">
-                                            {a.total_amount && (
-                                                <span className="text-xs font-semibold text-forest hidden sm:inline">
-                                                    £{Number(a.total_amount).toLocaleString()}
-                                                </span>
-                                            )}
-                                            <StatusBadge status={a.status} />
-                                            <button onClick={() => setViewing(a)}
-                                                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold"
-                                                style={{ background: '#F1F1EF', color: '#4A4A4A' }}>
-                                                View
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </>
-                    )}
-                </div>
+                <TabBar active={tab} onChange={setTab} />
+
+                {tab === 'Variation Agreements' && (
+                    <VariationAgreementsTab
+                        agreements={agreements}
+                        projects={projects}
+                        variations={variations}
+                    />
+                )}
+                {tab === 'Terms & Conditions' && (
+                    <DocumentUploadTab category="terms_conditions" docs={tcDocs} />
+                )}
+                {tab === 'Others' && (
+                    <DocumentUploadTab category="others" docs={othersDocs} />
+                )}
             </div>
         </AuthenticatedLayout>
     );

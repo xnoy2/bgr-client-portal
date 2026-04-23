@@ -544,41 +544,77 @@ function DocumentsTab({ documents, ghlId }) {
                     accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.png,.jpg,.jpeg,.webp" />
             </div>
 
-            {/* Document grid */}
+            {/* Document table */}
             {documents.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
-                    {documents.map(doc => (
-                        <div key={doc.id} className="group relative bg-white rounded-xl p-3 flex flex-col items-center text-center"
-                            style={{ border: '0.5px solid #D1CDC7' }}>
-
-                            {/* Delete button */}
-                            <button
-                                onClick={() => deleteDoc(doc.id)}
-                                disabled={deleting === doc.id}
-                                className="absolute top-2 right-2 w-6 h-6 rounded-full items-center justify-center hidden group-hover:flex transition-all"
-                                style={{ background: '#fef2f2', border: '0.5px solid rgba(239,68,68,0.3)' }}
-                                title="Delete">
-                                {deleting === doc.id
-                                    ? <svg className="animate-spin" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" strokeWidth="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
-                                    : <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="#b91c1c" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>
-                                }
-                            </button>
-
-                            {/* Icon */}
-                            <a href={route('admin.projects.documents.download', { ghlId, document: doc.id })}
-                                className="mb-2 mt-1" title={doc.filename}>
-                                <FileIcon mimeType={doc.mime_type} size={56} />
-                            </a>
-
-                            {/* Filename */}
-                            <p className="text-xs font-medium text-forest leading-tight mt-1 w-full truncate" title={doc.filename}>
-                                {doc.filename}
-                            </p>
-                            {doc.file_size && (
-                                <p className="text-xs mt-0.5" style={{ color: '#888480' }}>{formatBytes(doc.file_size)}</p>
-                            )}
-                        </div>
-                    ))}
+                <div className="glass-card rounded-xl overflow-hidden">
+                    <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                        <thead>
+                            <tr style={{ borderBottom: '0.5px solid #D1CDC7', background: '#F1F1EF' }}>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#888480' }}>File</th>
+                                <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#888480' }}>Type</th>
+                                <th className="hidden sm:table-cell px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider" style={{ color: '#888480' }}>Size</th>
+                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: '#888480' }}>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {documents.map((doc, i) => (
+                                <tr key={doc.id}
+                                    style={{ borderBottom: i < documents.length - 1 ? '0.5px solid #F1F1EF' : 'none' }}
+                                    className="hover:bg-stone-50 transition-colors">
+                                    <td className="px-4 py-3 min-w-0">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className="flex-shrink-0">
+                                                <FileIcon mimeType={doc.mime_type} size={32} />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-xs font-medium text-forest truncate" title={doc.filename}>
+                                                    {doc.filename}
+                                                </p>
+                                                {/* Size shown inline on mobile */}
+                                                <p className="sm:hidden text-xs mt-0.5" style={{ color: '#888480' }}>
+                                                    {doc.file_size ? formatBytes(doc.file_size) : ''}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="hidden sm:table-cell px-4 py-3">
+                                        <span className="text-xs font-medium px-2 py-0.5 rounded-full"
+                                            style={{ background: 'rgba(26,26,26,0.05)', color: '#4A4A4A' }}>
+                                            {doc.mime_type?.split('/')[1]?.toUpperCase() ?? 'FILE'}
+                                        </span>
+                                    </td>
+                                    <td className="hidden sm:table-cell px-4 py-3 text-xs" style={{ color: '#888480' }}>
+                                        {doc.file_size ? formatBytes(doc.file_size) : '—'}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <a href={route('admin.projects.documents.download', { ghlId, document: doc.id })}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity hover:opacity-75"
+                                                style={{ background: '#F1F1EF', color: '#25282D', border: '0.5px solid #D1CDC7' }}>
+                                                <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                                                    <path d="M8 2v8M4 7l4 4 4-4"/><path d="M2 12v1a1 1 0 001 1h10a1 1 0 001-1v-1"/>
+                                                </svg>
+                                                <span className="hidden sm:inline">Download</span>
+                                            </a>
+                                            <button
+                                                onClick={() => deleteDoc(doc.id)}
+                                                disabled={deleting === doc.id}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity disabled:opacity-50 hover:opacity-75"
+                                                style={{ background: '#fef2f2', color: '#b91c1c', border: '0.5px solid rgba(239,68,68,0.3)' }}>
+                                                {deleting === doc.id
+                                                    ? <svg className="animate-spin" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+                                                    : <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>
+                                                }
+                                                <span className="hidden sm:inline">Delete</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    </div>
                 </div>
             ) : (
                 !uploading && (

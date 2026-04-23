@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\UpdateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AgreementController as AdminAgreementController;
+use App\Http\Controllers\Admin\PortalDocumentController;
 use App\Http\Controllers\Admin\ProposalController as AdminProposalController;
 use App\Http\Controllers\Admin\VariationController as AdminVariationController;
 use App\Http\Controllers\Admin\MaintenanceController as AdminMaintenanceController;
@@ -99,12 +100,16 @@ Route::middleware(['auth', 'password.changed', 'role:admin'])
         Route::put('/variations/{variation}/attach-agreement',         [AdminVariationController::class, 'attachAgreement'])->name('variations.attach-agreement');
 
         // Agreements (in-app document signing)
-        Route::get('/agreements',                          [AdminAgreementController::class, 'index'])->name('agreements.index');
-        Route::post('/agreements',                         [AdminAgreementController::class, 'store'])->name('agreements.store');
-        Route::put('/agreements/{agreement}',              [AdminAgreementController::class, 'update'])->name('agreements.update');
-        Route::post('/agreements/{agreement}/send',        [AdminAgreementController::class, 'send'])->name('agreements.send');
-        Route::get('/agreements/{agreement}/download',     [AdminAgreementController::class, 'download'])->name('agreements.download');
-        Route::delete('/agreements/{agreement}',           [AdminAgreementController::class, 'destroy'])->name('agreements.destroy');
+        Route::get('/agreements',                                          [AdminAgreementController::class, 'index'])->name('agreements.index');
+        Route::post('/agreements',                                         [AdminAgreementController::class, 'store'])->name('agreements.store');
+        // Portal documents (Terms & Conditions / Others) — must be before {agreement} wildcard routes
+        Route::post('/agreements/documents/{category}',                    [PortalDocumentController::class, 'store'])->name('agreements.documents.store');
+        Route::delete('/agreements/documents/{portalDocument}',            [PortalDocumentController::class, 'destroy'])->name('agreements.documents.destroy');
+        Route::get('/agreements/documents/{portalDocument}/download',      [PortalDocumentController::class, 'download'])->name('agreements.documents.download');
+        Route::put('/agreements/{agreement}',                              [AdminAgreementController::class, 'update'])->name('agreements.update');
+        Route::post('/agreements/{agreement}/send',                        [AdminAgreementController::class, 'send'])->name('agreements.send');
+        Route::get('/agreements/{agreement}/download',                     [AdminAgreementController::class, 'download'])->name('agreements.download');
+        Route::delete('/agreements/{agreement}',                           [AdminAgreementController::class, 'destroy'])->name('agreements.destroy');
 
         // Proposals
         Route::get('/proposals',                    [AdminProposalController::class, 'index'])->name('proposals.index');

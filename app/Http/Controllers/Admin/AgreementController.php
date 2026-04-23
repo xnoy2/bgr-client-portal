@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Agreement;
+use App\Models\PortalDocument;
 use App\Models\PortalNotification;
 use App\Models\Project;
 use App\Models\VariationRequest;
@@ -42,10 +43,22 @@ class AgreementController extends Controller
                 'estimated_cost' => $v->estimated_cost,
             ]);
 
+        $portalDocs = PortalDocument::orderByDesc('created_at')
+            ->get()
+            ->groupBy('category')
+            ->map(fn ($group) => $group->map(fn ($d) => [
+                'id'            => $d->id,
+                'original_name' => $d->original_name,
+                'mime_type'     => $d->mime_type,
+                'file_size'     => $d->file_size,
+                'uploaded_at'   => $d->created_at->format('j M Y'),
+            ])->values());
+
         return Inertia::render('Admin/Agreements/Index', [
-            'agreements' => $agreements,
-            'projects'   => $projects,
-            'variations' => $variations,
+            'agreements'    => $agreements,
+            'projects'      => $projects,
+            'variations'    => $variations,
+            'portalDocs'    => $portalDocs,
         ]);
     }
 
