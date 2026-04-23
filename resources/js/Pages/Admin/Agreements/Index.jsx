@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import ModalShell from '@/Components/ModalShell';
 import { Head, router } from '@inertiajs/react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -416,6 +416,72 @@ function ViewModal({ show, agreement, onClose }) {
 
 // ── Document upload tab (Terms & Conditions / Others) ─────────────────────────
 
+// ── Project selector dropdown ─────────────────────────────────────────────────
+
+function ProjectSelect({ projects, value, onChange }) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        function handler(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    const selected = projects.find(p => String(p.id) === String(value));
+
+    return (
+        <div ref={ref} className="relative">
+            <button
+                type="button"
+                onClick={() => setOpen(o => !o)}
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm text-left transition-colors"
+                style={{
+                    background: '#F1F1EF',
+                    border: `1.5px solid ${open ? '#25282D' : '#D1CDC7'}`,
+                    borderBottomLeftRadius:  open ? 0 : undefined,
+                    borderBottomRightRadius: open ? 0 : undefined,
+                }}>
+                {selected ? (
+                    <span className="flex items-baseline gap-2 min-w-0">
+                        <span className="font-medium text-forest truncate">{selected.name}</span>
+                        <span className="text-xs italic flex-shrink-0" style={{ color: '#888480' }}>{selected.client_name}</span>
+                    </span>
+                ) : (
+                    <span style={{ color: '#888480' }}>— Choose a project —</span>
+                )}
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#888480" strokeWidth="2"
+                    strokeLinecap="round" className="flex-shrink-0 ml-2"
+                    style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
+                    <polyline points="3,5 8,11 13,5"/>
+                </svg>
+            </button>
+
+            {open && (
+                <div className="absolute left-0 right-0 z-20 rounded-b-xl overflow-hidden"
+                    style={{ border: '1.5px solid #25282D', borderTop: 'none', background: '#fff', boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }}>
+                    {projects.length === 0 ? (
+                        <p className="px-4 py-3 text-xs" style={{ color: '#888480' }}>No projects available.</p>
+                    ) : projects.map((p, i) => (
+                        <button key={p.id} type="button"
+                            onClick={() => { onChange(String(p.id)); setOpen(false); }}
+                            className="w-full flex items-baseline gap-2 px-4 py-2.5 text-left transition-colors hover:bg-stone-50"
+                            style={{
+                                borderTop: i > 0 ? '0.5px solid #f0ebe3' : 'none',
+                                background: String(p.id) === String(value) ? 'rgba(26,60,46,0.04)' : undefined,
+                            }}>
+                            <span className="text-sm font-medium text-forest">{p.name}</span>
+                            <span className="text-xs italic" style={{ color: '#888480' }}>{p.client_name}</span>
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ── Document upload tab (Terms & Conditions / Others) ─────────────────────────
+
 function DocumentUploadTab({ category, allDocs, projects }) {
     const fileRef                         = useRef(null);
     const [selectedProjectId, setSelectedProjectId] = useState('');
@@ -454,16 +520,7 @@ function DocumentUploadTab({ category, allDocs, projects }) {
                 <label className="block text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: '#4A4A4A' }}>
                     Select Project
                 </label>
-                <select
-                    value={selectedProjectId}
-                    onChange={e => setSelectedProjectId(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl text-sm text-forest outline-none"
-                    style={{ background: '#F1F1EF', border: '1.5px solid #D1CDC7' }}>
-                    <option value="">— Choose a project —</option>
-                    {projects.map(p => (
-                        <option key={p.id} value={p.id}>{p.name} — {p.client_name}</option>
-                    ))}
-                </select>
+                <ProjectSelect projects={projects} value={selectedProjectId} onChange={setSelectedProjectId} />
             </div>
 
             {!selectedProjectId ? (
