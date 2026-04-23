@@ -69,6 +69,18 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+// Temporary: one-click Cloudinary cleanup (admin only, remove after use)
+Route::middleware(['auth', 'role:admin'])
+    ->get('/admin/tools/clean-cloudinary', function () {
+        IlluminateSupportFacadesArtisan::call('media:clean-cloudinary');
+        $output = IlluminateSupportFacadesArtisan::output();
+        return response('<pre style="font-family:monospace;padding:2rem;font-size:14px;">'
+            . '<strong>Cloudinary Cleanup Result:</strong><br><br>'
+            . e($output)
+            . '<br><br><a href="/admin/dashboard">Back to Dashboard</a></pre>');
+    })->name('admin.tools.clean-cloudinary');
+
+
 
 // â”€â”€â”€ Admin routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 Route::middleware(['auth', 'password.changed', 'role:admin'])
