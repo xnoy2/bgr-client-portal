@@ -82,6 +82,27 @@ Route::middleware(['auth', 'role:admin'])
             . '<br><br><a href="/admin/dashboard">Back to Dashboard</a></pre>');
     })->name('admin.tools.clean-cloudinary');
 
+// Temporary: document diagnostic (admin only, remove after use)
+Route::middleware(['auth', 'role:admin'])
+    ->get('/admin/tools/check-doc/{id}', function ($id) {
+        $doc = \App\Models\Document::withTrashed()->find($id);
+        if (! $doc) {
+            return response()->json(['error' => 'Document ' . $id . ' NOT FOUND in database']);
+        }
+        return response()->json([
+            'id'           => $doc->id,
+            'filename'     => $doc->filename,
+            'storage_path' => $doc->storage_path,
+            'storage_disk' => $doc->storage_disk,
+            'url'          => $doc->url,
+            'project_id'   => $doc->project_id,
+            'deleted_at'   => $doc->deleted_at,
+            'r2_key'       => config('filesystems.disks.r2.key') ? 'SET (' . strlen(config('filesystems.disks.r2.key')) . ' chars)' : 'NOT SET',
+            'r2_endpoint'  => config('filesystems.disks.r2.endpoint') ?? 'NOT SET',
+            'r2_bucket'    => config('filesystems.disks.r2.bucket') ?? 'NOT SET',
+        ]);
+    });
+
 
 
 // â”€â”€â”€ Admin routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
