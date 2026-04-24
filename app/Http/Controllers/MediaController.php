@@ -71,18 +71,26 @@ class MediaController extends Controller
         ]);
     }
 
-    private function streamFromStorage(string $path, string $mime, string $filename, bool $download): \Symfony\Component\HttpFoundation\StreamedResponse
+    private function streamFromStorage(string $path, string $mime, string $filename, bool $download): \Symfony\Component\HttpFoundation\Response
     {
-        abort_unless(Storage::disk('r2')->exists($path), 404);
-
         $disposition = $download
             ? 'attachment; filename="' . str_replace('"', '', $filename) . '"'
             : 'inline';
 
-        return response()->stream(function () use ($path) {
+        try {
             $stream = Storage::disk('r2')->readStream($path);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('R2 file stream failed', ['path' => $path, 'error' => $e->getMessage()]);
+            abort(404, 'File not found in storage.');
+        }
+
+        if (! $stream) {
+            abort(404, 'File not found in storage.');
+        }
+
+        return response()->stream(function () use ($stream) {
             fpassthru($stream);
-            fclose($stream);
+            if (is_resource($stream)) fclose($stream);
         }, 200, [
             'Content-Type'        => $mime,
             'Content-Disposition' => $disposition,
