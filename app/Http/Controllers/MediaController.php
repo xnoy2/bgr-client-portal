@@ -71,31 +71,31 @@ class MediaController extends Controller
         ]);
     }
 
-    private function streamFromStorage(string $path, string $mime, string $filename, bool $download): \Symfony\Component\HttpFoundation\Response
+    private function streamFromStorage(string $path, string $mime, string $filename, bool $download): \Illuminate\Http\RedirectResponse
     {
+        $s3 = new \Aws\S3\S3Client([
+            'version'                 => 'latest',
+            'region'                  => 'auto',
+            'endpoint'                => config('filesystems.disks.r2.endpoint'),
+            'use_path_style_endpoint' => true,
+            'credentials'             => [
+                'key'    => config('filesystems.disks.r2.key'),
+                'secret' => config('filesystems.disks.r2.secret'),
+            ],
+        ]);
+
         $disposition = $download
             ? 'attachment; filename="' . str_replace('"', '', $filename) . '"'
             : 'inline';
 
-        try {
-            $stream = Storage::disk('r2')->readStream($path);
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('R2 file stream failed', ['path' => $path, 'error' => $e->getMessage()]);
-            abort(404, 'File not found in storage.');
-        }
-
-        if (! $stream) {
-            abort(404, 'File not found in storage.');
-        }
-
-        return response()->stream(function () use ($stream) {
-            fpassthru($stream);
-            if (is_resource($stream)) fclose($stream);
-        }, 200, [
-            'Content-Type'        => $mime,
-            'Content-Disposition' => $disposition,
-            'Cache-Control'       => 'private, max-age=3600',
-            'X-Accel-Buffering'   => 'no',
+        $cmd = $s3->getCommand('GetObject', [
+            'Bucket'                     => config('filesystems.disks.r2.bucket'),
+            'Key'                        => $path,
+            'ResponseContentDisposition' => $disposition,
         ]);
+
+        $url = (string) $s3->createPresignedRequest($cmd, '+10 minutes')->getUri();
+
+        return redirect($url);
     }
 }

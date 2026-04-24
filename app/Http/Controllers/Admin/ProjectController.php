@@ -362,42 +362,15 @@ class ProjectController extends Controller
 
     /**
      * GET /admin/projects/{ghlId}/documents/{document}/download
-     * Streams the document directly from R2 (no redirect).
+     * Generates a short-lived presigned R2 URL and redirects the browser to it.
      */
     public function downloadDocument(string $ghlId, Document $document)
     {
         $project = Project::where('ghl_opportunity_id', $ghlId)->firstOrFail();
         abort_unless($document->project_id === $project->id, 403);
 
-        // New R2-stored documents — stream directly
         if ($document->storage_path) {
-            try {
-                $stream = \Illuminate\Support\Facades\Storage::disk('r2')->readStream($document->storage_path);
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::error('R2 download failed', [
-                    'document_id' => $document->id,
-                    'path'        => $document->storage_path,
-                    'error'       => $e->getMessage(),
-                ]);
-                abort(500, 'Could not retrieve file: ' . $e->getMessage());
-            }
-
-            if (! $stream) {
-                abort(404, 'File not found in storage.');
-            }
-
-            $mime     = $document->mime_type ?? 'application/octet-stream';
-            $filename = $document->filename  ?? 'document';
-
-            return response()->stream(function () use ($stream) {
-                fpassthru($stream);
-                if (is_resource($stream)) fclose($stream);
-            }, 200, [
-                'Content-Type'        => $mime,
-                'Content-Disposition' => 'attachment; filename="' . str_replace('"', '', $filename) . '"',
-                'Cache-Control'       => 'private, max-age=3600',
-                'X-Accel-Buffering'   => 'no',
-            ]);
+            return $this->r2PresignedRedirect($document->storage_path, $document->filename ?? 'document');
         }
 
         // Legacy Cloudinary — proxy via HTTP
@@ -412,5 +385,29 @@ class ProjectController extends Controller
         }
 
         abort(404, 'File not available. Please re-upload this document.');
+    }
+
+    private function r2PresignedRedirect(string $path, string $filename): \Illuminate\Http\RedirectResponse
+    {
+        $s3 = new \Aws\S3\S3Client([
+            'version'                 => 'latest',
+            'region'                  => 'auto',
+            'endpoint'                => config('filesystems.disks.r2.endpoint'),
+            'use_path_style_endpoint' => true,
+            'credentials'             => [
+                'key'    => config('filesystems.disks.r2.key'),
+                'secret' => config('filesystems.disks.r2.secret'),
+            ],
+        ]);
+
+        $cmd = $s3->getCommand('GetObject', [
+            'Bucket'                        => config('filesystems.disks.r2.bucket'),
+            'Key'                           => $path,
+            'ResponseContentDisposition'    => 'attachment; filename="' . str_replace('"', '', $filename) . '"',
+        ]);
+
+        $url = (string) $s3->createPresignedRequest($cmd, '+10 minutes')->getUri();
+
+        return redirect($url);
     }
 }
