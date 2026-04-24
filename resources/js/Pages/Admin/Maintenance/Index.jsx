@@ -47,11 +47,7 @@ function Inp({ type = 'text', value, onChange, placeholder }) {
 // ── Convert enquiry modal ─────────────────────────────────────────────────────
 
 function ConvertModal({ enquiry, planLabels, onClose }) {
-    const { data, setData, post, processing } = useForm({
-        start_date:   '',
-        renewal_date: '',
-        notes:        '',
-    });
+    const { data, setData, post, processing } = useForm({ notes: '' });
 
     const submit = (e) => {
         e.preventDefault();
@@ -60,6 +56,11 @@ function ConvertModal({ enquiry, planLabels, onClose }) {
             onSuccess: () => onClose(),
         });
     };
+
+    // Compute display dates for the info banner
+    const today   = new Date();
+    const renewal = new Date(today); renewal.setFullYear(renewal.getFullYear() + 1);
+    const fmt = d => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -88,18 +89,21 @@ function ConvertModal({ enquiry, planLabels, onClose }) {
 
                 <form onSubmit={submit} className="px-6 py-5 space-y-4">
                     {/* Info banner */}
-                    <div className="rounded-xl p-3 text-xs" style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#065F46' }}>
-                        This will create an <strong>Active</strong> subscription for this client and send them a notification. The enquiry will be marked as <strong>Converted</strong>.
+                    <div className="rounded-xl p-3 text-xs space-y-1"
+                        style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#065F46' }}>
+                        <p>This will create an <strong>Active</strong> annual subscription and notify the client.</p>
+                        <div className="flex gap-4 mt-2 pt-2" style={{ borderTop: '1px solid #BBF7D0' }}>
+                            <div>
+                                <p style={{ color: '#047857', opacity: 0.7 }}>Starts</p>
+                                <p className="font-semibold">{fmt(today)}</p>
+                            </div>
+                            <div>
+                                <p style={{ color: '#047857', opacity: 0.7 }}>Renews</p>
+                                <p className="font-semibold">{fmt(renewal)}</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                        <Field label="Start Date">
-                            <Inp type="date" value={data.start_date} onChange={e => setData('start_date', e.target.value)} />
-                        </Field>
-                        <Field label="Renewal Date">
-                            <Inp type="date" value={data.renewal_date} onChange={e => setData('renewal_date', e.target.value)} />
-                        </Field>
-                    </div>
                     <Field label="Internal Notes (optional)">
                         <textarea rows={2} value={data.notes} onChange={e => setData('notes', e.target.value)}
                             placeholder="Any notes about this subscription…"
@@ -331,7 +335,7 @@ function SubscriptionRow({ sub, plans, onDelete }) {
 
 function NewSubscriptionForm({ clients, plans }) {
     const [open, setOpen] = useState(false);
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, reset } = useForm({
         client_id:    '',
         plan:         plans[0]?.slug ?? '',
         status:       'active',

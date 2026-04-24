@@ -120,6 +120,16 @@ class DocumentController extends Controller
         abort_unless($belongs, 403);
 
         if ($document->storage_path) {
+            // Local disk (dev environment) — stream directly
+            if ($document->storage_disk === 'local') {
+                $content = \Illuminate\Support\Facades\Storage::disk('local')->get($document->storage_path);
+                return response($content ?? '', 200, [
+                    'Content-Type'        => $document->mime_type ?? 'application/octet-stream',
+                    'Content-Disposition' => 'attachment; filename="' . str_replace('"', '', $document->filename ?? 'document') . '"',
+                    'Cache-Control'       => 'no-store',
+                ]);
+            }
+
             $s3 = new \Aws\S3\S3Client([
                 'version'                 => 'latest',
                 'region'                  => 'auto',

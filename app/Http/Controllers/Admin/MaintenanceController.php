@@ -76,18 +76,19 @@ class MaintenanceController extends Controller
     public function convertEnquiry(Request $request, MaintenanceEnquiry $enquiry)
     {
         $data = $request->validate([
-            'start_date'   => 'nullable|date',
-            'renewal_date' => 'nullable|date',
-            'notes'        => 'nullable|string|max:1000',
+            'notes' => 'nullable|string|max:1000',
         ]);
+
+        $startDate   = now()->toDateString();
+        $renewalDate = now()->addYear()->toDateString();
 
         MaintenanceSubscription::create([
             'client_id'    => $enquiry->client_id,
             'plan'         => $enquiry->plan,
             'status'       => 'active',
-            'start_date'   => $data['start_date']   ?? null,
-            'renewal_date' => $data['renewal_date'] ?? null,
-            'notes'        => $data['notes']         ?? null,
+            'start_date'   => $startDate,
+            'renewal_date' => $renewalDate,
+            'notes'        => $data['notes'] ?? null,
         ]);
 
         $enquiry->update(['status' => 'converted']);

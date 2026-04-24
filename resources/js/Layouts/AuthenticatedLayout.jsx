@@ -7,6 +7,7 @@ const typeIcon = {
     project_assigned:         '🏗️',
     maintenance_enquiry:      '🔧',
     maintenance_subscription: '✅',
+    document_shared:          '📁',
 };
 
 // ── Toast system ───────────────────────────────────────────────────────────────
@@ -431,9 +432,21 @@ export default function AuthenticatedLayout({ title, breadcrumb, children }) {
                                     background: n.read ? 'transparent' : 'rgba(178,148,91,0.04)',
                                 }}
                                 onClick={() => {
-                                    if (!n.read) router.post(route('notifications.read', n.id), {}, { preserveScroll: true });
-                                    if (n.url) { setNotifOpen(false); router.visit(n.url); }
-                                    else setNotifOpen(false);
+                                    // Mark read silently in background — plain fetch avoids Inertia conflict
+                                    if (!n.read) {
+                                        const xsrf = document.cookie.split('; ')
+                                            .find(r => r.startsWith('XSRF-TOKEN='))
+                                            ?.split('=')[1];
+                                        fetch(route('notifications.read', n.id), {
+                                            method: 'POST',
+                                            headers: {
+                                                'X-XSRF-TOKEN': xsrf ? decodeURIComponent(xsrf) : '',
+                                                'Accept': 'application/json',
+                                            },
+                                        }).catch(() => {});
+                                    }
+                                    setNotifOpen(false);
+                                    if (n.url) router.visit(n.url);
                                 }}
                             >
                                 <span className="flex-shrink-0 text-base mt-0.5">

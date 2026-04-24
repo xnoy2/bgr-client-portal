@@ -314,12 +314,8 @@ class ProjectController extends Controller
         try {
             $path = $this->storage->upload($file, "documents/{$project->id}");
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::error('R2 document upload failed', ['error' => $e->getMessage()]);
+            \Illuminate\Support\Facades\Log::error('Document upload failed', ['error' => $e->getMessage()]);
             return back()->withErrors(['file' => 'File upload failed: ' . $e->getMessage()]);
-        }
-
-        if (! $path) {
-            return back()->withErrors(['file' => 'Storage is not configured. Please contact the administrator.']);
         }
 
         Document::create([
@@ -328,7 +324,7 @@ class ProjectController extends Controller
             'title'        => $title,
             'filename'     => $filename,
             'storage_path' => $path,
-            'storage_disk' => 'r2',
+            'storage_disk' => $this->storage->activeDisk(),
             'mime_type'    => $file->getMimeType(),
             'file_size'    => $file->getSize(),
             'category'     => $request->input('category', 'other'),
@@ -336,6 +332,17 @@ class ProjectController extends Controller
             'sign_status'  => 'pending',
             'sent_at'      => now(),
         ]);
+
+        // Notify the client that a document has been shared
+        if ($project->client_id) {
+            \App\Models\PortalNotification::notifyUser(
+                userId:  $project->client_id,
+                type:    'document_shared',
+                title:   'New Document Shared',
+                message: 'A new document "' . $filename . '" has been shared on your project.',
+                url:     route('client.documents.index'),
+            );
+        }
 
         return back()->with('success', 'Document uploaded.');
     }
@@ -351,7 +358,7 @@ class ProjectController extends Controller
         abort_unless($doc->project_id === $project->id, 403);
 
         if ($doc->storage_path) {
-            try { \Illuminate\Support\Facades\Storage::disk('r2')->delete($doc->storage_path); } catch (\Throwable) {}
+            $this->storage->delete($doc->storage_path, $doc->storage_disk ?? 'r2');
         }
 
         $doc->delete();
@@ -374,6 +381,15 @@ class ProjectController extends Controller
         }
 
         if ($doc->storage_path) {
+            // Local disk (dev environment) — stream directly
+            if ($doc->storage_disk === 'local') {
+                $content = \Illuminate\Support\Facades\Storage::disk('local')->get($doc->storage_path);
+                return response($content ?? '', 200, [
+                    'Content-Type'        => $doc->mime_type ?? 'application/octet-stream',
+                    'Content-Disposition' => 'attachment; filename="' . str_replace('"', '', $doc->filename ?? 'document') . '"',
+                    'Cache-Control'       => 'no-store',
+                ]);
+            }
             return $this->r2PresignedRedirect($doc->storage_path, $doc->filename ?? 'document');
         }
 

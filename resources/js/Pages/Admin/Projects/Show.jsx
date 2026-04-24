@@ -490,6 +490,7 @@ function DocumentsTab({ documents, ghlId }) {
         router.post(route('admin.projects.documents.upload', ghlId), fd, {
             forceFormData: true,
             preserveScroll: true,
+            preserveState:  true,
             onSuccess: () => { setUploadError(null); },
             onError:   (errors) => { setUploadError(errors.file ?? 'Upload failed. Please try again.'); },
             onFinish:  () => { setUploading(false); if (fileRef.current) fileRef.current.value = ''; },
@@ -506,6 +507,7 @@ function DocumentsTab({ documents, ghlId }) {
         setDeleting(id);
         router.delete(route('admin.projects.documents.delete', { ghlId, document: id }), {
             preserveScroll: true,
+            preserveState:  true,
             onFinish: () => setDeleting(null),
         });
     }
