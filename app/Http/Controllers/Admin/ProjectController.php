@@ -362,13 +362,55 @@ class ProjectController extends Controller
 
     /**
      * GET /admin/projects/{ghlId}/documents/{document}/download
-     * Streams the document securely via the MediaController proxy.
+     * Streams the document directly from R2 (no redirect).
      */
     public function downloadDocument(string $ghlId, Document $document)
     {
         $project = Project::where('ghl_opportunity_id', $ghlId)->firstOrFail();
         abort_unless($document->project_id === $project->id, 403);
 
-        return redirect()->route('media.document', $document->id);
+        // New R2-stored documents — stream directly
+        if ($document->storage_path) {
+            try {
+                $stream = \Illuminate\Support\Facades\Storage::disk('r2')->readStream($document->storage_path);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('R2 download failed', [
+                    'document_id' => $document->id,
+                    'path'        => $document->storage_path,
+                    'error'       => $e->getMessage(),
+                ]);
+                abort(500, 'Could not retrieve file: ' . $e->getMessage());
+            }
+
+            if (! $stream) {
+                abort(404, 'File not found in storage.');
+            }
+
+            $mime     = $document->mime_type ?? 'application/octet-stream';
+            $filename = $document->filename  ?? 'document';
+
+            return response()->stream(function () use ($stream) {
+                fpassthru($stream);
+                if (is_resource($stream)) fclose($stream);
+            }, 200, [
+                'Content-Type'        => $mime,
+                'Content-Disposition' => 'attachment; filename="' . str_replace('"', '', $filename) . '"',
+                'Cache-Control'       => 'private, max-age=3600',
+                'X-Accel-Buffering'   => 'no',
+            ]);
+        }
+
+        // Legacy Cloudinary — proxy via HTTP
+        if ($document->url) {
+            $response = \Illuminate\Support\Facades\Http::timeout(30)->get($document->url);
+            abort_unless($response->successful(), 502, 'Could not retrieve the file.');
+            return response($response->body(), 200, [
+                'Content-Type'        => $document->mime_type ?? 'application/octet-stream',
+                'Content-Disposition' => 'attachment; filename="' . str_replace('"', '', $document->filename ?? 'document') . '"',
+                'Cache-Control'       => 'no-store',
+            ]);
+        }
+
+        abort(404, 'File not available. Please re-upload this document.');
     }
 }

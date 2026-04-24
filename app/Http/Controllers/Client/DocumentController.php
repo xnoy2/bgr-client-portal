@@ -109,7 +109,7 @@ class DocumentController extends Controller
 
     /**
      * GET /portal/documents/{document}/download
-     * Delegates to the authenticated media proxy.
+     * Streams the document directly from R2 (no redirect).
      */
     public function download(Document $document)
     {
@@ -119,6 +119,38 @@ class DocumentController extends Controller
 
         abort_unless($belongs, 403);
 
-        return redirect()->route('media.document', $document->id);
+        if ($document->storage_path) {
+            try {
+                $stream = \Illuminate\Support\Facades\Storage::disk('r2')->readStream($document->storage_path);
+            } catch (\Throwable $e) {
+                abort(500, 'Could not retrieve file: ' . $e->getMessage());
+            }
+
+            if (! $stream) {
+                abort(404, 'File not found in storage.');
+            }
+
+            return response()->stream(function () use ($stream) {
+                fpassthru($stream);
+                if (is_resource($stream)) fclose($stream);
+            }, 200, [
+                'Content-Type'        => $document->mime_type ?? 'application/octet-stream',
+                'Content-Disposition' => 'attachment; filename="' . str_replace('"', '', $document->filename ?? 'document') . '"',
+                'Cache-Control'       => 'private, max-age=3600',
+                'X-Accel-Buffering'   => 'no',
+            ]);
+        }
+
+        if ($document->url) {
+            $response = \Illuminate\Support\Facades\Http::timeout(30)->get($document->url);
+            abort_unless($response->successful(), 502, 'Could not retrieve the file.');
+            return response($response->body(), 200, [
+                'Content-Type'        => $document->mime_type ?? 'application/octet-stream',
+                'Content-Disposition' => 'attachment; filename="' . str_replace('"', '', $document->filename ?? 'document') . '"',
+                'Cache-Control'       => 'no-store',
+            ]);
+        }
+
+        abort(404, 'File not available. Please ask an admin to re-upload this document.');
     }
 }
