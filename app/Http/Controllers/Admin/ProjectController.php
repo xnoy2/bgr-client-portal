@@ -333,15 +333,19 @@ class ProjectController extends Controller
             'sent_at'      => now(),
         ]);
 
-        // Notify the client that a document has been shared
+        // Notify the client — wrapped so it never breaks the upload if it fails
         if ($project->client_id) {
-            \App\Models\PortalNotification::notifyUser(
-                userId:  $project->client_id,
-                type:    'document_shared',
-                title:   'New Document Shared',
-                message: 'A new document "' . $filename . '" has been shared on your project.',
-                url:     route('client.documents.index'),
-            );
+            try {
+                \App\Models\PortalNotification::notifyUser(
+                    userId:  $project->client_id,
+                    type:    'document_shared',
+                    title:   'New Document Shared',
+                    message: 'A new document "' . $filename . '" has been shared on your project.',
+                    url:     route('client.documents.index'),
+                );
+            } catch (\Throwable) {
+                // Non-fatal — upload already succeeded
+            }
         }
 
         return back()->with('success', 'Document uploaded.');

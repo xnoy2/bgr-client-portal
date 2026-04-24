@@ -446,7 +446,16 @@ export default function AuthenticatedLayout({ title, breadcrumb, children }) {
                                         }).catch(() => {});
                                     }
                                     setNotifOpen(false);
-                                    if (n.url) router.visit(n.url);
+                                    if (n.url) {
+                                        // Extract pathname only — handles old notifications stored
+                                        // with a different domain (e.g. old Railway URL)
+                                        try {
+                                            const parsed = new URL(n.url);
+                                            router.visit(parsed.pathname + parsed.search);
+                                        } catch {
+                                            router.visit(n.url);
+                                        }
+                                    }
                                 }}
                             >
                                 <span className="flex-shrink-0 text-base mt-0.5">
