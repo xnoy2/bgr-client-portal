@@ -205,9 +205,10 @@ Route::middleware(['auth', 'password.changed', 'role:client'])
         Route::get('/agreements/{agreement}',             [ClientAgreementController::class, 'show'])->name('agreements.show');
         Route::get('/agreements/{agreement}/download',    [ClientAgreementController::class, 'download'])->name('agreements.download');
         Route::post('/agreements/{agreement}/sign',       [ClientAgreementController::class, 'sign'])->name('agreements.sign');
-        Route::get('/documents',                         [ClientDocumentController::class, 'index'])->name('documents.index');
-        Route::get('/documents/{document}/download',     [ClientDocumentController::class, 'download'])->name('documents.download');
-        Route::post('/documents/{document}/sign',        [ClientDocumentController::class, 'sign'])->name('documents.sign');
+        Route::get('/documents',                                        [ClientDocumentController::class, 'index'])->name('documents.index');
+        Route::get('/documents/{document}/download',                    [ClientDocumentController::class, 'download'])->name('documents.download');
+        Route::post('/documents/{document}/sign',                       [ClientDocumentController::class, 'sign'])->name('documents.sign');
+        Route::get('/portal-documents/{portalDocument}/download',       [ClientDocumentController::class, 'downloadPortalDocument'])->name('portal-documents.download');
 
         // Maintenance plans
         Route::get('/maintenance', function () {

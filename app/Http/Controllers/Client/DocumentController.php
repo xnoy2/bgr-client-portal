@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Models\Document;
+use App\Models\PortalDocument;
 use App\Models\Project;
 use App\Services\MediaStorageService;
 use App\Services\PdfSigningService;
@@ -23,28 +24,89 @@ class DocumentController extends Controller
     {
         $projectIds = Project::where('client_id', auth()->id())->pluck('id');
 
-        $documents = Document::whereIn('project_id', $projectIds)
+        // Project documents (uploaded via Admin → Project → Documents tab)
+        $projectDocs = Document::whereIn('project_id', $projectIds)
             ->where('visibility', 'client')
             ->with('project')
             ->orderByDesc('created_at')
             ->get()
             ->map(fn ($doc) => [
                 'id'           => $doc->id,
-                'title'        => $doc->title,
                 'filename'     => $doc->filename,
                 'download_url' => route('client.documents.download', $doc->id),
                 'mime_type'    => $doc->mime_type,
                 'file_size'    => $doc->file_size,
                 'category'     => $doc->category,
-                'sign_status'  => $doc->sign_status,
-                'sent_at'      => $doc->sent_at?->toDateString(),
-                'signed_at'    => $doc->signed_at?->toDateString(),
-                'signer_name'  => $doc->signer_name,
                 'project_name' => $doc->project?->name,
+                'created_at'   => $doc->created_at,
             ]);
+
+        // Portal documents (uploaded via Admin → Agreements → T&C / Others tabs)
+        $portalDocs = PortalDocument::whereIn('project_id', $projectIds)
+            ->with('project')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn ($doc) => [
+                'id'           => 'p_' . $doc->id,   // prefix to avoid ID collision
+                'filename'     => $doc->original_name,
+                'download_url' => route('client.portal-documents.download', $doc->id),
+                'mime_type'    => $doc->mime_type,
+                'file_size'    => $doc->file_size,
+                'category'     => $doc->category,
+                'project_name' => $doc->project?->name,
+                'created_at'   => $doc->created_at,
+            ]);
+
+        // Merge and sort by newest first
+        $documents = $projectDocs->concat($portalDocs)
+            ->sortByDesc('created_at')
+            ->values();
 
         return Inertia::render('Client/Documents/Index', [
             'documents' => $documents,
+        ]);
+    }
+
+    /**
+     * GET /portal/portal-documents/{portalDocument}/download
+     * Authenticated download for portal documents (T&C, Others).
+     */
+    public function downloadPortalDocument(PortalDocument $portalDocument)
+    {
+        $belongs = Project::where('client_id', auth()->id())
+            ->where('id', $portalDocument->project_id)
+            ->exists();
+
+        abort_unless($belongs, 403);
+
+        $disk = $portalDocument->storage_disk;
+        $path = $portalDocument->disk_path;
+
+        if ($disk === 'r2') {
+            $s3 = new \Aws\S3\S3Client([
+                'version'                 => 'latest',
+                'region'                  => 'auto',
+                'endpoint'                => config('filesystems.disks.r2.endpoint'),
+                'use_path_style_endpoint' => true,
+                'credentials'             => [
+                    'key'    => config('filesystems.disks.r2.key'),
+                    'secret' => config('filesystems.disks.r2.secret'),
+                ],
+            ]);
+            $cmd = $s3->getCommand('GetObject', [
+                'Bucket'                     => config('filesystems.disks.r2.bucket'),
+                'Key'                        => $path,
+                'ResponseContentDisposition' => 'attachment; filename="' . str_replace('"', '', $portalDocument->original_name) . '"',
+            ]);
+            return redirect((string) $s3->createPresignedRequest($cmd, '+10 minutes')->getUri());
+        }
+
+        // Local disk fallback
+        $content = Storage::disk($disk)->get($path);
+        return response($content ?? '', 200, [
+            'Content-Type'        => $portalDocument->mime_type ?? 'application/octet-stream',
+            'Content-Disposition' => 'attachment; filename="' . str_replace('"', '', $portalDocument->original_name) . '"',
+            'Cache-Control'       => 'no-store',
         ]);
     }
 

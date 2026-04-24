@@ -7,11 +7,12 @@ use App\Http\Resources\ProgressUpdateResource;
 use App\Models\MediaFile;
 use App\Models\ProgressUpdate;
 use App\Models\Project;
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use App\Services\MediaStorageService;
 use Illuminate\Http\Request;
 
 class ProgressUpdateController extends Controller
 {
+    public function __construct(private MediaStorageService $storage) {}
     /**
      * GET /api/projects/{project}/updates
      *
@@ -160,7 +161,7 @@ class ProgressUpdateController extends Controller
         return response()->json(['message' => 'Update deleted.']);
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private function authorizeProjectAccess(Request $request, Project $project): void
     {
@@ -186,25 +187,21 @@ class ProgressUpdateController extends Controller
     {
         $urls = [];
         foreach ($request->file($field, []) as $file) {
-            $result = Cloudinary::uploadApi()->upload($file->getRealPath(), [
-                'folder'        => "bgr/project-updates/{$project->id}",
-                'resource_type' => 'image',
-                'quality'       => 'auto',
-                'fetch_format'  => 'auto',
-            ]);
+            $path = $this->storage->upload($file, "project-updates/{$project->id}");
+            if (! $path) continue;
 
-            $urls[] = $result['secure_url'];
-
-            MediaFile::create([
+            $media = MediaFile::create([
                 'project_id'        => $project->id,
                 'user_id'           => $request->user()->id,
                 'original_filename' => $file->getClientOriginalName(),
-                'url'               => $result['secure_url'],
-                'ghl_file_id'       => $result['public_id'],
+                'storage_path'      => $path,
+                'storage_disk'      => $this->storage->activeDisk(),
                 'resource_type'     => 'photo',
                 'mime_type'         => $file->getMimeType(),
                 'file_size'         => $file->getSize(),
             ]);
+
+            $urls[] = route('media.photo', $media->id);
         }
         return $urls;
     }

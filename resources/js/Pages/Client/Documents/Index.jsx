@@ -137,7 +137,7 @@ export default function ClientDocumentsIndex({ documents }) {
 
                                 {/* Download */}
                                 <div className="flex-shrink-0">
-                                    <a href={route('client.documents.download', doc.id)}
+                                    <a href={doc.download_url}
                                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
                                         style={{ background: '#F1F1EF', color: '#25282D', border: '0.5px solid #D1CDC7' }}>
                                         <svg width="11" height="11" viewBox="0 0 16 16" fill="none"
