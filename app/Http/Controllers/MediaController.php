@@ -56,6 +56,9 @@ class MediaController extends Controller
             );
         }
 
+        // No file available — neither R2 path nor legacy URL
+        abort_if(empty($document->url), 404, 'File not available. Please ask an admin to re-upload this document.');
+
         // Legacy Cloudinary documents — proxy through HTTP
         $response = Http::timeout(30)->get($document->url);
         abort_unless($response->successful(), 502, 'Could not retrieve the file.');
