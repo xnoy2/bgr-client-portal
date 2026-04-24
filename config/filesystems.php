@@ -60,7 +60,7 @@ return [
             'bucket'                  => env('R2_BUCKET', 'bgr-portal'),
             'endpoint'                => env('R2_ENDPOINT'),
             'use_path_style_endpoint' => true,
-            'throw'                   => false,
+            'throw'                   => true,
         ],
 
         's3' => [

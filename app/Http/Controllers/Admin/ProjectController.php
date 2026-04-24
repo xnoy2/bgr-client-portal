@@ -311,7 +311,16 @@ class ProjectController extends Controller
         $filename = $file->getClientOriginalName();
         $title    = pathinfo($filename, PATHINFO_FILENAME);
 
-        $path = $this->storage->upload($file, "documents/{$project->id}");
+        try {
+            $path = $this->storage->upload($file, "documents/{$project->id}");
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('R2 document upload failed', ['error' => $e->getMessage()]);
+            return back()->withErrors(['file' => 'File upload failed: ' . $e->getMessage()]);
+        }
+
+        if (! $path) {
+            return back()->withErrors(['file' => 'Storage is not configured. Please contact the administrator.']);
+        }
 
         Document::create([
             'project_id'   => $project->id,
