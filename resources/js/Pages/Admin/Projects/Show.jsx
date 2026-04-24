@@ -479,17 +479,27 @@ function DocumentsTab({ documents, ghlId }) {
     const fileRef  = useRef(null);
     const [uploading, setUploading] = useState(false);
     const [deleting,  setDeleting]  = useState(null);
+    const [uploadError, setUploadError] = useState(null);
+
+    function doUpload(file) {
+        if (!file) return;
+        setUploading(true);
+        setUploadError(null);
+        const fd = new FormData();
+        fd.append('file', file);
+        router.post(route('admin.projects.documents.upload', ghlId), fd, {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => { setUploadError(null); },
+            onError:   (errors) => { setUploadError(errors.file ?? 'Upload failed. Please try again.'); },
+            onFinish:  () => { setUploading(false); if (fileRef.current) fileRef.current.value = ''; },
+        });
+    }
 
     function upload(e) {
         const files = Array.from(e.target.files);
         if (!files.length) return;
-        setUploading(true);
-        const fd = new FormData();
-        fd.append('file', files[0]);
-        router.post(route('admin.projects.documents.upload', ghlId), fd, {
-            forceFormData: true,
-            onFinish:  () => { setUploading(false); e.target.value = ''; },
-        });
+        doUpload(files[0]);
     }
 
     function deleteDoc(id) {
@@ -512,15 +522,7 @@ function DocumentsTab({ documents, ghlId }) {
                 onDrop={e => {
                     e.preventDefault();
                     e.currentTarget.style.borderColor = '#D1CDC7';
-                    const file = e.dataTransfer.files[0];
-                    if (!file) return;
-                    setUploading(true);
-                    const fd = new FormData();
-                    fd.append('file', file);
-                    router.post(route('admin.projects.documents.upload', ghlId), fd, {
-                        forceFormData: true,
-                        onFinish: () => setUploading(false),
-                    });
+                    doUpload(e.dataTransfer.files[0]);
                 }}>
                 {uploading ? (
                     <div className="flex items-center gap-2" style={{ color: '#25282D' }}>
@@ -543,6 +545,18 @@ function DocumentsTab({ documents, ghlId }) {
                 <input ref={fileRef} type="file" className="hidden" onChange={upload}
                     accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.png,.jpg,.jpeg,.webp" />
             </div>
+
+            {/* Upload error banner */}
+            {uploadError && (
+                <div className="rounded-xl px-4 py-3 flex items-center gap-3"
+                    style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round">
+                        <circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><circle cx="8" cy="11" r="0.5" fill="#DC2626"/>
+                    </svg>
+                    <p className="text-xs font-medium flex-1" style={{ color: '#DC2626' }}>{uploadError}</p>
+                    <button onClick={() => setUploadError(null)} style={{ color: '#DC2626', fontSize: 16, lineHeight: 1 }}>×</button>
+                </div>
+            )}
 
             {/* Document table */}
             {documents.length > 0 ? (
