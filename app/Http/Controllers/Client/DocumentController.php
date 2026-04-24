@@ -32,7 +32,7 @@ class DocumentController extends Controller
                 'id'           => $doc->id,
                 'title'        => $doc->title,
                 'filename'     => $doc->filename,
-                'download_url' => route('media.document', $doc->id),
+                'download_url' => route('client.documents.download', $doc->id),
                 'mime_type'    => $doc->mime_type,
                 'file_size'    => $doc->file_size,
                 'category'     => $doc->category,

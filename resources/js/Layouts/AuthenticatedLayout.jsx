@@ -110,6 +110,7 @@ function getNav(role) {
     ];
     return [
         { label: 'My Projects',  icon: 'briefcase', href: () => route('client.dashboard'),           active: () => route().current('client.dashboard') || route().current('client.projects.*') },
+        { label: 'Documents',    icon: 'file',      href: () => route('client.documents.index'),    active: () => route().current('client.documents.*') },
         { label: 'Variations',   icon: 'edit',      href: () => route('client.variations.index'),   active: () => route().current('client.variations.*') },
         { label: 'Agreements',   icon: 'file',      href: () => route('client.agreements.index'),   active: () => route().current('client.agreements.*') },
         { label: 'Maintenance',  icon: 'tool',      href: () => route('client.maintenance.index'),  active: () => route().current('client.maintenance.*') },
