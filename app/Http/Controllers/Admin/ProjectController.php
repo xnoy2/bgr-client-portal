@@ -388,7 +388,8 @@ class ProjectController extends Controller
             ]);
         }
 
-        abort(404, 'File not available. Please re-upload this document.');
+        // File was never stored (uploaded during transition period with missing storage config)
+        return redirect()->back()->with('error', 'The file "' . $doc->filename . '" has no stored content. Please delete it and re-upload.');
     }
 
     private function r2PresignedRedirect(string $path, string $filename): \Illuminate\Http\RedirectResponse
