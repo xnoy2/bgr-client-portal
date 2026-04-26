@@ -1,5 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Modal from '@/Components/Modal';
+import ModalShell from '@/Components/ModalShell';
 import { Head, useForm, router, Link } from '@inertiajs/react';
 import { useRef, useState, useEffect } from 'react';
 
@@ -228,9 +229,9 @@ const STAGE_STYLE = {
 
 function StageCompleteModal({ stage, ghlId, onClose, onDone }) {
     const { data, setData, post, processing, errors, reset } = useForm({
-        title:    stage.name + ' completed',
+        title:    stage.name + ' — Completed',
         body:     '',
-        stage_id: stage.id,
+        stage_id: String(stage.id),
         photos:   [],
     });
     const [previews, setPreviews] = useState([]);
@@ -241,23 +242,24 @@ function StageCompleteModal({ stage, ghlId, onClose, onDone }) {
         setData('photos', [...data.photos, ...arr]);
         arr.forEach(f => {
             const r = new FileReader();
-            r.onload = e => setPreviews(p => [...p, e.target.result]);
+            r.onload = ev => setPreviews(p => [...p, ev.target.result]);
             r.readAsDataURL(f);
         });
     }
 
+    function removePhoto(i) {
+        setData('photos', data.photos.filter((_, idx) => idx !== i));
+        setPreviews(p => p.filter((_, idx) => idx !== i));
+    }
+
     function submit(e) {
         e.preventDefault();
-        const fd = new FormData();
-        fd.append('title', data.title);
-        fd.append('body',  data.body);
-        fd.append('stage_id', String(data.stage_id));
-        data.photos.forEach(f => fd.append('photos[]', f));
-
-        router.post(route('admin.projects.stage.complete', ghlId), fd, {
-            forceFormData: true,
+        // Use useForm.post — Inertia handles File objects + CSRF automatically
+        post(route('admin.projects.stage.complete', ghlId), {
+            forceFormData:  true,
             preserveScroll: true,
-            onSuccess: () => { reset(); onDone(); onClose(); },
+            preserveState:  true,   // keep modal open if validation fails
+            onSuccess: () => { reset(); setPreviews([]); onDone(); onClose(); },
         });
     }
 
@@ -320,10 +322,7 @@ function StageCompleteModal({ stage, ghlId, onClose, onDone }) {
                                     <div key={i} className="relative">
                                         <img src={src} alt="" className="w-16 h-16 rounded-lg object-cover" />
                                         <button type="button"
-                                            onClick={() => {
-                                                setData('photos', data.photos.filter((_, idx) => idx !== i));
-                                                setPreviews(p => p.filter((_, idx) => idx !== i));
-                                            }}
+                                            onClick={() => removePhoto(i)}
                                             className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-white text-xs"
                                             style={{ background: '#e53e3e' }}>✕</button>
                                     </div>
@@ -367,12 +366,17 @@ function StageCompleteModal({ stage, ghlId, onClose, onDone }) {
 
 // ── Stage row ─────────────────────────────────────────────────────────────────
 
-function StageRow({ stage, ghlId, onUpdateStatus, onCompleting }) {
+function StageRow({ stage, onCompleting, canStart, onStart }) {
     const s = STAGE_STYLE[stage.status] ?? STAGE_STYLE.pending;
+
     return (
         <div className="flex items-center gap-3 rounded-xl px-4 py-3"
             style={{ background: s.bg, border: `0.5px solid ${s.dot}33` }}>
+
+            {/* Status dot */}
             <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: s.dot }} />
+
+            {/* Stage name */}
             <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium" style={{ color: s.color }}>{stage.name}</div>
                 {(stage.start_date || stage.end_date) && (
@@ -381,22 +385,41 @@ function StageRow({ stage, ghlId, onUpdateStatus, onCompleting }) {
                     </div>
                 )}
             </div>
-            <select
-                value={stage.status}
-                onChange={e => {
-                    const newStatus = e.target.value;
-                    if (newStatus === 'completed') {
-                        onCompleting(stage);   // open modal instead of direct update
-                    } else {
-                        onUpdateStatus(stage.id, newStatus);
-                    }
-                }}
-                className="text-xs rounded-lg px-2 py-1 outline-none"
-                style={{ border: `0.5px solid ${s.dot}55`, background: '#fff', color: s.color }}>
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-            </select>
+
+            {/* Action / Badge */}
+            {stage.status === 'completed' && (
+                <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full"
+                    style={{ background: 'rgba(21,128,61,0.1)', color: '#15803d', border: '0.5px solid rgba(21,128,61,0.25)' }}>
+                    <svg width="9" height="9" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <polyline points="2,8 6,12 14,4"/>
+                    </svg>
+                    Completed
+                </span>
+            )}
+
+            {stage.status === 'pending' && !canStart && (
+                <span className="text-xs font-medium px-2.5 py-1 rounded-full"
+                    style={{ background: '#F1F1EF', color: '#888480', border: '0.5px solid #D1CDC7' }}>
+                    Pending
+                </span>
+            )}
+
+            {/* Exception: all stages pending → allow starting the first stage */}
+            {stage.status === 'pending' && canStart && (
+                <button onClick={onStart}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity"
+                    style={{ background: '#25282D', color: '#fff' }}>
+                    Start Stage
+                </button>
+            )}
+
+            {stage.status === 'in_progress' && (
+                <button onClick={() => onCompleting(stage)}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity"
+                    style={{ background: '#B2945B', color: '#fff' }}>
+                    Mark Complete
+                </button>
+            )}
         </div>
     );
 }
@@ -495,7 +518,7 @@ function ProjectDetailsTab({ project }) {
 
 // ── Tab: Construction Stages ──────────────────────────────────────────────────
 
-function StagesTab({ project, ghlId, onUpdateStatus, onCompleting }) {
+function StagesTab({ project, ghlId, onUpdateStatus, onCompleting, onStartProject }) {
     const completedStages = project.stages?.filter(s => s.status === 'completed').length ?? 0;
     const totalStages     = project.stages?.length ?? 0;
     const progressPct     = totalStages > 0 ? Math.round((completedStages / totalStages) * 100) : 0;
@@ -525,10 +548,20 @@ function StagesTab({ project, ghlId, onUpdateStatus, onCompleting }) {
             )}
 
             <div className="space-y-2">
-                {project.stages?.map(stage => (
-                    <StageRow key={stage.id} stage={stage} ghlId={ghlId}
-                        onUpdateStatus={onUpdateStatus} onCompleting={onCompleting} />
-                ))}
+                {(() => {
+                    const sorted    = [...(project.stages ?? [])].sort((a, b) => a.order - b.order);
+                    const allPending = sorted.length > 0 && sorted.every(s => s.status === 'pending');
+                    const firstStage = sorted[0];
+                    return sorted.map(stage => (
+                        <StageRow
+                            key={stage.id}
+                            stage={stage}
+                            onCompleting={onCompleting}
+                            canStart={allPending && stage.id === firstStage?.id}
+                            onStart={() => onStartProject()}
+                        />
+                    ));
+                })()}
             </div>
         </div>
     );
@@ -832,6 +865,10 @@ export default function ProjectShow({ project, ghl, workers, clients, documents 
         router.put(route('admin.projects.stage.update', ghlId), { stage_id: stageId, status }, { preserveScroll: true });
     };
 
+    const startProject = () => {
+        router.post(route('admin.projects.stage.start', ghlId), {}, { preserveScroll: true });
+    };
+
     const refreshGHL = () => {
         router.post(route('admin.projects.refresh-ghl', ghlId), {}, { preserveScroll: true });
     };
@@ -879,7 +916,7 @@ export default function ProjectShow({ project, ghl, workers, clients, documents 
 
             {/* Tab content */}
             {tab === 'Project Details'      && <ProjectDetailsTab project={project} />}
-            {tab === 'Construction Stages'  && <StagesTab project={project} ghlId={ghlId} onUpdateStatus={updateStageStatus} onCompleting={setCompletingStage} />}
+            {tab === 'Construction Stages'  && <StagesTab project={project} ghlId={ghlId} onUpdateStatus={updateStageStatus} onCompleting={setCompletingStage} onStartProject={startProject} />}
 
             {completingStage && (
                 <StageCompleteModal

@@ -273,6 +273,21 @@ class ProjectController extends Controller
     }
 
     /**
+     * POST /admin/projects/{ghlId}/stage/start
+     * Reset all stages to pending then advance to stage 1 (Design Approved → In Progress).
+     * Called when all stages are pending and admin clicks "Start Stage".
+     */
+    public function startProject(Request $request, string $ghlId)
+    {
+        $project = Project::with('stages')->where('ghl_opportunity_id', $ghlId)->firstOrFail();
+
+        // Advance to order 1 — marks Design Approved as in_progress, rest pending, pushes to GHL
+        $this->ghl->advanceProjectStage($project, 1);
+
+        return back()->with('success', 'Project started. Design Approved is now in progress.');
+    }
+
+    /**
      * POST /admin/projects/{ghlId}/stage/complete
      * Mark a stage as completed and save a progress update with optional photos.
      */
@@ -281,16 +296,22 @@ class ProjectController extends Controller
         $project = Project::with('stages')->where('ghl_opportunity_id', $ghlId)->firstOrFail();
 
         $validated = $request->validate([
-            'stage_id' => 'required|exists:project_stages,id',
+            'stage_id' => 'required|integer|exists:project_stages,id',
             'title'    => 'required|string|max:255',
             'body'     => 'required|string|max:5000',
             'photos'   => 'nullable|array|max:10',
-            'photos.*' => 'file|mimes:jpg,jpeg,png,webp|max:10240',
+            'photos.*' => 'file|mimes:jpg,jpeg,png,webp,heic|max:10240',
         ]);
 
-        // Mark stage as completed
-        $stage = $project->stages()->findOrFail($validated['stage_id']);
-        $stage->update(['status' => 'completed']);
+        // Find the stage being completed
+        $stage = $project->stages()->findOrFail((int) $validated['stage_id']);
+
+        // Advance to the NEXT stage (marks current as completed, next as in_progress, pushes to GHL)
+        $this->ghl->advanceProjectStage($project, $stage->order + 1);
+
+        // Reload stages after advance so relationships are fresh
+        $project->load('stages');
+        $stage = $project->stages()->findOrFail((int) $validated['stage_id']);
 
         // Upload photos to R2 / local
         $photoUrls = [];
