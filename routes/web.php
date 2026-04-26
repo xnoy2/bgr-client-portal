@@ -172,6 +172,7 @@ Route::middleware(['auth', 'password.changed', 'role:admin'])
         Route::get('/projects/{ghlId}',                    [ProjectController::class, 'show'])->name('projects.show');
         Route::put('/projects/{ghlId}',                    [ProjectController::class, 'update'])->name('projects.update');
         Route::put('/projects/{ghlId}/stage',              [ProjectController::class, 'updateStage'])->name('projects.stage.update');
+        Route::post('/projects/{ghlId}/stage/complete',   [ProjectController::class, 'completeStage'])->name('projects.stage.complete');
         Route::post('/projects/{ghlId}/refresh-ghl',       [ProjectController::class, 'refreshGHL'])->name('projects.refresh-ghl');
         Route::post('/projects/{ghlId}/documents',                        [ProjectController::class, 'uploadDocument'])->name('projects.documents.upload');
         Route::delete('/projects/{ghlId}/documents/{document}',           [ProjectController::class, 'deleteDocument'])->name('projects.documents.delete');

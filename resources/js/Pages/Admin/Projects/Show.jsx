@@ -224,7 +224,150 @@ const STAGE_STYLE = {
     completed:   { bg: 'rgba(26,26,26,0.05)',      color: '#25282D', dot: '#25282D' },
 };
 
-function StageRow({ stage, onUpdateStatus }) {
+// ── Stage complete modal ──────────────────────────────────────────────────────
+
+function StageCompleteModal({ stage, ghlId, onClose, onDone }) {
+    const { data, setData, post, processing, errors, reset } = useForm({
+        title:    stage.name + ' completed',
+        body:     '',
+        stage_id: stage.id,
+        photos:   [],
+    });
+    const [previews, setPreviews] = useState([]);
+    const fileRef = useRef(null);
+
+    function addFiles(files) {
+        const arr = Array.from(files);
+        setData('photos', [...data.photos, ...arr]);
+        arr.forEach(f => {
+            const r = new FileReader();
+            r.onload = e => setPreviews(p => [...p, e.target.result]);
+            r.readAsDataURL(f);
+        });
+    }
+
+    function submit(e) {
+        e.preventDefault();
+        const fd = new FormData();
+        fd.append('title', data.title);
+        fd.append('body',  data.body);
+        fd.append('stage_id', String(data.stage_id));
+        data.photos.forEach(f => fd.append('photos[]', f));
+
+        router.post(route('admin.projects.stage.complete', ghlId), fd, {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => { reset(); onDone(); onClose(); },
+        });
+    }
+
+    return (
+        <ModalShell show onClose={onClose}>
+            <div className="w-full max-w-md bg-white rounded-2xl overflow-hidden" style={{ maxHeight: '90vh' }}>
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 py-4"
+                    style={{ borderBottom: '0.5px solid #E8E6E2' }}>
+                    <div>
+                        <h2 className="text-sm font-semibold text-forest">Complete Stage</h2>
+                        <p className="text-xs mt-0.5" style={{ color: '#8a7e6e' }}>• {stage.name}</p>
+                    </div>
+                    <button onClick={onClose}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center"
+                        style={{ background: '#F1F1EF', color: '#6b6259' }}>
+                        <svg width="11" height="11" viewBox="0 0 16 16" fill="none"
+                            stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                            <line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <form onSubmit={submit} className="overflow-y-auto px-5 py-4 space-y-4"
+                    style={{ maxHeight: 'calc(90vh - 64px)' }}>
+
+                    {/* What was done */}
+                    <div>
+                        <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide"
+                            style={{ color: '#4A4A4A' }}>
+                            What was done <span style={{ color: '#e53e3e' }}>*</span>
+                        </label>
+                        <textarea rows={4} value={data.body}
+                            onChange={e => setData('body', e.target.value)}
+                            placeholder="Describe what was completed, any issues, next steps…"
+                            className="w-full px-3.5 py-2.5 rounded-xl text-sm outline-none resize-none"
+                            style={{
+                                border: `1.5px solid ${errors.body ? '#fca5a5' : '#D1CDC7'}`,
+                                background: '#F8F7F5', color: '#25282D',
+                            }}
+                            onFocus={e => e.target.style.borderColor = '#25282D'}
+                            onBlur={e  => e.target.style.borderColor = errors.body ? '#fca5a5' : '#D1CDC7'}
+                        />
+                        {errors.body && <p className="mt-1 text-xs" style={{ color: '#b91c1c' }}>{errors.body}</p>}
+                    </div>
+
+                    {/* Photos (optional) */}
+                    <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                            <label className="text-xs font-semibold uppercase tracking-wide"
+                                style={{ color: '#4A4A4A' }}>
+                                Photos <span style={{ color: '#888480', fontWeight: 400 }}>(optional)</span>
+                            </label>
+                            <span className="text-xs" style={{ color: '#888480' }}>{data.photos.length}/10</span>
+                        </div>
+
+                        {previews.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-2">
+                                {previews.map((src, i) => (
+                                    <div key={i} className="relative">
+                                        <img src={src} alt="" className="w-16 h-16 rounded-lg object-cover" />
+                                        <button type="button"
+                                            onClick={() => {
+                                                setData('photos', data.photos.filter((_, idx) => idx !== i));
+                                                setPreviews(p => p.filter((_, idx) => idx !== i));
+                                            }}
+                                            className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-white text-xs"
+                                            style={{ background: '#e53e3e' }}>✕</button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        <button type="button" onClick={() => fileRef.current?.click()}
+                            disabled={data.photos.length >= 10}
+                            className="w-full py-2.5 rounded-xl text-xs font-medium border border-dashed transition-colors"
+                            style={{ borderColor: '#D1CDC7', color: '#888480', background: '#F8F7F5' }}>
+                            + Add Photos
+                        </button>
+                        <input ref={fileRef} type="file" multiple accept="image/*" className="hidden"
+                            onChange={e => { addFiles(e.target.files); e.target.value = ''; }} />
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-3 pt-1">
+                        <button type="button" onClick={onClose}
+                            className="flex-1 py-2.5 rounded-xl text-sm font-medium"
+                            style={{ background: '#F1F1EF', color: '#4A4A4A', border: '0.5px solid #D1CDC7' }}>
+                            Cancel
+                        </button>
+                        <button type="submit" disabled={processing || !data.body.trim()}
+                            className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-opacity"
+                            style={{
+                                background: !data.body.trim() ? '#D1CDC7' : '#25282D',
+                                color: '#fff',
+                                opacity: processing ? 0.6 : 1,
+                                cursor: !data.body.trim() ? 'not-allowed' : 'pointer',
+                            }}>
+                            {processing ? 'Saving…' : 'Mark Complete'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </ModalShell>
+    );
+}
+
+// ── Stage row ─────────────────────────────────────────────────────────────────
+
+function StageRow({ stage, ghlId, onUpdateStatus, onCompleting }) {
     const s = STAGE_STYLE[stage.status] ?? STAGE_STYLE.pending;
     return (
         <div className="flex items-center gap-3 rounded-xl px-4 py-3"
@@ -238,7 +381,16 @@ function StageRow({ stage, onUpdateStatus }) {
                     </div>
                 )}
             </div>
-            <select value={stage.status} onChange={e => onUpdateStatus(stage.id, e.target.value)}
+            <select
+                value={stage.status}
+                onChange={e => {
+                    const newStatus = e.target.value;
+                    if (newStatus === 'completed') {
+                        onCompleting(stage);   // open modal instead of direct update
+                    } else {
+                        onUpdateStatus(stage.id, newStatus);
+                    }
+                }}
                 className="text-xs rounded-lg px-2 py-1 outline-none"
                 style={{ border: `0.5px solid ${s.dot}55`, background: '#fff', color: s.color }}>
                 <option value="pending">Pending</option>
@@ -343,7 +495,7 @@ function ProjectDetailsTab({ project }) {
 
 // ── Tab: Construction Stages ──────────────────────────────────────────────────
 
-function StagesTab({ project, onUpdateStatus }) {
+function StagesTab({ project, ghlId, onUpdateStatus, onCompleting }) {
     const completedStages = project.stages?.filter(s => s.status === 'completed').length ?? 0;
     const totalStages     = project.stages?.length ?? 0;
     const progressPct     = totalStages > 0 ? Math.round((completedStages / totalStages) * 100) : 0;
@@ -374,7 +526,8 @@ function StagesTab({ project, onUpdateStatus }) {
 
             <div className="space-y-2">
                 {project.stages?.map(stage => (
-                    <StageRow key={stage.id} stage={stage} onUpdateStatus={onUpdateStatus} />
+                    <StageRow key={stage.id} stage={stage} ghlId={ghlId}
+                        onUpdateStatus={onUpdateStatus} onCompleting={onCompleting} />
                 ))}
             </div>
         </div>
@@ -649,8 +802,9 @@ function DocumentsTab({ documents, ghlId }) {
 const TABS = ['Project Details', 'Construction Stages', 'GHL Opportunity', 'Documents'];
 
 export default function ProjectShow({ project, ghl, workers, clients, documents }) {
-    const [tab,      setTab]      = useState('Project Details');
-    const [showEdit, setShowEdit] = useState(false);
+    const [tab,            setTab]          = useState('Project Details');
+    const [showEdit,       setShowEdit]      = useState(false);
+    const [completingStage, setCompletingStage] = useState(null); // stage being completed
 
     const editForm = useForm({
         name:                 project.name                  ?? '',
@@ -725,7 +879,16 @@ export default function ProjectShow({ project, ghl, workers, clients, documents 
 
             {/* Tab content */}
             {tab === 'Project Details'      && <ProjectDetailsTab project={project} />}
-            {tab === 'Construction Stages'  && <StagesTab project={project} onUpdateStatus={updateStageStatus} />}
+            {tab === 'Construction Stages'  && <StagesTab project={project} ghlId={ghlId} onUpdateStatus={updateStageStatus} onCompleting={setCompletingStage} />}
+
+            {completingStage && (
+                <StageCompleteModal
+                    stage={completingStage}
+                    ghlId={ghlId}
+                    onClose={() => setCompletingStage(null)}
+                    onDone={() => setCompletingStage(null)}
+                />
+            )}
             {tab === 'GHL Opportunity'      && <GHLTab ghl={ghl} onRefresh={refreshGHL} />}
             {tab === 'Documents'            && <DocumentsTab documents={documents ?? []} ghlId={ghlId} />}
 
