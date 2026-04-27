@@ -52,13 +52,9 @@ function DetailModal({ show, variation, onClose }) {
     const photos = variation.photos ?? [];
 
     return (
-        <ModalShell show={show} onClose={onClose} position="bottom">
-            <div className="w-full sm:max-w-lg bg-white sm:rounded-2xl rounded-t-2xl overflow-hidden flex flex-col"
+        <ModalShell show={show} onClose={onClose} position="center">
+            <div className="w-full sm:max-w-lg bg-white rounded-2xl overflow-hidden flex flex-col"
                 style={{ maxHeight: '88vh', border: '0.5px solid #D1CDC7' }}>
-
-                <div className="flex justify-center pt-3 pb-1 sm:hidden">
-                    <div className="w-10 h-1 rounded-full" style={{ background: '#d0c8bc' }} />
-                </div>
 
                 <div className="flex items-start justify-between px-5 pt-4 pb-3 flex-shrink-0"
                     style={{ borderBottom: '0.5px solid #f0ebe3' }}>
@@ -523,8 +519,11 @@ function VariationModal({ show, projects, user, editing, onClose, onSuccess }) {
 
 function VariationRow({ variation, onView, onEdit, isLast }) {
     return (
-        <div className="flex items-center gap-4 px-5 py-4"
-            style={{ borderBottom: isLast ? 'none' : '0.5px solid #F1F1EF' }}>
+        <div className="flex items-center gap-4 px-5 py-4 cursor-pointer transition-colors"
+            style={{ borderBottom: isLast ? 'none' : '0.5px solid #F1F1EF' }}
+            onClick={() => onView(variation)}
+            onMouseEnter={e => e.currentTarget.style.background = '#faf8f5'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
 
             {/* Icon */}
             <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -551,7 +550,7 @@ function VariationRow({ variation, onView, onEdit, isLast }) {
 
                 {/* Edit button — only for pending */}
                 {variation.status === 'pending' && (
-                    <button onClick={() => onEdit(variation)}
+                    <button onClick={e => { e.stopPropagation(); onEdit(variation); }}
                         className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
                         style={{ background: '#F1F1EF', color: '#4A4A4A' }}
                         title="Edit request"

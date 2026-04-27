@@ -320,16 +320,15 @@ function CreateModal({ show, projects, variations, onClose }) {
     function handleVariationChange(id) {
         setVariationId(id);
         const v = variations.find(v => String(v.id) === String(id));
-        if (v) {
-            setTitle(v.title || title);
-            if (v.description) setItems([{ description: v.description, price: v.estimated_cost || '' }]);
-        }
+        if (v) setTitle(v.title || title);
     }
 
-    const projectVariations = variations.filter(v => String(v.project_id) === String(projectId));
+    const projectVariations  = variations.filter(v => String(v.project_id) === String(projectId));
+    const noVariationsForProject = projectId && projectVariations.length === 0;
 
     function submit(e) {
         e.preventDefault();
+        if (noVariationsForProject) return;
         setBusy(true);
         router.post(route('admin.agreements.store'), {
             project_id: projectId, variation_request_id: variationId || null,
@@ -377,15 +376,28 @@ function CreateModal({ show, projects, variations, onClose }) {
                         <div>
                             <Label>Project</Label>
                             <ProjectSelect projects={projects} value={projectId} onChange={handleProjectChange} placeholder="Select a project…" />
+                            {noVariationsForProject && (
+                                <div className="mt-2 flex items-start gap-2 px-3 py-2.5 rounded-xl"
+                                    style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                                    <svg className="flex-shrink-0 mt-0.5" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round">
+                                        <circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8"/><circle cx="8" cy="11" r="0.5" fill="#dc2626"/>
+                                    </svg>
+                                    <p className="text-xs leading-snug" style={{ color: '#dc2626' }}>
+                                        No approved variation requests found for this project. Submit a variation request first before creating an agreement.
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
+                        {!noVariationsForProject && (
                         <div>
                             <Label optional>Variation Request <span style={{ color: '#aaa49e', fontSize: 11 }}>— auto-fills items</span></Label>
                             <SelectInput value={variationId} onChange={e => handleVariationChange(e.target.value)}>
-                                <option value="">None — fill manually</option>
+                                <option value="">— Select a variation request —</option>
                                 {projectVariations.map(v => <option key={v.id} value={v.id}>{v.title}</option>)}
                             </SelectInput>
                         </div>
+                        )}
 
                         <div>
                             <Label>Agreement Title</Label>
@@ -442,7 +454,7 @@ function CreateModal({ show, projects, variations, onClose }) {
                                 style={{ background: '#ede8e0', color: '#4A4A4A' }}>
                                 Cancel
                             </button>
-                            <button type="submit" disabled={busy}
+                            <button type="submit" disabled={busy || noVariationsForProject}
                                 className="py-3 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-50"
                                 style={{ flex: 2, background: '#25282D', color: '#fff' }}>
                                 {busy ? 'Saving…' : sendNow ? 'Save & Send to Client' : 'Save as Draft'}
