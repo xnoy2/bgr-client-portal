@@ -134,6 +134,7 @@ Route::middleware(['auth', 'password.changed', 'role:admin'])
 
         // Variation requests
         Route::get('/variations',                                      [AdminVariationController::class, 'index'])->name('variations.index');
+        Route::post('/variations',                                     [AdminVariationController::class, 'store'])->name('variations.store');
         Route::put('/variations/{variation}/review',                   [AdminVariationController::class, 'review'])->name('variations.review');
         Route::put('/variations/{variation}/attach-agreement',         [AdminVariationController::class, 'attachAgreement'])->name('variations.attach-agreement');
 

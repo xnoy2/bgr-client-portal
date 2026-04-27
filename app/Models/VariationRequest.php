@@ -11,6 +11,7 @@ class VariationRequest extends Model
     protected $fillable = [
         'ghl_submission_id', 'source',
         'project_id', 'submitted_by', 'title', 'description',
+        'staff_member', 'site_location', 'photos',
         'estimated_cost', 'status', 'admin_notes', 'reviewed_at', 'reviewed_by',
         'agreement_link', 'agreement_status', 'agreement_signed_at',
     ];
@@ -18,6 +19,7 @@ class VariationRequest extends Model
     protected function casts(): array
     {
         return [
+            'photos'              => 'array',
             'estimated_cost'      => 'decimal:2',
             'reviewed_at'         => 'datetime',
             'agreement_signed_at' => 'datetime',
